@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management - School Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   <style>
+    /* ============================================================================
+       MODERN MINIMAL ADMIN DASHBOARD STYLES - 2025/2026 STYLE
+       ========================================================================== */
+
+    :root {
+        --primary: #4376ed;
+        --primary-dark:#f59e0b;
+        --primary-light: #3b82f6;
+        --primary-very-light: #eff6ff;
+
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+    }
+
+    /* Reset & Base */
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: var(--gray-100);
+        border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: var(--gray-400);
+        border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--gray-500);
+    }
+
+    body {
+        background-color: var(--gray-50);
+    }
+
+    /* ============================================================================
+       SIDEBAR
+       ========================================================================== */
+    #sidebar {
+        width: 260px;
+        background-color: var(--gray-200);
+        transition: width 0.35s ease;
+        height: calc(100vh - 64px);
+        position: fixed;
+        top: 64px;
+        margin-top: 20px;
+        left: 0;
+        z-index: 40;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    #sidebar.collapsed {
+        width: 72px;
+    }
+
+    .nav-item {
+        white-space: nowrap;
+        overflow: hidden;
+        transition: all 0.25s ease;
+    }
+
+    .nav-icon {
+        font-size: 1.25rem;
+        color: #93c5fd;
+        min-width: 28px;
+        text-align: center;
+    }
+
+    .nav-text {
+        color: #e5e7eb;
+        transition: all 0.25s ease;
+    }
+
+    /* Collapsed state */
+    #sidebar.collapsed .nav-text {
+        opacity: 0;
+        visibility: hidden;
+        width: 0;
+        margin-left: 0 !important;
+    }
+
+    #sidebar.collapsed .nav-item {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    #sidebar.collapsed .nav-icon {
+        font-size: 1.4rem;
+    }
+
+    /* Tooltips when collapsed */
+    #sidebar.collapsed .nav-item {
+        position: relative;
+    }
+
+    #sidebar.collapsed .nav-item:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: calc(100% + 12px);
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--gray-800);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        white-space: nowrap;
+        z-index: 50;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    /* Hide badges/counters when collapsed */
+    #sidebar.collapsed .ml-auto {
+        display: none;
+    }
+
+    /* Category headers */
+    #sidebar.collapsed .uppercase {
+        opacity: 0;
+        height: 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .nav-item:hover {
+        background-color: var(--primary-dark) !important;
+    }
+
+    .nav-item.bg-blue-700,
+    .nav-item[style*="background-color: rgb(29, 78, 216)"] {
+        background-color: var(--primary-dark) !important;
+    }
+
+    /* ============================================================================
+       RESPONSIVE SIDEBAR (Mobile / Tablet)
+       ========================================================================== */
+    @media (max-width: 1023px) {
+        #sidebar {
+            width: 280px !important;
+            transform: translateX(-100%);
+            transition: transform 0.35s ease;
+        }
+
+        #sidebar.mobile-open {
+            transform: translateX(0);
+        }
+
+        #mainContent {
+            margin-left: 0 !important;
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 64px 0 0 0;
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(4px);
+            z-index: 39;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+    }
+
+    @media (max-width: 640px) {
+        #sidebar.mobile-open {
+            width: 85vw !important;
+        }
+    }
+
+    @media (min-width: 1024px) {
+        #sidebar {
+            transform: translateX(0) !important;
+        }
+
+        #mainContent {
+            margin-left: 260px;
+            transition: margin-left 0.35s ease;
+        }
+
+        #mainContent.sidebar-collapsed {
+            margin-left: 72px;
+        }
+    }
+
+    /* Make sure main content doesn't get overlapped */
+    main#mainContent {
+        min-height: calc(100vh - 64px);
+    }
+
+    /* Custom styles for student management */
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        padding: 16px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateX(120%);
+        transition: transform 0.3s ease-in-out;
+        max-width: 350px;
+    }
+    
+    .toast.show {
+        transform: translateX(0);
+    }
+    
+    /* Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 50;
+        backdrop-filter: blur(4px);
+    }
+    
+    .modal-overlay.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: modalSlideIn 0.3s ease-out;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Tabs */
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 0.3s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .tab-button.active {
+        background-color: #3b82f6;
+        color: white;
+    }
+    
+    /* Status badges */
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .status-paid {
+        background-color: #dcfce7;
+        color: #166534;
+    }
+    
+    .status-pending {
+        background-color: #fef3c7;
+        color: #92400e;
+    }
+    
+    .status-partial {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+</style>
+</head>
+<body class="bg-gray-50">
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden fixed inset-0 bg-white bg-opacity-80 z-50 flex items-center justify-center">
+        <div class="spinner"></div>
+        <span class="ml-3 text-lg font-semibold text-gray-700">Loading...</span>
+    </div>
+    
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard">
+        <!-- Top Navbar -->
+        <nav class="bg-white border-b border-gray-200 text-gray-700 shadow-sm sticky top-0 z-50">
+            <div class="flex items-center justify-between px-4 lg:px-6 py-4">
+                <div class="flex items-center space-x-4">
+                    <button id="sidebarToggle" class="text-gray-600 hover:bg-gray-100 p-2 rounded-lg transition-all duration-200">
+                        <i id="sidebarToggleIcon" class="fas fa-bars text-xl"></i>
+                    </button>
+                    <div class="flex items-center">
+                        <div class="h-10 w-36  rounded-lg flex items-center justify-center">
+                            <img src="/assets/kunash_logo.png" alt="">
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <div class="hidden md:block">
+                        <div class="text-right">
+                          
+                        </div>
+                    </div>
+                    
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button id="notificationsBtn" class="p-2 hover:bg-gray-100 rounded-full relative">
+                            <i class="fas fa-bell text-gray-600"></i>
+                            <span class="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">3</span>
+                        </button>
+                        <!-- Notifications Dropdown -->
+                        <div id="notificationsDropdown" class="hidden absolute right-0 mt-2 w-80 bg-white text-gray-800 rounded-lg shadow-lg border border-gray-200 z-50">
+                            <div class="p-4 border-b border-gray-200">
+                                <h3 class="font-bold text-lg text-gray-800">Notifications</h3>
+                            </div>
+                            <div class="max-h-96 overflow-y-auto">
+                                <div class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="h-10 w-10 bg-blue-50 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-money-bill-wave text-blue-500"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800">Fees Payment Due</p>
+                                            <p class="text-sm text-gray-600">5 students have pending fees</p>
+                                            <p class="text-xs text-gray-500 mt-1">10 min ago</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer">
+                                    <div class="flex items-start space-x-3">
+                                        <div class="h-10 w-10 bg-green-50 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user-plus text-green-500"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-800">New Student Registration</p>
+                                            <p class="text-sm text-gray-600">Rohan Sharma registered for Class 10</p>
+                                            <p class="text-xs text-gray-500 mt-1">1 hour ago</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-4 border-t border-gray-200">
+                                <a href="#" class="text-blue-600 hover:text-blue-800 text-sm font-semibold block text-center">View All Notifications</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- User Menu -->
+                    <div class="relative">
+                        <button id="userMenuBtn" class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-lg">
+                            <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user-circle text-blue-600"></i>
+                            </div>
+                            <div class="hidden md:block text-left">
+                                <p class="text-sm font-semibold text-gray-800">Admin User</p>
+                                <p class="text-xs text-gray-500">admin@school.com</p>
+                            </div>
+                            <i class="fas fa-chevron-down text-sm text-gray-500"></i>
+                        </button>
+                        <!-- User Menu Dropdown -->
+                        <div id="userMenuDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-lg border border-gray-200 z-50">
+                            <div class="p-4 border-b border-gray-200">
+                                <p class="font-semibold text-gray-800">Admin User</p>
+                                <p class="text-sm text-gray-600">Super Administrator</p>
+                            </div>
+                            <a href="#" class="block px-4 py-3 hover:bg-gray-50 text-sm text-gray-700">
+                                <i class="fas fa-user mr-2 text-gray-500"></i>My Profile
+                            </a>
+                            <a href="#" class="block px-4 py-3 hover:bg-gray-50 text-sm text-gray-700">
+                                <i class="fas fa-cog mr-2 text-gray-500"></i>Settings
+                            </a>
+                            <a href="#" class="block px-4 py-3 hover:bg-gray-50 text-sm text-gray-700 border-t border-gray-100" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt mr-2 text-gray-500"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar shadow-lg">
+            <div class="sidebar-scroll">
+                <div class="space-y-1 p-4">
+                    <a data-tooltip="Dashboard" href="index.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                        <i class="fas fa-home text-black nav-icon"></i>
+                        <span class="nav-text text-black">Dashboard</span>  
+                    </a>
+                    
+                    <div class="pt-4 pb-2">
+                        <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Student Management</p>
+                    </div>
+                    
+                    <a data-tooltip="All Students" href="../student-management/student-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                        <i class="fas fa-user-graduate text-black nav-icon"></i>
+                        <span class="nav-text text-black">All Students</span>
+                        <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">245</span>
+                    </a>
+                    
+                    <a data-tooltip="Add Student" href="../student-management/student-management.html?action=add" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-user-plus text-black nav-icon"></i>
+                        <span class="nav-text text-black">Add Student</span>
+                    </a>
+
+                    <div class="pt-4 pb-2">
+                        <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Teacher Management</p>
+                    </div>
+                    
+                    <a data-tooltip="All Teachers" href="teacher-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                        <i class="fas fa-chalkboard-teacher text-black nav-icon"></i>
+                        <span class="nav-text text-black">All Teachers</span>
+                        <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">68</span>
+                    </a>
+                    
+                    <a data-tooltip="Add Teacher" href="teacher-management.html?action=add" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-user-tie text-black nav-icon"></i>
+                        <span class="nav-text text-black">Add Teacher</span>
+                    </a>
+
+                    <div class="pt-4 pb-2">
+                        <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Academic</p>
+                    </div>
+                    
+                    <a data-tooltip="Attendance" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-calendar-check text-black nav-icon"></i>
+                        <span class="nav-text text-black">Attendance</span>
+                    </a>
+                    
+                    <a data-tooltip="Marks & Reports" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-chart-line text-black nav-icon"></i>
+                        <span class="nav-text text-black">Marks & Reports</span>
+                    </a>
+                    
+                    <div class="pt-4 pb-2">
+                        <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Financial</p>
+                    </div>
+                    
+                    <a data-tooltip="Fees Management" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-money-bill-wave text-black nav-icon"></i>
+                        <span class="nav-text text-black">Fees Management</span>
+                        <span class="ml-auto bg-red-500 text-black text-xs px-2 py-1 rounded-full nav-text">₹45k</span>
+                    </a>
+                    
+                    <div class="pt-4 pb-2">
+                        <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Calendar</p>
+                    </div>
+                    
+                    <a data-tooltip="School Calendar" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-calendar text-black nav-icon"></i>
+                        <span class="nav-text text-black">School Calendar</span>
+                    </a>
+                    
+                    <div class="pt-4 pb-2">
+                        <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">System</p>
+                    </div>
+                    
+                    <a data-tooltip="Notifications" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-bell text-black nav-icon"></i>
+                        <span class="nav-text text-black">Notifications</span>
+                        <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">3</span>
+                    </a>
+                    
+                    <a data-tooltip="Analytics & Reports" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-chart-pie text-black nav-icon"></i>
+                        <span class="nav-text text-black">Analytics & Reports</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main id="mainContent" class="transition-all duration-300">
+            <div class="p-4 lg:p-6">
+                <!-- All Students Section -->
+                <div id="allStudentsSection" class="section">
+                    <!-- Page Header -->
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
+                        <div>
+                            <h2 class="text-2xl lg:text-3xl font-bold text-gray-800">Student Management</h2>
+                        </div>
+                        <div class="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0">
+                            <button onclick="exportStudents()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium">
+                                <i class="fas fa-download mr-2"></i>Export
+                            </button>
+                            <button onclick="window.location.href='?action=add'" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-sm font-medium">
+                                <i class="fas fa-plus mr-2"></i>Add New Student
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-white p-4 rounded-xl shadow border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-users text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Total Students</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalStudentsCount">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-xl shadow border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Active Students</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="activeStudentsCount">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-xl shadow border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Pending Fees</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="pendingFeesCount">0</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-4 rounded-xl shadow border border-gray-200">
+                            <div class="flex items-center">
+                                <div class="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-graduation-cap text-purple-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600">Average Attendance</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="avgAttendance">0%</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters and Search -->
+                    <div class="bg-white rounded-xl shadow p-4 lg:p-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Search Students</label>
+                                <div class="relative">
+                                    <input type="text" id="searchStudent" placeholder="Name, ID, or Parent..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                    <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Class</label>
+                                <select id="filterClass" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                    <option value="">All Classes</option>
+                                    <option value="1">Class 1</option>
+                                    <option value="2">Class 2</option>
+                                    <option value="3">Class 3</option>
+                                    <option value="4">Class 4</option>
+                                    <option value="5">Class 5</option>
+                                    <option value="6">Class 6</option>
+                                    <option value="7">Class 7</option>
+                                    <option value="8">Class 8</option>
+                                    <option value="9">Class 9</option>
+                                    <option value="10">Class 10</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Fee Status</label>
+                                <select id="filterFeeStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                    <option value="">All Status</option>
+                                    <option value="paid">Fully Paid</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="partial">Partially Paid</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Student Status</label>
+                                <select id="filterStudentStatus" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                    <option value="">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Students Table -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full responsive-table">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                            <input type="checkbox" id="selectAll" class="rounded border-gray-300">
+                                        </th>
+                                        <th class="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Student Details</th>
+                                        <th class="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Class</th>
+                                        <th class="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact Info</th>
+                                        <th class="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fees Status</th>
+                                        <th class="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentTableBody" class="divide-y divide-gray-200">
+                                    <!-- Will be populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Table Footer -->
+                        <div class="px-4 lg:px-6 py-4 border-t border-gray-200 bg-gray-50">
+                            <div class="flex flex-col lg:flex-row justify-between items-center">
+                                <div class="text-sm text-gray-700 mb-4 lg:mb-0">
+                                    Showing <span id="startCount">0</span> to <span id="endCount">0</span> of <span id="totalCount">0</span> students
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <button onclick="previousPage()" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200" id="prevBtn">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <div class="flex space-x-1" id="pageNumbers">
+                                        <!-- Page numbers will be generated here -->
+                                    </div>
+                                    <button onclick="nextPage()" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200" id="nextBtn">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Student Section -->
+                <div id="addStudentSection" class="section hidden">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
+                        <div>
+                            <h2 class="text-2xl lg:text-3xl font-bold text-gray-800">Add New Student</h2>
+                            <p class="text-gray-600 mt-2">Complete the form below to register a new student</p>
+                        </div>
+                        <button onclick="window.location.href='student-management.html'" class="mt-4 lg:mt-0 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                            <i class="fas fa-arrow-left mr-2"></i>Back to Students
+                        </button>
+                    </div>
+                    
+                    <!-- Form Tabs -->
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
+                        <div class="border-b border-gray-200">
+                            <div class="flex overflow-x-auto tab-buttons">
+                                <button onclick="switchTab('personal')" class="tab-button px-4 lg:px-6 py-4 font-medium text-sm transition-all duration-200 active whitespace-nowrap" id="personalTab">
+                                    <i class="fas fa-user mr-2"></i>Personal Details
+                                </button>
+                                <button onclick="switchTab('academic')" class="tab-button px-4 lg:px-6 py-4 font-medium text-sm transition-all duration-200 whitespace-nowrap" id="academicTab">
+                                    <i class="fas fa-graduation-cap mr-2"></i>Academic Details
+                                </button>
+                                <button onclick="switchTab('parent')" class="tab-button px-4 lg:px-6 py-4 font-medium text-sm transition-all duration-200 whitespace-nowrap" id="parentTab">
+                                    <i class="fas fa-users mr-2"></i>Parent Details
+                                </button>
+                                <button onclick="switchTab('fees')" class="tab-button px-4 lg:px-6 py-4 font-medium text-sm transition-all duration-200 whitespace-nowrap" id="feesTab">
+                                    <i class="fas fa-money-bill-wave mr-2"></i>Fees Details
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Personal Details Tab -->
+                        <div id="personalTabContent" class="tab-content active p-4 lg:p-8 form-tab-container">
+                            <form id="addStudentForm">
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    <!-- Left Column - Photo and Basic Info -->
+                                    <div class="lg:col-span-1">
+                                        <div class="space-y-6">
+                                            <!-- Student Photo -->
+                                            <div class="text-center">
+                                                <div class="relative inline-block">
+                                                    <div id="studentPhotoPreview" class="h-40 w-40 lg:h-48 lg:w-48 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+                                                        <i class="fas fa-user text-4xl lg:text-6xl text-gray-400"></i>
+                                                    </div>
+                                                    <div class="file-upload">
+                                                        <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium">
+                                                            <i class="fas fa-camera mr-2"></i>Upload Photo
+                                                        </button>
+                                                        <input type="file" id="studentPhoto" accept="image/*" class="file-input">
+                                                    </div>
+                                                    <p class="text-xs text-gray-500 mt-2">Max size: 2MB | Formats: JPG, PNG</p>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Basic Information -->
+                                            <div class="space-y-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                        <i class="fas fa-calendar-alt mr-2"></i>Date of Birth *
+                                                    </label>
+                                                    <input type="date" name="dob" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                        <i class="fas fa-venus-mars mr-2"></i>Gender *
+                                                    </label>
+                                                    <select name="gender" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                                        <option value="">Select Gender</option>
+                                                        <option value="Male">Male</option>
+                                                        <option value="Female">Female</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                        <i class="fas fa-tint mr-2"></i>Blood Group
+                                                    </label>
+                                                    <select name="bloodGroup" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                                        <option value="">Select Blood Group</option>
+                                                        <option value="A+">A+</option>
+                                                        <option value="A-">A-</option>
+                                                        <option value="B+">B+</option>
+                                                        <option value="B-">B-</option>
+                                                        <option value="O+">O+</option>
+                                                        <option value="O-">O-</option>
+                                                        <option value="AB+">AB+</option>
+                                                        <option value="AB-">AB-</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Right Column - Form Fields -->
+                                    <div class="lg:col-span-2">
+                                        <div class="space-y-6">
+                                            <!-- Student Name -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-user mr-2"></i>Full Name *
+                                                </label>
+                                                <input type="text" name="studentName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Enter student's full name">
+                                            </div>
+                                            
+                                            <!-- Address - Updated with Address Line 1 and Line 2 -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-home mr-2"></i>Address *
+                                                </label>
+                                                <div class="space-y-3">
+                                                    <div>
+                                                        <input type="text" name="addressLine1" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Address Line 1">
+                                                    </div>
+                                                    <div>
+                                                        <input type="text" name="addressLine2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Address Line 2 (Optional)">
+                                                    </div>
+                                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                        <input type="text" name="city" required class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="City">
+                                                        <input type="text" name="state" required class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="State">
+                                                        <input type="text" name="pincode" required class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Pincode">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Caste Category -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-layer-group mr-2"></i>Caste Category *
+                                                </label>
+                                                <select name="casteCategory" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                                    <option value="">Select Caste Category</option>
+                                                    <option value="General">General</option>
+                                                    <option value="OBC">OBC (Other Backward Class)</option>
+                                                    <option value="SC">SC (Scheduled Caste)</option>
+                                                    <option value="ST">ST (Scheduled Tribe)</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <!-- Previous School & Aadhar -->
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                        <i class="fas fa-school mr-2"></i>Previous School
+                                                    </label>
+                                                    <input type="text" name="previousSchool" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="If applicable">
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                        <i class="fas fa-id-card mr-2"></i>Aadhar Number
+                                                    </label>
+                                                    <input type="text" name="aadharNumber" maxlength="12" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="12-digit Aadhar number">
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Medical Information -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-heartbeat mr-2"></i>Medical Information
+                                                </label>
+                                                <textarea name="medicalInfo" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Any medical conditions, allergies, etc."></textarea>
+                                            </div>
+                                            
+                                            <!-- Sports and Activities -->
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-running mr-2"></i>Sports & Activities
+                                                </label>
+                                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                    <label class="flex items-center space-x-2">
+                                                        <input type="checkbox" name="sports[]" value="cricket" class="rounded border-gray-300">
+                                                        <span class="text-sm">Cricket</span>
+                                                    </label>
+                                                    <label class="flex items-center space-x-2">
+                                                        <input type="checkbox" name="sports[]" value="football" class="rounded border-gray-300">
+                                                        <span class="text-sm">Football</span>
+                                                    </label>
+                                                    <label class="flex items-center space-x-2">
+                                                        <input type="checkbox" name="sports[]" value="basketball" class="rounded border-gray-300">
+                                                        <span class="text-sm">Basketball</span>
+                                                    </label>
+                                                    <label class="flex items-center space-x-2">
+                                                        <input type="checkbox" name="sports[]" value="chess" class="rounded border-gray-300">
+                                                        <span class="text-sm">Chess</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Navigation Buttons -->
+                                <div class="flex justify-between mt-8 pt-6 border-t border-gray-200">
+                                    <div></div>
+                                    <button type="button" onclick="switchTab('academic')" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium">
+                                        Next: Academic Details <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <!-- Academic Details Tab -->
+                        <div id="academicTabContent" class="tab-content p-4 lg:p-8 form-tab-container">
+                            <div class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-graduation-cap mr-2"></i>Class *
+                                        </label>
+                                        <select name="class" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                            <option value="">Select Class</option>
+                                            <option value="1">Class 1</option>
+                                            <option value="2">Class 2</option>
+                                            <option value="3">Class 3</option>
+                                            <option value="4">Class 4</option>
+                                            <option value="5">Class 5</option>
+                                            <option value="6">Class 6</option>
+                                            <option value="7">Class 7</option>
+                                            <option value="8">Class 8</option>
+                                            <option value="9">Class 9</option>
+                                            <option value="10">Class 10</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-th-large mr-2"></i>Section *
+                                        </label>
+                                        <select name="section" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                            <option value="">Select Section</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="C">C</option>
+                                            <option value="D">D</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-hashtag mr-2"></i>Roll Number *
+                                        </label>
+                                        <input type="text" name="rollNumber" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Roll number in class">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-calendar-day mr-2"></i>Admission Date *
+                                        </label>
+                                        <input type="date" name="admissionDate" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-book-open mr-2"></i>Academic Year *
+                                        </label>
+                                        <select name="academicYear" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                            <option value="">Select Year</option>
+                                            <option value="2023-2024">2023-2024</option>
+                                            <option value="2024-2025">2024-2025</option>
+                                            <option value="2025-2026">2025-2026</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-user-tie mr-2"></i>Class Teacher
+                                        </label>
+                                        <select name="classTeacher" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                            <option value="">Select Class Teacher</option>
+                                            <option value="Mr. Sharma">Mr. Sharma</option>
+                                            <option value="Ms. Patel">Ms. Patel</option>
+                                            <option value="Mr. Kumar">Mr. Kumar</option>
+                                            <option value="Ms. Desai">Ms. Desai</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Subjects -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fas fa-book mr-2"></i>Subjects
+                                    </label>
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" name="subjects[]" value="english" class="rounded border-gray-300">
+                                            <span>English</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" name="subjects[]" value="hindi" class="rounded border-gray-300">
+                                            <span>Hindi</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" name="subjects[]" value="mathematics" class="rounded border-gray-300">
+                                            <span>Mathematics</span>
+                                        </label>
+                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                            <input type="checkbox" name="subjects[]" value="science" class="rounded border-gray-300">
+                                            <span>Science</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Navigation Buttons -->
+                                <div class="flex justify-between mt-8 pt-6 border-t border-gray-200">
+                                    <button type="button" onclick="switchTab('personal')" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                                        <i class="fas fa-arrow-left mr-2"></i>Back to Personal Details
+                                    </button>
+                                    <button type="button" onclick="switchTab('parent')" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium">
+                                        Next: Parent Details <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Parent Details Tab -->
+                        <div id="parentTabContent" class="tab-content p-4 lg:p-8 form-tab-container">
+                            <div class="space-y-6">
+                                <!-- Parent/Guardian Details -->
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                                    <h4 class="text-lg font-semibold text-blue-800 mb-4">
+                                        <i class="fas fa-user-shield mr-2"></i>Parent/Guardian Details
+                                    </h4>
+                                    
+                                    <!-- Father's Details -->
+                                    <div class="mb-6 pb-6 border-b border-blue-200">
+                                        <h5 class="text-md font-semibold text-blue-700 mb-4">
+                                            <i class="fas fa-male mr-2"></i>Father's Details
+                                        </h5>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-user mr-2"></i>Father's Full Name *
+                                                </label>
+                                                <input type="text" name="fatherName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Full name of father">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-id-card mr-2"></i>Father's Aadhar Number
+                                                </label>
+                                                <input type="text" name="fatherAadhar" maxlength="12" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="12-digit Aadhar number">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-phone mr-2"></i>Father's Contact Number *
+                                                </label>
+                                                <input type="tel" name="fatherContact" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="10-digit mobile number">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-briefcase mr-2"></i>Father's Occupation
+                                                </label>
+                                                <input type="text" name="fatherOccupation" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Occupation">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Mother's Details -->
+                                    <div class="mb-6 pb-6 border-b border-blue-200">
+                                        <h5 class="text-md font-semibold text-blue-700 mb-4">
+                                            <i class="fas fa-female mr-2"></i>Mother's Details
+                                        </h5>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-user mr-2"></i>Mother's Full Name *
+                                                </label>
+                                                <input type="text" name="motherName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Full name of mother">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-id-card mr-2"></i>Mother's Aadhar Number
+                                                </label>
+                                                <input type="text" name="motherAadhar" maxlength="12" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="12-digit Aadhar number">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-phone mr-2"></i>Mother's Contact Number
+                                                </label>
+                                                <input type="tel" name="motherContact" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="10-digit mobile number">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-briefcase mr-2"></i>Mother's Occupation
+                                                </label>
+                                                <input type="text" name="motherOccupation" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Occupation">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Primary Guardian -->
+                                    <div>
+                                        <h5 class="text-md font-semibold text-blue-700 mb-4">
+                                            <i class="fas fa-user-tie mr-2"></i>Primary Guardian Details
+                                        </h5>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-envelope mr-2"></i>Primary Email Address *
+                                                </label>
+                                                <input type="email" name="parentEmail" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="primary@email.com">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    Relationship with Student *
+                                                </label>
+                                                <select name="relationship" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                                    <option value="">Select Relationship</option>
+                                                    <option value="Father">Father</option>
+                                                    <option value="Mother">Mother</option>
+                                                    <option value="Both Parents">Both Parents</option>
+                                                    <option value="Guardian">Guardian</option>
+                                                    <option value="Other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Emergency Contact -->
+                                <div class="bg-red-50 border border-red-200 rounded-lg p-6">
+                                    <h4 class="text-lg font-semibold text-red-800 mb-4">
+                                        <i class="fas fa-phone-square-alt mr-2"></i>Emergency Contact Details
+                                    </h4>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="fas fa-user mr-2"></i>Emergency Contact Name *
+                                            </label>
+                                            <input type="text" name="emergencyContactName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Name of emergency contact">
+                                        </div>
+                                        
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                <i class="fas fa-phone mr-2"></i>Emergency Contact Number *
+                                            </label>
+                                            <input type="tel" name="emergencyContactNumber" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Emergency contact number">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Navigation Buttons -->
+                                <div class="flex justify-between mt-8 pt-6 border-t border-gray-200">
+                                    <button type="button" onclick="switchTab('academic')" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                                        <i class="fas fa-arrow-left mr-2"></i>Back to Academic Details
+                                    </button>
+                                    <button type="button" onclick="switchTab('fees')" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium">
+                                        Next: Fees Details <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fees Details Tab -->
+                        <div id="feesTabContent" class="tab-content p-4 lg:p-8 form-tab-container">
+                            <div class="space-y-6">
+                                <!-- Fee Structure -->
+                                <div class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
+                                    <h4 class="text-lg font-semibold text-blue-800 mb-4">
+                                        <i class="fas fa-money-check-alt mr-2"></i>Fee Structure Details
+                                    </h4>
+                                    
+                                    <div class="space-y-4 mb-6">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-graduation-cap mr-2"></i>Admission Fees *
+                                                </label>
+                                                <input type="number" id="admissionFees" name="admissionFees" required min="0" value="5000" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" onchange="calculateTotalFees()">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-tshirt mr-2"></i>Uniform Fees
+                                                </label>
+                                                <input type="number" id="uniformFees" name="uniformFees" min="0" value="2000" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" onchange="calculateTotalFees()">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-book mr-2"></i>Book & Stationery
+                                                </label>
+                                                <input type="number" id="bookFees" name="bookFees" min="0" value="3000" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" onchange="calculateTotalFees()">
+                                            </div>
+                                            
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                    <i class="fas fa-school mr-2"></i>Tuition Fees (Annual) *
+                                                </label>
+                                                <input type="number" id="tuitionFees" name="tuitionFees" required min="0" value="40000" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" onchange="calculateTotalFees()">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Additional Fees Section -->
+                                    <div class="mt-6">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                                            <i class="fas fa-plus-circle mr-2"></i>Additional Fees (if any)
+                                        </label>
+                                        <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                                            <input type="text" id="additionalFeeName" placeholder="Fee name" class="flex-1 w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                            <input type="number" id="additionalFeeAmount" placeholder="Amount" min="0" class="w-full sm:w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                            <button type="button" onclick="addAdditionalFee()" class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200">
+                                                <i class="fas fa-plus"></i> Add
+                                            </button>
+                                        </div>
+                                        <div id="additionalFeesList" class="mt-2 space-y-1">
+                                            <!-- Additional fees will be added here -->
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Total Fees Summary -->
+                                    <div class="bg-white rounded-lg p-4 border border-gray-200 mt-4">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="font-semibold text-gray-700">Total Annual Fees:</span>
+                                            <span class="text-2xl font-bold text-blue-600" id="totalFeesDisplay">₹0</span>
+                                        </div>
+                                        <div class="text-sm text-gray-500" id="additionalFeesSummary"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Payment Mode -->
+                                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+                                    <h4 class="text-lg font-semibold text-green-800 mb-4">
+                                        <i class="fas fa-credit-card mr-2"></i>Payment Mode Selection
+                                    </h4>
+                                    
+                                    <div class="space-y-4">
+                                        <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="radio" name="paymentMode" value="one-time" checked class="h-5 w-5 text-blue-600 focus:ring-blue-500" onchange="toggleInstallmentOptions()">
+                                                <div>
+                                                    <span class="font-medium text-gray-700">One-Time Payment</span>
+                                                    <p class="text-sm text-gray-500">Pay entire fees at once</p>
+                                                </div>
+                                            </label>
+                                            
+                                            <label class="flex items-center space-x-3 cursor-pointer">
+                                                <input type="radio" name="paymentMode" value="installment" class="h-5 w-5 text-blue-600 focus:ring-blue-500" onchange="toggleInstallmentOptions()">
+                                                <div>
+                                                    <span class="font-medium text-gray-700">Installment Payment</span>
+                                                    <p class="text-sm text-gray-500">Pay in multiple installments</p>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        
+                                        <!-- Installment Options (Hidden by default) -->
+                                        <div id="installmentOptions" class="hidden space-y-4">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                        Number of Installments
+                                                    </label>
+                                                    <select id="installmentCount" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" onchange="calculateInstallments()">
+                                                        <option value="2">2 Installments</option>
+                                                        <option value="3">3 Installments</option>
+                                                        <option value="4">4 Installments</option>
+                                                        <option value="6">6 Installments</option>
+                                                        <option value="12">12 Installments</option>
+                                                    </select>
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                        First Installment Date
+                                                    </label>
+                                                    <input type="date" id="firstInstallmentDate" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" onchange="calculateInstallments()">
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Installment Breakdown -->
+                                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                <h5 class="font-semibold text-gray-700 mb-3">Installment Breakdown</h5>
+                                                <div id="installmentBreakdown" class="space-y-2">
+                                                    <!-- Installment details will be shown here -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Initial Payment -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                Initial Payment Amount *
+                                            </label>
+                                            <input type="number" id="initialPayment" name="initialPayment" required min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Amount to be paid now" value="10000" onchange="updatePaymentSummary()">
+                                            <p class="text-sm text-gray-500 mt-1">Balance amount: <span id="balanceAmount" class="font-semibold">₹0</span></p>
+                                        </div>
+                                        
+                                        <!-- Payment Method -->
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                Payment Method
+                                            </label>
+                                            <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
+                                                <label class="flex items-center space-x-2">
+                                                    <input type="radio" name="paymentMethod" value="cash" checked class="h-4 w-4 text-blue-600">
+                                                    <span class="text-sm">Cash</span>
+                                                </label>
+                                                <label class="flex items-center space-x-2">
+                                                    <input type="radio" name="paymentMethod" value="cheque" class="h-4 w-4 text-blue-600">
+                                                    <span class="text-sm">Cheque</span>
+                                                </label>
+                                                <label class="flex items-center space-x-2">
+                                                    <input type="radio" name="paymentMethod" value="online" class="h-4 w-4 text-blue-600">
+                                                    <span class="text-sm">Online Transfer</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Payment Summary -->
+                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+                                    <h4 class="text-lg font-semibold text-purple-800 mb-4">
+                                        <i class="fas fa-file-invoice-dollar mr-2"></i>Payment Summary
+                                    </h4>
+                                    
+                                    <div class="space-y-3">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Total Annual Fees:</span>
+                                            <span class="font-medium" id="summaryTotal">₹0</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Additional Fees:</span>
+                                            <span class="font-medium" id="summaryAdditional">₹0</span>
+                                        </div>
+                                        <div class="flex justify-between font-bold">
+                                            <span>Grand Total:</span>
+                                            <span id="summaryGrandTotal">₹0</span>
+                                        </div>
+                                        <div class="flex justify-between pt-2 border-t">
+                                            <span class="text-gray-600">Paid Amount:</span>
+                                            <span class="font-medium text-green-600" id="summaryPaid">₹0</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Pending Amount:</span>
+                                            <span class="font-medium text-red-600" id="summaryPending">₹0</span>
+                                        </div>
+                                        <div class="pt-3 border-t border-gray-200">
+                                            <div class="flex justify-between font-bold">
+                                                <span>Balance to be Paid:</span>
+                                                <span class="text-lg" id="summaryBalance">₹0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Form Actions -->
+                                <div class="flex flex-col lg:flex-row justify-between mt-8 pt-6 border-t border-gray-200">
+                                    <button type="button" onclick="switchTab('parent')" class="mb-4 lg:mb-0 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                                        <i class="fas fa-arrow-left mr-2"></i>Back to Parent Details
+                                    </button>
+                                    
+                                    <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                                        <button type="button" onclick="resetForm()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                                            <i class="fas fa-redo mr-2"></i>Reset Form
+                                        </button>
+                                        
+                                        <button type="button" onclick="handleAddStudent()" class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl">
+                                            <i class="fas fa-check-circle mr-2"></i>Register Student
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- View Student Modal -->
+    <div id="viewModalOverlay" class="modal-overlay">
+        <div class="bg-white rounded-xl shadow-2xl modal-content w-full max-w-6xl">
+            <!-- Modal content will be loaded dynamically -->
+        </div>
+    </div>
+
+    <!-- Edit Student Modal -->
+    <div id="editModalOverlay" class="modal-overlay">
+        <div class="bg-white rounded-xl shadow-2xl modal-content w-full max-w-6xl">
+            <!-- Modal content will be loaded dynamically -->
+        </div>
+    </div>
+
+   <script src="../student-management/student-management.js"></script>
+</body>
+</html>
