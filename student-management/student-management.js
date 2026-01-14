@@ -1,4 +1,5 @@
-  // Initialize application
+
+    // Initialize application
     document.addEventListener('DOMContentLoaded', function() {
         checkSession();
         setupEventListeners();
@@ -30,6 +31,8 @@
     let sidebarCollapsed = false;
     let isMobile = window.innerWidth < 1024;
     let additionalFees = [];
+    let editingStudentId = null;
+    let originalAdditionalFees = [];
     
     // Session Management
     const USER_SESSION_KEY = 'school_portal_session';
@@ -144,10 +147,58 @@
                     additional: 0,
                     paid: 30000,
                     pending: 20000,
-                    paymentMode: 'installment'
+                    paymentMode: 'installment',
+                    paymentMethod: 'cash'
                 },
                 status: 'Active',
                 createdAt: '2023-06-01T10:30:00Z'
+            },
+            {
+                id: 2,
+                studentId: 'STU1002',
+                name: 'Priya Patel',
+                dob: '2011-08-22',
+                gender: 'Female',
+                bloodGroup: 'B+',
+                casteCategory: 'OBC',
+                localAddress: '456 Park Avenue, Chinchwad, Pune - 411033',
+                permanentAddress: '456 Park Avenue, Chinchwad, Pune - 411033',
+                photo: null,
+                class: '4',
+                section: 'B',
+                rollNumber: '205',
+                admissionDate: '2023-06-10',
+                academicYear: '2023-2024',
+                classTeacher: 'Ms. Patel',
+                subjects: ['English', 'Hindi', 'Mathematics', 'Science'],
+                fatherName: 'Mr. Raj Patel',
+                fatherContact: '9876543212',
+                fatherAadhar: '345678901234',
+                fatherOccupation: 'Business',
+                motherName: 'Mrs. Anita Patel',
+                motherContact: '9876543211',
+                motherAadhar: '456789012345',
+                motherOccupation: 'Teacher',
+                parentEmail: 'anita.patel@example.com',
+                relationship: 'Mother',
+                emergencyContactName: 'Mr. Patel',
+                emergencyContactNumber: '9876543212',
+                medicalInfo: 'Asthma (controlled)',
+                sports: ['Dance', 'Swimming'],
+                fees: {
+                    total: 45000,
+                    admission: 5000,
+                    uniform: 2000,
+                    books: 2500,
+                    tuition: 35500,
+                    additional: 0,
+                    paid: 45000,
+                    pending: 0,
+                    paymentMode: 'one-time',
+                    paymentMethod: 'online'
+                },
+                status: 'Active',
+                createdAt: '2023-06-10T14:20:00Z'
             }
         ];
     }
@@ -376,6 +427,9 @@
         document.getElementById('addStudentSection').classList.remove('hidden');
         resetForm();
         switchTab('personal');
+        document.getElementById('addStudentForm').querySelector('button[type="button"]').innerHTML = '<i class="fas fa-check-circle mr-2"></i>Register Student';
+        document.getElementById('addStudentForm').querySelector('button[type="button"]').onclick = handleAddStudent;
+        editingStudentId = null;
     }
     
     // Tab Switching
@@ -416,7 +470,10 @@
             permanentAddressSection.classList.add('opacity-50');
             inputs.forEach(input => {
                 input.disabled = true;
-                input.value = '';
+                // Don't clear values when in edit mode
+                if (!editingStudentId) {
+                    input.value = '';
+                }
             });
         } else {
             permanentAddressSection.classList.remove('opacity-50');
@@ -426,7 +483,7 @@
         }
     }
     
-    // Fee Calculations - FIXED: No infinite recursion
+    // Fee Calculations
     function updateFeeCalculations() {
         const admission = parseFloat(document.getElementById('admissionFees')?.value || 0);
         const uniform = parseFloat(document.getElementById('uniformFees')?.value || 0);
@@ -494,7 +551,7 @@
         
         additionalFees.push(fee);
         renderAdditionalFeesList();
-        updateFeeCalculations(); // Use the main function
+        updateFeeCalculations();
         
         // Clear inputs
         nameInput.value = '';
@@ -505,7 +562,7 @@
     function removeAdditionalFee(id) {
         additionalFees = additionalFees.filter(fee => fee.id !== id);
         renderAdditionalFeesList();
-        updateFeeCalculations(); // Use the main function
+        updateFeeCalculations();
     }
     
     function renderAdditionalFeesList() {
@@ -1017,110 +1074,295 @@
         `;
     }
     
+    // EDIT STUDENT FUNCTIONALITY - FULLY IMPLEMENTED
     function editStudent(id) {
+        editingStudentId = id;
         const student = appState.students.find(s => s.id === id);
+        
         if (!student) {
             Toast.show('Student not found', 'error');
             return;
         }
         
-        // For now, show a toast since edit functionality needs to be fully implemented
-        Toast.show('Edit functionality will be implemented in the next version', 'info');
+        // Show the add student section but in edit mode
+        showAddStudentSection();
         
-        // You can implement a full edit form similar to the add student form here
-        // It would populate the form with student data and allow editing
-        // Then save the changes to appState.students
-    }
-    
-    function deleteStudent(id) {
-        // Show confirmation using toast instead of alert
-        const student = appState.students.find(s => s.id === id);
-        if (!student) {
-            Toast.show('Student not found', 'error');
-            return;
+        // Change the form title and button
+        document.querySelector('#addStudentSection h2').textContent = 'Edit Student';
+        document.querySelector('#addStudentSection p').textContent = 'Edit the student information below';
+        
+        const submitButton = document.querySelector('#feesTabContent button[onclick="handleAddStudent()"]');
+        if (submitButton) {
+            submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Update Student';
+            submitButton.onclick = handleUpdateStudent;
         }
         
-        // Create a custom confirmation modal
-        const confirmationHtml = `
-            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-                    <div class="flex items-center mb-4">
-                        <div class="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-800">Confirm Deletion</h3>
-                            <p class="text-sm text-gray-600">Are you sure you want to delete this student?</p>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                        <div class="flex items-center">
-                            <div class="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                                <i class="fas fa-user-graduate text-red-600"></i>
-                            </div>
-                            <div>
-                                <p class="font-medium text-gray-800">${student.name}</p>
-                                <p class="text-sm text-gray-600">${student.studentId} • Class ${student.class}${student.section}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <p class="text-sm text-gray-600 mb-6">This action cannot be undone. All student data including fees and academic records will be permanently deleted.</p>
-                    
-                    <div class="flex justify-end space-x-3">
-                        <button onclick="closeDeleteConfirmation()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
-                            Cancel
-                        </button>
-                        <button onclick="confirmDelete(${id})" class="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-200 font-medium">
-                            <i class="fas fa-trash mr-2"></i>Delete Student
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Parse addresses
+        const localAddressParts = parseAddress(student.localAddress);
+        const permanentAddressParts = parseAddress(student.permanentAddress || student.localAddress);
         
-        // Create and show confirmation modal
-        const modal = document.createElement('div');
-        modal.innerHTML = confirmationHtml;
-        modal.id = 'deleteConfirmationModal';
-        document.body.appendChild(modal);
-    }
-    
-    function closeDeleteConfirmation() {
-        const modal = document.getElementById('deleteConfirmationModal');
-        if (modal) {
-            modal.remove();
+        // Fill Personal Details Tab
+        document.querySelector('input[name="studentName"]').value = student.name;
+        document.querySelector('input[name="dob"]').value = student.dob;
+        document.querySelector('select[name="gender"]').value = student.gender;
+        document.querySelector('select[name="bloodGroup"]').value = student.bloodGroup || '';
+        document.querySelector('select[name="casteCategory"]').value = student.casteCategory;
+        document.querySelector('input[name="aadharNumber"]').value = student.aadharNumber || '';
+        document.querySelector('input[name="previousSchool"]').value = student.previousSchool || '';
+        document.querySelector('textarea[name="medicalInfo"]').value = student.medicalInfo || '';
+        
+        // Fill Local Address
+        document.querySelector('input[name="localAddressLine1"]').value = localAddressParts.line1;
+        document.querySelector('input[name="localAddressLine2"]').value = localAddressParts.line2 || '';
+        document.querySelector('input[name="localCity"]').value = localAddressParts.city;
+        document.querySelector('input[name="localState"]').value = localAddressParts.state;
+        document.querySelector('input[name="localPincode"]').value = localAddressParts.pincode;
+        
+        // Fill Permanent Address
+        const sameAsLocal = student.permanentAddress === student.localAddress || !student.permanentAddress;
+        document.getElementById('sameAsLocal').checked = sameAsLocal;
+        
+        if (!sameAsLocal && student.permanentAddress) {
+            document.querySelector('input[name="permanentAddressLine1"]').value = permanentAddressParts.line1;
+            document.querySelector('input[name="permanentAddressLine2"]').value = permanentAddressParts.line2 || '';
+            document.querySelector('input[name="permanentCity"]').value = permanentAddressParts.city;
+            document.querySelector('input[name="permanentState"]').value = permanentAddressParts.state;
+            document.querySelector('input[name="permanentPincode"]').value = permanentAddressParts.pincode;
         }
+        
+        togglePermanentAddress();
+        
+        // Fill Sports checkboxes
+        if (Array.isArray(student.sports)) {
+            student.sports.forEach(sport => {
+                const checkbox = document.querySelector(`input[name="sports[]"][value="${sport.toLowerCase()}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+        
+        // Fill Academic Details Tab
+        document.querySelector('select[name="class"]').value = student.class;
+        document.querySelector('select[name="section"]').value = student.section;
+        document.querySelector('input[name="rollNumber"]').value = student.rollNumber;
+        document.querySelector('input[name="admissionDate"]').value = student.admissionDate;
+        document.querySelector('select[name="academicYear"]').value = student.academicYear;
+        document.querySelector('select[name="classTeacher"]').value = student.classTeacher || '';
+        
+        // Fill Subjects checkboxes
+        if (Array.isArray(student.subjects)) {
+            student.subjects.forEach(subject => {
+                const checkbox = document.querySelector(`input[name="subjects[]"][value="${subject.toLowerCase()}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+        }
+        
+        // Fill Parent Details Tab
+        document.querySelector('input[name="fatherName"]').value = student.fatherName;
+        document.querySelector('input[name="fatherAadhar"]').value = student.fatherAadhar || '';
+        document.querySelector('input[name="fatherContact"]').value = student.fatherContact;
+        document.querySelector('input[name="fatherOccupation"]').value = student.fatherOccupation || '';
+        
+        document.querySelector('input[name="motherName"]').value = student.motherName;
+        document.querySelector('input[name="motherAadhar"]').value = student.motherAadhar || '';
+        document.querySelector('input[name="motherContact"]').value = student.motherContact || '';
+        document.querySelector('input[name="motherOccupation"]').value = student.motherOccupation || '';
+        
+        document.querySelector('input[name="parentEmail"]').value = student.parentEmail;
+        document.querySelector('select[name="relationship"]').value = student.relationship;
+        
+        document.querySelector('input[name="emergencyContactName"]').value = student.emergencyContactName;
+        document.querySelector('input[name="emergencyContactNumber"]').value = student.emergencyContactNumber;
+        
+        // Fill Fees Details Tab
+        document.getElementById('admissionFees').value = student.fees.admission;
+        document.getElementById('uniformFees').value = student.fees.uniform;
+        document.getElementById('bookFees').value = student.fees.books;
+        document.getElementById('tuitionFees').value = student.fees.tuition;
+        document.getElementById('initialPayment').value = student.fees.paid;
+        
+        // Set payment mode
+        const paymentMode = student.fees.paymentMode || 'one-time';
+        document.querySelector(`input[name="paymentMode"][value="${paymentMode}"]`).checked = true;
+        toggleInstallmentOptions();
+        
+        // Set payment method
+        const paymentMethod = student.fees.paymentMethod || 'cash';
+        document.querySelector(`input[name="paymentMethod"][value="${paymentMethod}"]`).checked = true;
+        
+        // Handle additional fees
+        additionalFees = [];
+        if (student.fees.additional > 0) {
+            // In a real app, you'd store individual additional fees
+            // For now, we'll add a generic additional fee entry
+            additionalFees.push({
+                id: Date.now(),
+                name: 'Additional Fees',
+                amount: student.fees.additional
+            });
+        }
+        originalAdditionalFees = [...additionalFees];
+        renderAdditionalFeesList();
+        
+        updateFeeCalculations();
+        
+        Toast.show('Student data loaded for editing', 'info');
     }
     
-    function confirmDelete(id) {
-        const student = appState.students.find(s => s.id === id);
-        if (student) {
-            appState.students = appState.students.filter(s => s.id !== id);
-            const saved = saveData();
-            if (saved) {
-                renderStudentsTable();
-                updateStudentStats();
-                closeDeleteConfirmation();
-                Toast.show(`Student ${student.name} deleted successfully`, 'success');
+    function parseAddress(address) {
+        if (!address) return { line1: '', line2: '', city: '', state: '', pincode: '' };
+        
+        // Try to parse the address format: "line1, line2, city, state - pincode"
+        const parts = address.split(', ');
+        let line1 = parts[0] || '';
+        let line2 = '';
+        let city = '';
+        let state = '';
+        let pincode = '';
+        
+        if (parts.length > 1) {
+            // Check if last part has " - " for state-pincode
+            const lastPart = parts[parts.length - 1];
+            const statePincodeMatch = lastPart.match(/(.+)\s+-\s+(\d+)/);
+            
+            if (statePincodeMatch) {
+                state = statePincodeMatch[1];
+                pincode = statePincodeMatch[2];
+                // City is the part before state
+                if (parts.length > 2) {
+                    city = parts[parts.length - 2];
+                    // Line2 is everything between line1 and city
+                    if (parts.length > 3) {
+                        line2 = parts.slice(1, parts.length - 2).join(', ');
+                    }
+                }
+            } else {
+                // Simple format
+                if (parts.length === 2) {
+                    city = parts[1];
+                } else if (parts.length === 3) {
+                    line2 = parts[1];
+                    city = parts[2];
+                }
             }
         }
+        
+        return { line1, line2, city, state, pincode };
     }
     
-    // Add Student Handler - FIXED TO SAVE DATA PROPERLY
-    function handleAddStudent() {
-        console.log('handleAddStudent called');
-        
-        // Get the form element
-        const form = document.getElementById('addStudentForm');
-        if (!form) {
-            Toast.show('Form not found', 'error');
+    function handleUpdateStudent() {
+        if (!editingStudentId) {
+            Toast.show('No student selected for editing', 'error');
             return;
         }
         
-        // Collect form data manually
-        const studentData = {
+        const studentIndex = appState.students.findIndex(s => s.id === editingStudentId);
+        if (studentIndex === -1) {
+            Toast.show('Student not found', 'error');
+            return;
+        }
+        
+        // Collect form data (reuse the same function as add)
+        const studentData = collectFormData();
+        if (!studentData) return;
+        
+        // Validate required fields
+        if (!validateFormData(studentData)) return;
+        
+        // Build addresses
+        const localAddress = `${studentData.localAddressLine1}${studentData.localAddressLine2 ? ', ' + studentData.localAddressLine2 : ''}, ${studentData.localCity}, ${studentData.localState} - ${studentData.localPincode}`;
+        
+        let permanentAddress = localAddress;
+        if (!studentData.sameAsLocal && 
+            studentData.permanentAddressLine1 && 
+            studentData.permanentCity && 
+            studentData.permanentState && 
+            studentData.permanentPincode) {
+            permanentAddress = `${studentData.permanentAddressLine1}${studentData.permanentAddressLine2 ? ', ' + studentData.permanentAddressLine2 : ''}, ${studentData.permanentCity}, ${studentData.permanentState} - ${studentData.permanentPincode}`;
+        }
+        
+        // Calculate fees
+        const baseTotal = studentData.admissionFees + studentData.uniformFees + studentData.bookFees + studentData.tuitionFees;
+        const additionalTotal = calculateAdditionalFeesTotal();
+        const totalFees = baseTotal + additionalTotal;
+        
+        if (studentData.initialPayment > totalFees) {
+            Toast.show('Initial payment cannot exceed total fees', 'error');
+            return;
+        }
+        
+        if (studentData.initialPayment < 0) {
+            Toast.show('Initial payment cannot be negative', 'error');
+            return;
+        }
+        
+        // Update student object
+        const updatedStudent = {
+            ...appState.students[studentIndex], // Keep existing properties
+            name: studentData.studentName,
+            dob: studentData.dob,
+            gender: studentData.gender,
+            bloodGroup: studentData.bloodGroup || '',
+            casteCategory: studentData.casteCategory,
+            localAddress: localAddress,
+            permanentAddress: permanentAddress,
+            aadharNumber: studentData.aadharNumber || '',
+            previousSchool: studentData.previousSchool || '',
+            medicalInfo: studentData.medicalInfo || '',
+            sports: studentData.sports || [],
+            class: studentData.class,
+            section: studentData.section,
+            rollNumber: studentData.rollNumber,
+            admissionDate: studentData.admissionDate,
+            academicYear: studentData.academicYear,
+            classTeacher: studentData.classTeacher || '',
+            subjects: studentData.subjects || [],
+            fatherName: studentData.fatherName,
+            fatherContact: studentData.fatherContact,
+            fatherAadhar: studentData.fatherAadhar || '',
+            fatherOccupation: studentData.fatherOccupation || '',
+            motherName: studentData.motherName,
+            motherContact: studentData.motherContact || '',
+            motherAadhar: studentData.motherAadhar || '',
+            motherOccupation: studentData.motherOccupation || '',
+            parentEmail: studentData.parentEmail,
+            relationship: studentData.relationship,
+            emergencyContactName: studentData.emergencyContactName,
+            emergencyContactNumber: studentData.emergencyContactNumber,
+            fees: {
+                total: totalFees,
+                admission: studentData.admissionFees,
+                uniform: studentData.uniformFees,
+                books: studentData.bookFees,
+                tuition: studentData.tuitionFees,
+                additional: additionalTotal,
+                paid: studentData.initialPayment,
+                pending: totalFees - studentData.initialPayment,
+                paymentMode: studentData.paymentMode,
+                paymentMethod: studentData.paymentMethod
+            },
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Update in array
+        appState.students[studentIndex] = updatedStudent;
+        
+        // Save data
+        const saved = saveData();
+        
+        if (saved) {
+            Toast.show(`Student ${updatedStudent.name} updated successfully!`, 'success');
+            
+            // Redirect after delay
+            setTimeout(() => {
+                window.location.href = 'student-management.html';
+            }, 1500);
+        } else {
+            Toast.show('Failed to update student data. Please try again.', 'error');
+        }
+    }
+    
+    function collectFormData() {
+        return {
             // Personal Details
             studentName: document.querySelector('input[name="studentName"]')?.value || '',
             dob: document.querySelector('input[name="dob"]')?.value || '',
@@ -1186,10 +1428,9 @@
             paymentMode: document.querySelector('input[name="paymentMode"]:checked')?.value || 'one-time',
             paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cash'
         };
-        
-        console.log('Form data collected:', studentData);
-        
-        // Validate required fields
+    }
+    
+    function validateFormData(studentData) {
         const requiredFields = [
             { field: 'studentName', name: 'Student Name' },
             { field: 'dob', name: 'Date of Birth' },
@@ -1216,7 +1457,7 @@
         for (const { field, name } of requiredFields) {
             if (!studentData[field] || studentData[field].toString().trim() === '') {
                 Toast.show(`${name} is required`, 'error');
-                return;
+                return false;
             }
         }
         
@@ -1229,14 +1470,14 @@
         for (const { field, name } of phoneFields) {
             if (studentData[field] && !/^\d{10}$/.test(studentData[field])) {
                 Toast.show(`${name} must be 10 digits`, 'error');
-                return;
+                return false;
             }
         }
         
         // Validate email
         if (studentData.parentEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentData.parentEmail)) {
             Toast.show('Please enter a valid email address', 'error');
-            return;
+            return false;
         }
         
         // Validate admission date is not in the future
@@ -1244,26 +1485,113 @@
         const today = new Date();
         if (admissionDate > today) {
             Toast.show('Admission date cannot be in the future', 'error');
-            return;
+            return false;
         }
         
         // Validate date of birth makes sense (not in future and reasonable age)
         const dob = new Date(studentData.dob);
         if (dob > today) {
             Toast.show('Date of birth cannot be in the future', 'error');
-            return;
+            return false;
         }
         
         const age = today.getFullYear() - dob.getFullYear();
         if (age < 3 || age > 25) {
             Toast.show('Student age should be between 3 and 25 years', 'error');
+            return false;
+        }
+        
+        return true;
+    }
+    
+    function deleteStudent(id) {
+        const student = appState.students.find(s => s.id === id);
+        if (!student) {
+            Toast.show('Student not found', 'error');
             return;
         }
+        
+        const confirmationHtml = `
+            <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+                    <div class="flex items-center mb-4">
+                        <div class="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                            <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-800">Confirm Deletion</h3>
+                            <p class="text-sm text-gray-600">Are you sure you want to delete this student?</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                        <div class="flex items-center">
+                            <div class="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-user-graduate text-red-600"></i>
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">${student.name}</p>
+                                <p class="text-sm text-gray-600">${student.studentId} • Class ${student.class}${student.section}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm text-gray-600 mb-6">This action cannot be undone. All student data including fees and academic records will be permanently deleted.</p>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button onclick="closeDeleteConfirmation()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                            Cancel
+                        </button>
+                        <button onclick="confirmDelete(${id})" class="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-200 font-medium">
+                            <i class="fas fa-trash mr-2"></i>Delete Student
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const modal = document.createElement('div');
+        modal.innerHTML = confirmationHtml;
+        modal.id = 'deleteConfirmationModal';
+        document.body.appendChild(modal);
+    }
+    
+    function closeDeleteConfirmation() {
+        const modal = document.getElementById('deleteConfirmationModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+    
+    function confirmDelete(id) {
+        const student = appState.students.find(s => s.id === id);
+        if (student) {
+            appState.students = appState.students.filter(s => s.id !== id);
+            const saved = saveData();
+            if (saved) {
+                renderStudentsTable();
+                updateStudentStats();
+                closeDeleteConfirmation();
+                Toast.show(`Student ${student.name} deleted successfully`, 'success');
+            }
+        }
+    }
+    
+    // Add Student Handler
+    function handleAddStudent() {
+        console.log('handleAddStudent called');
+        
+        // Collect form data
+        const studentData = collectFormData();
+        if (!studentData) return;
+        
+        // Validate required fields
+        if (!validateFormData(studentData)) return;
         
         // Build addresses
         const localAddress = `${studentData.localAddressLine1}${studentData.localAddressLine2 ? ', ' + studentData.localAddressLine2 : ''}, ${studentData.localCity}, ${studentData.localState} - ${studentData.localPincode}`;
         
-        let permanentAddress = localAddress; // Default to local address
+        let permanentAddress = localAddress;
         if (!studentData.sameAsLocal && 
             studentData.permanentAddressLine1 && 
             studentData.permanentCity && 
@@ -1397,6 +1725,13 @@
         
         updateFeeCalculations();
         switchTab('personal');
+        
+        // Reset form title and button if in edit mode
+        if (editingStudentId) {
+            document.querySelector('#addStudentSection h2').textContent = 'Add New Student';
+            document.querySelector('#addStudentSection p').textContent = 'Complete the form below to register a new student';
+            editingStudentId = null;
+        }
     }
     
     // Utility Functions

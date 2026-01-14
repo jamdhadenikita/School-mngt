@@ -1,0 +1,4 @@
+Academic
+
+attendance
+Marks & Reports
