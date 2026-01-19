@@ -1,4 +1,4 @@
-  
+   
         // Application State
         const APP_STATE = {
             currentTab: 'overview',

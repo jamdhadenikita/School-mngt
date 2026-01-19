@@ -10,6 +10,7 @@
     /* ============================================================================
        MODERN MINIMAL ADMIN DASHBOARD STYLES - 2025/2026 STYLE
        ========================================================================== */
+       
 
     :root {
         --primary: #4376ed;
@@ -429,7 +430,7 @@
         <aside id="sidebar" class="sidebar shadow-lg">
             <div class="sidebar-scroll">
                 <div class="space-y-1 p-4">
-                    <a data-tooltip="Dashboard" href="index.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                    <a data-tooltip="Dashboard" href="/index.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
                         <i class="fas fa-home text-black nav-icon"></i>
                         <span class="nav-text text-black">Dashboard</span>  
                     </a>
@@ -438,13 +439,13 @@
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Student Management</p>
                     </div>
                     
-                    <a data-tooltip="All Students" href="student-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                    <a data-tooltip="All Students" href="/student-management/student-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
                         <i class="fas fa-user-graduate text-black nav-icon"></i>
                         <span class="nav-text text-black">All Students</span>
-                        <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">245</span>
+                        <!-- <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">245</span> -->
                     </a>
                     
-                    <a data-tooltip="Add Student" href="student-management.html?action=add" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                    <a data-tooltip="Add Student" href="/student-management/student-management.html?action=add" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-user-plus text-black nav-icon"></i>
                         <span class="nav-text text-black">Add Student</span>
                     </a>
@@ -452,14 +453,18 @@
                     <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Teacher Management</p>
                     </div>
-                    
-                    <a data-tooltip="All Teachers" href="teacher-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
-                        <i class="fas fa-chalkboard-teacher text-black nav-icon"></i>
-                        <span class="nav-text text-black">All Teachers</span>
-                        <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">68</span>
+
+                    <a data-tooltip="Teachers Attendance" href="/teachers-management/teacher-attendance.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                             <i class="fas fa-calendar-check text-black nav-icon"></i>
+                            <span class="nav-text text-black">Teachers Attendance</span>
                     </a>
                     
-                    <a data-tooltip="Add Teacher" href="teacher-management.html?action=add" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                    <a data-tooltip="All Teachers" href="/teachers-management/teachers-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                        <i class="fas fa-chalkboard-teacher text-black nav-icon"></i>
+                        <span class="nav-text text-black">All Teachers</span>
+                    </a>
+                    
+                    <a data-tooltip="Add Teacher" href="/teachers-management/teachers-management.html?action=add" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-user-tie text-black nav-icon"></i>
                         <span class="nav-text text-black">Add Teacher</span>
                     </a>
@@ -468,14 +473,19 @@
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Academic</p>
                     </div>
                     
-                    <a data-tooltip="Attendance" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                    <a data-tooltip="Attendance" href="/Academic/attendance.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-calendar-check text-black nav-icon"></i>
-                        <span class="nav-text text-black">Attendance</span>
+                        <span class="nav-text text-black">Student Attendance</span>
                     </a>
                     
-                    <a data-tooltip="Marks & Reports" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                    <a data-tooltip="Marks & Reports" href="/Academic/marks-reports.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-chart-line text-black nav-icon"></i>
                         <span class="nav-text text-black">Marks & Reports</span>
+                    </a>
+
+                     <a data-tooltip="CreateClass" href="/Academic/create-class.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-chart-line text-black nav-icon"></i>
+                        <span class="nav-text text-black">Create Class</span>
                     </a>
                     
                     <div class="pt-4 pb-2">
@@ -485,7 +495,7 @@
                     <a data-tooltip="Fees Management" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-money-bill-wave text-black nav-icon"></i>
                         <span class="nav-text text-black">Fees Management</span>
-                        <span class="ml-auto bg-red-500 text-black text-xs px-2 py-1 rounded-full nav-text">₹45k</span>
+                        <!-- <span class="ml-auto bg-red-500 text-black text-xs px-2 py-1 rounded-full nav-text">₹45k</span> -->
                     </a>
                     
                     <div class="pt-4 pb-2">
@@ -497,7 +507,7 @@
                         <span class="nav-text text-black">School Calendar</span>
                     </a>
                     
-                    <div class="pt-4 pb-2">
+                    <!-- <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">System</p>
                     </div>
                     
@@ -505,12 +515,12 @@
                         <i class="fas fa-bell text-black nav-icon"></i>
                         <span class="nav-text text-black">Notifications</span>
                         <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">3</span>
-                    </a>
+                    </a> -->
                     
-                    <a data-tooltip="Analytics & Reports" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                    <!-- <a data-tooltip="Analytics & Reports" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-chart-pie text-black nav-icon"></i>
                         <span class="nav-text text-black">Analytics & Reports</span>
-                    </a>
+                    </a> -->
                 </div>
             </div>
         </aside>
