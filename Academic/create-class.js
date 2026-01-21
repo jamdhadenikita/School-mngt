@@ -1,7 +1,7 @@
 // Class Management System
 
 // Initialize application
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     checkSession();
     setupEventListeners();
     setupResponsiveSidebar();
@@ -134,7 +134,7 @@ function checkSession() {
         window.location.href = 'login.html';
         return;
     }
-    
+
     const { username, expires } = JSON.parse(session);
     if (new Date(expires) < new Date()) {
         localStorage.removeItem(USER_SESSION_KEY);
@@ -153,18 +153,18 @@ function handleLogout() {
 function setupEventListeners() {
     // Logout
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    
+
     // Sidebar Toggle
     document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
-    
+
     // Notifications Dropdown
     document.getElementById('notificationsBtn').addEventListener('click', toggleNotifications);
-    
+
     // User Menu Dropdown
     document.getElementById('userMenuBtn').addEventListener('click', toggleUserMenu);
-    
+
     // Close dropdowns when clicking outside
-    document.addEventListener('click', function(event) {
+    document.addEventListener('click', function (event) {
         if (!event.target.closest('#notificationsBtn')) {
             document.getElementById('notificationsDropdown').classList.add('hidden');
         }
@@ -172,15 +172,15 @@ function setupEventListeners() {
             document.getElementById('userMenuDropdown').classList.add('hidden');
         }
     });
-    
+
     // Close sidebar when clicking on overlay
     const sidebarOverlay = document.getElementById('sidebarOverlay');
     if (sidebarOverlay) {
         sidebarOverlay.addEventListener('click', closeMobileSidebar);
     }
-    
+
     // Search input
-    document.getElementById('searchInput').addEventListener('input', function(e) {
+    document.getElementById('searchInput').addEventListener('input', function (e) {
         setTimeout(() => {
             applyFilters();
         }, 300);
@@ -190,13 +190,13 @@ function setupEventListeners() {
 // Responsive Sidebar Setup
 function setupResponsiveSidebar() {
     isMobile = window.innerWidth < 1024;
-    
+
     if (isMobile) {
         closeMobileSidebar();
     } else {
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
-        
+
         if (sidebarCollapsed) {
             sidebar.classList.add('collapsed');
             mainContent.classList.add('sidebar-collapsed');
@@ -205,14 +205,14 @@ function setupResponsiveSidebar() {
             mainContent.classList.remove('sidebar-collapsed');
         }
     }
-    
+
     window.addEventListener('resize', handleResize);
 }
 
 function handleResize() {
     const wasMobile = isMobile;
     isMobile = window.innerWidth < 1024;
-    
+
     if (wasMobile !== isMobile) {
         if (isMobile) {
             closeMobileSidebar();
@@ -220,11 +220,11 @@ function handleResize() {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('mainContent');
             const overlay = document.getElementById('sidebarOverlay');
-            
+
             sidebar.classList.remove('mobile-open');
             overlay.classList.remove('active');
             document.body.classList.remove('sidebar-open');
-            
+
             if (sidebarCollapsed) {
                 sidebar.classList.add('collapsed');
                 mainContent.classList.add('sidebar-collapsed');
@@ -240,7 +240,7 @@ function toggleSidebar() {
     if (isMobile) {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebarOverlay');
-        
+
         if (sidebar.classList.contains('mobile-open')) {
             closeMobileSidebar();
         } else {
@@ -249,9 +249,9 @@ function toggleSidebar() {
     } else {
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
-        
+
         sidebarCollapsed = !sidebarCollapsed;
-        
+
         if (sidebarCollapsed) {
             sidebar.classList.add('collapsed');
             mainContent.classList.add('sidebar-collapsed');
@@ -267,7 +267,7 @@ function toggleSidebar() {
 function openMobileSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
-    
+
     sidebar.classList.add('mobile-open');
     overlay.classList.add('active');
     document.body.classList.add('sidebar-open');
@@ -276,7 +276,7 @@ function openMobileSidebar() {
 function closeMobileSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebarOverlay');
-    
+
     sidebar.classList.remove('mobile-open');
     overlay.classList.remove('active');
     document.body.classList.remove('sidebar-open');
@@ -303,27 +303,27 @@ function initializeClassModule() {
         month: 'long',
         day: 'numeric'
     });
-    
+
     // Initialize data
     classesData = [...mockClasses];
     filteredClasses = [...classesData];
-    
+
     // Load initial data
     loadClassData();
-    
+
     // Generate schedule
     generateSchedule();
 }
 
 function loadClassData() {
     showLoading();
-    
+
     // Update class statistics
     updateClassStatistics();
-    
+
     // Apply filters
     applyFilters();
-    
+
     hideLoading();
 }
 
@@ -334,54 +334,41 @@ function updateClassStatistics() {
     const ukgClasses = classesData.filter(c => c.className === "UKG");
     const firstClasses = classesData.filter(c => c.className === "1st");
     const secondClasses = classesData.filter(c => c.className === "2nd");
-    
-    // Update PG stats
-    document.getElementById('pgClasses').textContent = pgClasses.length;
+
+    // Update student counts only
     document.getElementById('pgStudents').textContent = pgClasses.reduce((sum, c) => sum + c.currentStudents, 0);
-    
-    // Update LKG stats
-    document.getElementById('lkgClasses').textContent = lkgClasses.length;
     document.getElementById('lkgStudents').textContent = lkgClasses.reduce((sum, c) => sum + c.currentStudents, 0);
-    
-    // Update UKG stats
-    document.getElementById('ukgClasses').textContent = ukgClasses.length;
     document.getElementById('ukgStudents').textContent = ukgClasses.reduce((sum, c) => sum + c.currentStudents, 0);
-    
-    // Update 1st stats
-    document.getElementById('firstClasses').textContent = firstClasses.length;
     document.getElementById('firstStudents').textContent = firstClasses.reduce((sum, c) => sum + c.currentStudents, 0);
-    
-    // Update 2nd stats
-    document.getElementById('secondClasses').textContent = secondClasses.length;
     document.getElementById('secondStudents').textContent = secondClasses.reduce((sum, c) => sum + c.currentStudents, 0);
 }
 
 function applyFilters() {
     currentPage = 1;
-    
+
     // Get filter values
     const classFilter = document.getElementById('classFilter').value;
     const sectionFilter = document.getElementById('sectionFilter').value;
     const yearFilter = document.getElementById('yearFilter').value;
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    
+
     // Apply filters
     filteredClasses = classesData.filter(classItem => {
         // Class filter
         if (classFilter !== 'all' && classItem.className !== classFilter) {
             return false;
         }
-        
+
         // Section filter
         if (sectionFilter !== 'all' && classItem.section !== sectionFilter) {
             return false;
         }
-        
+
         // Year filter
         if (yearFilter !== 'all' && classItem.academicYear !== yearFilter) {
             return false;
         }
-        
+
         // Search filter
         if (searchTerm) {
             const searchFields = [
@@ -392,21 +379,21 @@ function applyFilters() {
                 classItem.assistantTeacher?.name,
                 classItem.description
             ].filter(field => field).map(field => field.toLowerCase());
-            
+
             if (!searchFields.some(field => field.includes(searchTerm))) {
                 return false;
             }
         }
-        
+
         return true;
     });
-    
+
     // Update total classes count
     document.getElementById('totalClasses').textContent = filteredClasses.length;
-    
+
     // Render table
     renderClassesTable();
-    
+
     // Update schedule
     generateSchedule();
 }
@@ -414,7 +401,7 @@ function applyFilters() {
 function renderClassesTable() {
     const tableBody = document.getElementById('classesTableBody');
     const tableInfo = document.getElementById('tableInfo');
-    
+
     if (filteredClasses.length === 0) {
         tableBody.innerHTML = `
             <tr>
@@ -428,23 +415,23 @@ function renderClassesTable() {
         tableInfo.textContent = `Showing 0 classes`;
         return;
     }
-    
+
     // Calculate pagination
     const totalPages = Math.ceil(filteredClasses.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = Math.min(startIndex + itemsPerPage, filteredClasses.length);
     const pageData = filteredClasses.slice(startIndex, endIndex);
-    
+
     // Clear table
     tableBody.innerHTML = '';
-    
+
     // Add rows
     pageData.forEach(classItem => {
         const row = document.createElement('tr');
-        
+
         // Calculate capacity percentage
         const capacityPercentage = Math.round((classItem.currentStudents / classItem.maxStudents) * 100);
-        
+
         // Determine capacity color
         let capacityColor = 'text-green-600';
         let capacityBg = 'bg-green-100';
@@ -455,7 +442,7 @@ function renderClassesTable() {
             capacityColor = 'text-yellow-600';
             capacityBg = 'bg-yellow-100';
         }
-        
+
         row.innerHTML = `
             <td class="px-6 py-4">
                 <div class="flex items-center">
@@ -535,17 +522,17 @@ function renderClassesTable() {
         `;
         tableBody.appendChild(row);
     });
-    
+
     // Update pagination controls
     document.getElementById('prevBtn').disabled = currentPage === 1;
     document.getElementById('nextBtn').disabled = currentPage === totalPages;
-    
+
     // Update table info
     tableInfo.textContent = `Showing ${startIndex + 1}-${endIndex} of ${filteredClasses.length} classes`;
 }
 
 function getClassColor(className) {
-    switch(className) {
+    switch (className) {
         case 'PG': return 'bg-purple-600';
         case 'LKG': return 'bg-green-600';
         case 'UKG': return 'bg-blue-600';
@@ -556,7 +543,7 @@ function getClassColor(className) {
 }
 
 function getClassIcon(className) {
-    switch(className) {
+    switch (className) {
         case 'PG': return 'fas fa-baby';
         case 'LKG': return 'fas fa-child';
         case 'UKG': return 'fas fa-graduation-cap';
@@ -572,7 +559,7 @@ function getTeacherInitials(name) {
 }
 
 function getStatusClass(status) {
-    switch(status) {
+    switch (status) {
         case 'active': return 'status-active';
         case 'inactive': return 'status-inactive';
         case 'pending': return 'status-pending';
@@ -581,7 +568,7 @@ function getStatusClass(status) {
 }
 
 function getStatusIcon(status) {
-    switch(status) {
+    switch (status) {
         case 'active': return 'fa-check-circle';
         case 'inactive': return 'fa-times-circle';
         case 'pending': return 'fa-clock';
@@ -618,18 +605,18 @@ function openCreateClassModal() {
     editingClassId = null;
     document.getElementById('modalTitle').textContent = 'Create New Class';
     document.getElementById('submitButtonText').textContent = 'Create Class';
-    
+
     // Reset form
     const form = document.getElementById('classForm');
     form.reset();
-    
+
     // Set default values
     document.getElementById('academicYear').value = '2024-2025';
     document.getElementById('maxStudents').value = '30';
     document.getElementById('currentStudents').value = '0';
     document.getElementById('startTime').value = '08:30';
     document.getElementById('endTime').value = '13:30';
-    
+
     // Show modal
     document.getElementById('createClassModal').classList.add('active');
 }
@@ -643,14 +630,14 @@ function openEditClassModal(classId) {
     editingClassId = classId;
     document.getElementById('modalTitle').textContent = 'Edit Class';
     document.getElementById('submitButtonText').textContent = 'Update Class';
-    
+
     // Find class
     const classItem = classesData.find(c => c.id === classId);
     if (!classItem) {
         showToast('Class not found', 'error');
         return;
     }
-    
+
     // Populate form
     document.getElementById('className').value = classItem.className;
     document.getElementById('classCode').value = classItem.classCode;
@@ -664,22 +651,22 @@ function openEditClassModal(classId) {
     document.getElementById('startTime').value = classItem.startTime;
     document.getElementById('endTime').value = classItem.endTime;
     document.getElementById('description').value = classItem.description || '';
-    
+
     // Set working days checkboxes
     const checkboxes = document.querySelectorAll('input[name="workingDays"]');
     checkboxes.forEach(checkbox => {
         checkbox.checked = classItem.workingDays.includes(checkbox.value);
     });
-    
+
     // Show modal
     document.getElementById('createClassModal').classList.add('active');
 }
 
 function handleClassFormSubmit(event) {
     event.preventDefault();
-    
+
     showLoading();
-    
+
     // Get form data
     const formData = {
         className: document.getElementById('className').value.trim(),
@@ -695,27 +682,27 @@ function handleClassFormSubmit(event) {
         endTime: document.getElementById('endTime').value,
         description: document.getElementById('description').value.trim(),
         workingDays: Array.from(document.querySelectorAll('input[name="workingDays"]:checked'))
-                         .map(cb => cb.value)
+            .map(cb => cb.value)
     };
-    
+
     // Validation
     if (formData.currentStudents > formData.maxStudents) {
         showToast('Current students cannot exceed maximum capacity', 'error');
         hideLoading();
         return;
     }
-    
+
     if (formData.workingDays.length === 0) {
         showToast('Please select at least one working day', 'error');
         hideLoading();
         return;
     }
-    
+
     // Get teacher details
     const classTeacher = mockTeachers.find(t => t.id === parseInt(formData.classTeacherId));
-    const assistantTeacher = formData.assistantTeacherId ? 
+    const assistantTeacher = formData.assistantTeacherId ?
         mockTeachers.find(t => t.id === parseInt(formData.assistantTeacherId)) : null;
-    
+
     // Create or update class
     if (editingClassId) {
         // Update existing class
@@ -728,7 +715,7 @@ function handleClassFormSubmit(event) {
                 assistantTeacher: assistantTeacher ? { id: assistantTeacher.id, name: assistantTeacher.name } : null,
                 status: 'active'
             };
-            
+
             showToast('Class updated successfully', 'success');
         }
     } else {
@@ -741,14 +728,14 @@ function handleClassFormSubmit(event) {
             status: 'active',
             createdAt: new Date().toISOString().split('T')[0]
         };
-        
+
         classesData.push(newClass);
         showToast('Class created successfully', 'success');
     }
-    
+
     // Close modal
     closeCreateClassModal();
-    
+
     // Reload data
     setTimeout(() => {
         loadClassData();
@@ -758,14 +745,14 @@ function handleClassFormSubmit(event) {
 function viewClassDetails(classId) {
     const classItem = classesData.find(c => c.id === classId);
     if (!classItem) return;
-    
+
     // Update modal title
     document.getElementById('viewClassTitle').textContent = `${classItem.className} - Section ${classItem.section}`;
     document.getElementById('viewClassCode').textContent = classItem.classCode;
-    
+
     // Calculate capacity
     const capacityPercentage = Math.round((classItem.currentStudents / classItem.maxStudents) * 100);
-    
+
     // Create content
     const content = document.getElementById('classDetailsContent');
     content.innerHTML = `
@@ -917,7 +904,7 @@ function viewClassDetails(classId) {
             </button>
         </div>
     `;
-    
+
     // Show modal
     document.getElementById('viewClassModal').classList.add('active');
 }
@@ -937,9 +924,9 @@ function deleteClass(classId) {
     if (!confirm('Are you sure you want to delete this class? This action cannot be undone.')) {
         return;
     }
-    
+
     showLoading();
-    
+
     // Find class
     const classItem = classesData.find(c => c.id === classId);
     if (!classItem) {
@@ -947,19 +934,19 @@ function deleteClass(classId) {
         hideLoading();
         return;
     }
-    
+
     // Check if class has students
     if (classItem.currentStudents > 0) {
         showToast('Cannot delete class with enrolled students', 'error');
         hideLoading();
         return;
     }
-    
+
     // Remove class
     classesData = classesData.filter(c => c.id !== classId);
-    
+
     showToast('Class deleted successfully', 'success');
-    
+
     // Reload data
     setTimeout(() => {
         loadClassData();
@@ -970,62 +957,131 @@ function deleteClass(classId) {
 function generateSchedule() {
     const scheduleGrid = document.getElementById('scheduleGrid');
     const weekDisplay = document.getElementById('currentWeek');
-    
+
     // Update week display
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const weekStart = new Date(currentWeekDate);
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-    
-    weekDisplay.textContent = `Week ${currentWeek}, ${monthNames[weekStart.getMonth()]} ${weekStart.getDate()} - ${monthNames[weekEnd.getMonth()]} ${weekEnd.getDate()}`;
-    
-    // Create schedule grid
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-    
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); // Start from Monday
+
+    const dateOptions = { weekday: 'short', day: 'numeric' };
+    const monday = new Date(weekStart);
+    const friday = new Date(weekStart);
+    friday.setDate(friday.getDate() + 4);
+
+    weekDisplay.textContent = `${monday.toLocaleDateString('en-US', dateOptions)} - ${friday.toLocaleDateString('en-US', dateOptions)}`;
+
+    // Create schedule grid - FIXED VERSION
     let scheduleHTML = `
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 schedule-grid">
+        <div class="grid grid-cols-5 gap-2">
+            <div class="text-xs text-gray-500 font-medium py-2 text-center">MON</div>
+            <div class="text-xs text-gray-500 font-medium py-2 text-center">TUE</div>
+            <div class="text-xs text-gray-500 font-medium py-2 text-center">WED</div>
+            <div class="text-xs text-gray-500 font-medium py-2 text-center">THU</div>
+            <div class="text-xs text-gray-500 font-medium py-2 text-center">FRI</div>
     `;
-    
-    days.forEach(day => {
-        const dayClasses = filteredClasses.filter(classItem => 
-            classItem.workingDays.map(d => d.toLowerCase()).includes(day.toLowerCase())
+
+    // Map of short day names to full day names used in the data
+    const dayMap = {
+        'MON': 'monday',
+        'TUE': 'tuesday',
+        'WED': 'wednesday',
+        'THU': 'thursday',
+        'FRI': 'friday'
+    };
+
+    const days = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
+
+    days.forEach((dayShort, index) => {
+        const fullDayName = dayMap[dayShort];
+        const currentDate = new Date(weekStart);
+        currentDate.setDate(currentDate.getDate() + index);
+        const dateStr = currentDate.getDate();
+
+        // FIXED: Use lowercase comparison
+        const dayClasses = filteredClasses.filter(classItem =>
+            classItem.workingDays &&
+            classItem.workingDays.map(d => d.toLowerCase()).includes(fullDayName)
         );
-        
+
         scheduleHTML += `
-            <div class="schedule-day p-4">
-                <div class="font-semibold text-gray-800 mb-3">${day}</div>
-                <div class="space-y-3">
+            <div class="border border-gray-100 rounded-lg p-3 min-h-[180px]">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-medium text-gray-500">${dateStr}</span>
+                    ${dayClasses.length > 0 ? `
+                        <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                            ${dayClasses.length}
+                        </span>
+                    ` : ''}
+                </div>
+                
+                <div class="space-y-2">
                     ${dayClasses.length > 0 ? dayClasses.map(classItem => `
-                        <div class="time-slot p-3 rounded-lg">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <div class="font-medium">${classItem.className} - Sec ${classItem.section}</div>
-                                    <div class="text-sm opacity-90">${formatTime(classItem.startTime)} - ${formatTime(classItem.endTime)}</div>
+                        <div class="text-xs p-2 border border-gray-100 rounded hover:border-gray-200 transition-colors">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-center">
+                                    <div class="h-5 w-5 ${getClassColor(classItem.className)} rounded flex items-center justify-center mr-2">
+                                        <i class="${getClassIcon(classItem.className)} text-white text-xs"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-gray-800">${classItem.className}-${classItem.section}</div>
+                                        <div class="text-gray-500 mt-0.5">${formatTimeShort(classItem.startTime)}-${formatTimeShort(classItem.endTime)}</div>
+                                    </div>
                                 </div>
-                                <div class="h-8 w-8 ${getClassColor(classItem.className)} rounded-full flex items-center justify-center">
-                                    <i class="${getClassIcon(classItem.className)} text-white text-sm"></i>
+                                <div class="text-gray-400 text-xs">
+                                    ${classItem.roomNumber?.replace('Room ', 'R') || '-'}
                                 </div>
                             </div>
-                            <div class="text-sm">
-                                <i class="fas fa-chalkboard-teacher mr-1"></i> ${classItem.classTeacher?.name || 'No teacher'}
+                            <div class="text-gray-500 text-xs mt-1 truncate">
+                                ${classItem.classTeacher?.name?.split(' ')[0] || 'Staff'}
                             </div>
-                            <div class="text-xs mt-1">${classItem.roomNumber || 'No room'}</div>
                         </div>
                     `).join('') : `
-                        <div class="text-center py-8 text-gray-400">
-                            <i class="fas fa-calendar-times text-2xl mb-2"></i>
-                            <p>No classes scheduled</p>
+                        <div class="text-center pt-8">
+                            <i class="fas fa-calendar text-gray-300 text-lg mb-2"></i>
+                            <p class="text-xs text-gray-400">No classes</p>
                         </div>
                     `}
                 </div>
             </div>
         `;
     });
-    
+
     scheduleHTML += '</div>';
     scheduleGrid.innerHTML = scheduleHTML;
+}
+
+// Add this helper function for short time format
+function formatTimeShort(time) {
+    if (!time) return '--:--';
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'pm' : 'am';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes}${ampm}`;
+}
+
+// Also make sure this function exists in your code
+function getClassColor(className) {
+    switch (className) {
+        case 'PG': return 'bg-purple-500';
+        case 'LKG': return 'bg-green-500';
+        case 'UKG': return 'bg-blue-500';
+        case '1st': return 'bg-yellow-500';
+        case '2nd': return 'bg-red-500';
+        default: return 'bg-gray-500';
+    }
+}
+
+function getClassIcon(className) {
+    switch (className) {
+        case 'PG': return 'fas fa-baby';
+        case 'LKG': return 'fas fa-child';
+        case 'UKG': return 'fas fa-graduation-cap';
+        case '1st': return 'fas fa-book-open';
+        case '2nd': return 'fas fa-book';
+        default: return 'fas fa-chalkboard';
+    }
 }
 
 function previousWeek() {
@@ -1053,14 +1109,14 @@ function hideLoading() {
 
 function showToast(message, type = 'info') {
     const toastContainer = document.getElementById('toastContainer');
-    
+
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    
+
     let icon = 'fa-info-circle';
     if (type === 'success') icon = 'fa-check-circle';
     if (type === 'error') icon = 'fa-exclamation-circle';
-    
+
     toast.innerHTML = `
         <i class="fas ${icon} text-xl"></i>
         <div>
@@ -1070,9 +1126,9 @@ function showToast(message, type = 'info') {
             <i class="fas fa-times"></i>
         </button>
     `;
-    
+
     toastContainer.appendChild(toast);
-    
+
     // Auto remove after 5 seconds
     setTimeout(() => {
         if (toast.parentNode) {

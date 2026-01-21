@@ -1,3 +1,4 @@
+
 // Marks and Reports Management Module
 document.addEventListener('DOMContentLoaded', function() {
     initializeMarksModule();
