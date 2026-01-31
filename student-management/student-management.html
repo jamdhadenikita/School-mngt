@@ -6,312 +6,373 @@
     <title>Student Management - School Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-   <style>
-    /* ============================================================================
-       MODERN MINIMAL ADMIN DASHBOARD STYLES - 2025/2026 STYLE
-       ========================================================================== */
-       
+    <style>
+        /* ============================================================================
+           MODERN MINIMAL ADMIN DASHBOARD STYLES - 2025/2026 STYLE
+           ========================================================================== */
+           
 
-    :root {
-        --primary: #4376ed;
-        --primary-dark:#f59e0b;
-        --primary-light: #3b82f6;
-        --primary-very-light: #eff6ff;
+        :root {
+            --primary: #4376ed;
+            --primary-dark:#f59e0b;
+            --primary-light: #3b82f6;
+            --primary-very-light: #eff6ff;
 
-        --gray-50: #f9fafb;
-        --gray-100: #f3f4f6;
-        --gray-200: #e5e7eb;
-        --gray-300: #d1d5db;
-        --gray-400: #9ca3af;
-        --gray-500: #6b7280;
-        --gray-600: #4b5563;
-        --gray-700: #374151;
-        --gray-800: #1f2937;
-        --gray-900: #111827;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
 
-        --success: #10b981;
-        --danger: #ef4444;
-        --warning: #f59e0b;
-    }
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
 
-    /* Reset & Base */
-    ::-webkit-scrollbar {
-        width: 6px;
-        height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-        background: var(--gray-100);
-        border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: var(--gray-400);
-        border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: var(--gray-500);
-    }
+        /* Reset & Base */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-400);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-500);
+        }
 
-    body {
-        background-color: var(--gray-50);
-    }
+        body {
+            background-color: var(--gray-50);
+        }
 
-    /* ============================================================================
-       SIDEBAR
-       ========================================================================== */
-    #sidebar {
-        width: 260px;
-        background-color: var(--gray-200);
-        transition: width 0.35s ease;
-        height: calc(100vh - 64px);
-        position: fixed;
-        top: 64px;
-        margin-top: 20px;
-        left: 0;
-        z-index: 40;
-        overflow-y: auto;
-        overflow-x: hidden;
-    }
-
-    #sidebar.collapsed {
-        width: 72px;
-    }
-
-    .nav-item {
-        white-space: nowrap;
-        overflow: hidden;
-        transition: all 0.25s ease;
-    }
-
-    .nav-icon {
-        font-size: 1.25rem;
-        color: #93c5fd;
-        min-width: 28px;
-        text-align: center;
-    }
-
-    .nav-text {
-        color: #e5e7eb;
-        transition: all 0.25s ease;
-    }
-
-    /* Collapsed state */
-    #sidebar.collapsed .nav-text {
-        opacity: 0;
-        visibility: hidden;
-        width: 0;
-        margin-left: 0 !important;
-    }
-
-    #sidebar.collapsed .nav-item {
-        justify-content: center;
-        padding-left: 0;
-        padding-right: 0;
-    }
-
-    #sidebar.collapsed .nav-icon {
-        font-size: 1.4rem;
-    }
-
-    /* Tooltips when collapsed */
-    #sidebar.collapsed .nav-item {
-        position: relative;
-    }
-
-    #sidebar.collapsed .nav-item:hover::after {
-        content: attr(data-tooltip);
-        position: absolute;
-        left: calc(100% + 12px);
-        top: 50%;
-        transform: translateY(-50%);
-        background: var(--gray-800);
-        color: white;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 0.875rem;
-        white-space: nowrap;
-        z-index: 50;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    }
-
-    /* Hide badges/counters when collapsed */
-    #sidebar.collapsed .ml-auto {
-        display: none;
-    }
-
-    /* Category headers */
-    #sidebar.collapsed .uppercase {
-        opacity: 0;
-        height: 0;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-    }
-
-    .nav-item:hover {
-        background-color: var(--primary-dark) !important;
-    }
-
-    .nav-item.bg-blue-700,
-    .nav-item[style*="background-color: rgb(29, 78, 216)"] {
-        background-color: var(--primary-dark) !important;
-    }
-
-    /* ============================================================================
-       RESPONSIVE SIDEBAR (Mobile / Tablet)
-       ========================================================================== */
-    @media (max-width: 1023px) {
+        /* ============================================================================
+           SIDEBAR
+           ========================================================================== */
         #sidebar {
-            width: 280px !important;
-            transform: translateX(-100%);
-            transition: transform 0.35s ease;
+            width: 260px;
+            background-color: var(--gray-200);
+            transition: width 0.35s ease;
+            height: calc(100vh - 64px);
+            position: fixed;
+            top: 64px;
+            margin-top: 20px;
+            left: 0;
+            z-index: 40;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
 
-        #sidebar.mobile-open {
-            transform: translateX(0);
+        #sidebar.collapsed {
+            width: 72px;
         }
 
-        #mainContent {
+        .nav-item {
+            white-space: nowrap;
+            overflow: hidden;
+            transition: all 0.25s ease;
+        }
+
+        .nav-icon {
+            font-size: 1.25rem;
+            color: #93c5fd;
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .nav-text {
+            color: #e5e7eb;
+            transition: all 0.25s ease;
+        }
+
+        /* Collapsed state */
+        #sidebar.collapsed .nav-text {
+            opacity: 0;
+            visibility: hidden;
+            width: 0;
             margin-left: 0 !important;
         }
 
-        .sidebar-overlay {
+        #sidebar.collapsed .nav-item {
+            justify-content: center;
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        #sidebar.collapsed .nav-icon {
+            font-size: 1.4rem;
+        }
+
+        /* Tooltips when collapsed */
+        #sidebar.collapsed .nav-item {
+            position: relative;
+        }
+
+        #sidebar.collapsed .nav-item:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: calc(100% + 12px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--gray-800);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            z-index: 50;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+
+        /* Hide badges/counters when collapsed */
+        #sidebar.collapsed .ml-auto {
+            display: none;
+        }
+
+        /* Category headers */
+        #sidebar.collapsed .uppercase {
+            opacity: 0;
+            height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .nav-item:hover {
+            background-color: var(--primary-dark) !important;
+        }
+
+        .nav-item.bg-blue-700,
+        .nav-item[style*="background-color: rgb(29, 78, 216)"] {
+            background-color: var(--primary-dark) !important;
+        }
+
+        /* ============================================================================
+           RESPONSIVE SIDEBAR (Mobile / Tablet)
+           ========================================================================== */
+        @media (max-width: 1023px) {
+            #sidebar {
+                width: 280px !important;
+                transform: translateX(-100%);
+                transition: transform 0.35s ease;
+            }
+
+            #sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            #mainContent {
+                margin-left: 0 !important;
+            }
+
+            .sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 64px 0 0 0;
+                background: rgba(0,0,0,0.45);
+                backdrop-filter: blur(4px);
+                z-index: 39;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+        }
+
+        @media (max-width: 640px) {
+            #sidebar.mobile-open {
+                width: 85vw !important;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            #sidebar {
+                transform: translateX(0) !important;
+            }
+
+            #mainContent {
+                margin-left: 260px;
+                transition: margin-left 0.35s ease;
+            }
+
+            #mainContent.sidebar-collapsed {
+                margin-left: 72px;
+            }
+        }
+
+        /* Make sure main content doesn't get overlapped */
+        main#mainContent {
+            min-height: calc(100vh - 64px);
+        }
+
+        /* Custom styles for student management */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transform: translateX(120%);
+            transition: transform 0.3s ease-in-out;
+            max-width: 350px;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        /* Modal */
+        .modal-overlay {
             display: none;
             position: fixed;
-            inset: 64px 0 0 0;
-            background: rgba(0,0,0,0.45);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 50;
             backdrop-filter: blur(4px);
-            z-index: 39;
         }
-
-        .sidebar-overlay.active {
+        
+        .modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Tabs */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
             display: block;
+            animation: fadeIn 0.3s ease-out;
         }
-    }
-
-    @media (max-width: 640px) {
-        #sidebar.mobile-open {
-            width: 85vw !important;
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-    }
-
-    @media (min-width: 1024px) {
-        #sidebar {
-            transform: translateX(0) !important;
+        
+        .tab-button.active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        
+        /* Status badges */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-paid {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-partial {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+        
+        /* Document Preview Styles */
+        .file-upload-container {
+            position: relative;
         }
 
-        #mainContent {
-            margin-left: 260px;
-            transition: margin-left 0.35s ease;
-        }
-
-        #mainContent.sidebar-collapsed {
-            margin-left: 72px;
-        }
-    }
-
-    /* Make sure main content doesn't get overlapped */
-    main#mainContent {
-        min-height: calc(100vh - 64px);
-    }
-
-    /* Custom styles for student management */
-    .toast {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 1000;
-        padding: 16px 24px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        transform: translateX(120%);
-        transition: transform 0.3s ease-in-out;
-        max-width: 350px;
-    }
-    
-    .toast.show {
-        transform: translateX(0);
-    }
-    
-    /* Modal */
-    .modal-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 50;
-        backdrop-filter: blur(4px);
-    }
-    
-    .modal-overlay.show {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-    
-    .modal-content {
-        max-height: 90vh;
-        overflow-y: auto;
-        animation: modalSlideIn 0.3s ease-out;
-    }
-    
-    @keyframes modalSlideIn {
-        from {
+        .file-upload-container input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
             opacity: 0;
-            transform: translateY(-20px);
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
+
+        #otherSportsDisplay .inline-flex,
+        #otherSubjectsDisplay .inline-flex {
+            animation: fadeIn 0.3s ease-out;
         }
-    }
-    
-    /* Tabs */
-    .tab-content {
-        display: none;
-    }
-    
-    .tab-content.active {
-        display: block;
-        animation: fadeIn 0.3s ease-out;
-    }
-    
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    
-    .tab-button.active {
-        background-color: #3b82f6;
-        color: white;
-    }
-    
-    /* Status badges */
-    .status-badge {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-    
-    .status-paid {
-        background-color: #dcfce7;
-        color: #166534;
-    }
-    
-    .status-pending {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-    
-    .status-partial {
-        background-color: #dbeafe;
-        color: #1e40af;
-    }
-</style>
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* QR Code Container */
+        .qrcode-canvas {
+            width: 200px !important;
+            height: 200px !important;
+        }
+
+        /* Payment status indicator */
+        .payment-status {
+            transition: all 0.3s ease;
+        }
+
+        .payment-status.success {
+            color: #10b981;
+            background-color: #d1fae5;
+        }
+
+        .payment-status.pending {
+            color: #f59e0b;
+            background-color: #fef3c7;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
     <!-- Toast Container -->
@@ -506,21 +567,6 @@
                         <i class="fas fa-calendar text-black nav-icon"></i>
                         <span class="nav-text text-black">School Calendar</span>
                     </a>
-                    
-                    <!-- <div class="pt-4 pb-2">
-                        <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">System</p>
-                    </div>
-                    
-                    <a data-tooltip="Notifications" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
-                        <i class="fas fa-bell text-black nav-icon"></i>
-                        <span class="nav-text text-black">Notifications</span>
-                        <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">3</span>
-                    </a> -->
-                    
-                    <!-- <a data-tooltip="Analytics & Reports" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
-                        <i class="fas fa-chart-pie text-black nav-icon"></i>
-                        <span class="nav-text text-black">Analytics & Reports</span>
-                    </a> -->
                 </div>
             </div>
         </aside>
@@ -686,8 +732,7 @@
                 <div id="addStudentSection" class="section hidden">
                     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8">
                         <div>
-                            <h2 class="text-2xl lg:text-3xl font-bold text-gray-800">Add New Student</h2>
-                            <!-- <p class="text-gray-600 mt-2">Complete the form below to register a new student</p> -->
+                            <h2 class="text-2xl lg:text-3xl font-bold text-gray-800" id="formTitle">Add New Student</h2>
                         </div>
                         <button onclick="window.location.href='student-management.html'" class="mt-4 lg:mt-0 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
                             <i class="fas fa-arrow-left mr-2"></i>Back to Students
@@ -706,6 +751,9 @@
                                 </button>
                                 <button onclick="switchTab('parent')" class="tab-button px-4 lg:px-6 py-4 font-medium text-sm transition-all duration-200 whitespace-nowrap" id="parentTab">
                                     <i class="fas fa-users mr-2"></i>Parent Details
+                                </button>
+                                <button onclick="switchTab('documents')" class="tab-button px-4 lg:px-6 py-4 font-medium text-sm transition-all duration-200 whitespace-nowrap" id="documentsTab">
+                                    <i class="fas fa-file-upload mr-2"></i>Documents Upload
                                 </button>
                                 <button onclick="switchTab('fees')" class="tab-button px-4 lg:px-6 py-4 font-medium text-sm transition-all duration-200 whitespace-nowrap" id="feesTab">
                                     <i class="fas fa-money-bill-wave mr-2"></i>Fees Details
@@ -726,11 +774,11 @@
                                                     <div id="studentPhotoPreview" class="h-40 w-40 lg:h-48 lg:w-48 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
                                                         <i class="fas fa-user text-4xl lg:text-6xl text-gray-400"></i>
                                                     </div>
-                                                    <div class="file-upload">
-                                                        <button type="button" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium">
+                                                    <div class="file-upload-container">
+                                                        <button type="button" onclick="document.getElementById('studentPhoto').click()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium">
                                                             <i class="fas fa-camera mr-2"></i>Upload Photo
                                                         </button>
-                                                        <input type="file" id="studentPhoto" accept="image/*" class="file-input">
+                                                        <input type="file" id="studentPhoto" accept="image/*" class="hidden" onchange="previewStudentPhoto(this)">
                                                     </div>
                                                     <p class="text-xs text-gray-500 mt-2">Max size: 2MB | Formats: JPG, PNG</p>
                                                 </div>
@@ -773,6 +821,37 @@
                                                         <option value="AB-">AB-</option>
                                                     </select>
                                                 </div>
+
+                                                <!-- Student Login Portal Credentials - ADDED AFTER BLOOD GROUP -->
+                                                <div class="pt-4 border-t border-gray-200">
+                                                    <h4 class="text-lg font-semibold text-gray-800 mb-3">
+                                                        <i class="fas fa-key mr-2"></i>Student Login Portal Credentials
+                                                    </h4>
+                                                    <div class="space-y-3">
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                                <i class="fas fa-id-card mr-2"></i>Student ID *
+                                                            </label>
+                                                            <input type="text" id="studentId" name="studentId" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Generate or enter student ID">
+                                                            <p class="text-xs text-gray-500 mt-1">Auto-generated: <span id="autoGeneratedId" class="font-semibold"></span></p>
+                                                        </div>
+                                                        
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                                <i class="fas fa-lock mr-2"></i>Student Password *
+                                                            </label>
+                                                            <input type="password" id="studentPassword" name="studentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Enter password">
+                                                        </div>
+                                                        
+                                                        <div>
+                                                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                                <i class="fas fa-lock mr-2"></i>Confirm Student Password *
+                                                            </label>
+                                                            <input type="password" id="confirmStudentPassword" name="confirmStudentPassword" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Confirm password">
+                                                            <p class="text-xs text-red-500 mt-1 hidden" id="passwordMismatch">Passwords do not match</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -780,12 +859,22 @@
                                     <!-- Right Column - Form Fields -->
                                     <div class="lg:col-span-2">
                                         <div class="space-y-6">
-                                            <!-- Student Name -->
+                                            <!-- Student Name Fields - CHANGED FROM SINGLE FULL NAME FIELD -->
                                             <div>
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                                    <i class="fas fa-user mr-2"></i>Full Name *
+                                                    <i class="fas fa-user mr-2"></i>Student Name *
                                                 </label>
-                                                <input type="text" name="studentName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Enter student's full name">
+                                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                                    <div>
+                                                        <input type="text" name="firstName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="First Name">
+                                                    </div>
+                                                    <div>
+                                                        <input type="text" name="middleName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Middle Name">
+                                                    </div>
+                                                    <div>
+                                                        <input type="text" name="lastName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Last Name">
+                                                    </div>
+                                                </div>
                                             </div>
                                             
                                             <!-- Local Address -->
@@ -877,23 +966,46 @@
                                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                                     <i class="fas fa-running mr-2"></i>Sports & Activities
                                                 </label>
-                                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                                    <label class="flex items-center space-x-2">
-                                                        <input type="checkbox" name="sports[]" value="cricket" class="rounded border-gray-300">
-                                                        <span class="text-sm">Cricket</span>
+                                                <div class="space-y-3">
+                                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                            <input type="checkbox" name="sports[]" value="cricket" class="rounded border-gray-300">
+                                                            <span>Cricket</span>
+                                                        </label>
+                                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                            <input type="checkbox" name="sports[]" value="football" class="rounded border-gray-300">
+                                                            <span>Football</span>
+                                                        </label>
+                                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                            <input type="checkbox" name="sports[]" value="basketball" class="rounded border-gray-300">
+                                                            <span>Basketball</span>
+                                                        </label>
+                                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                            <input type="checkbox" name="sports[]" value="chess" class="rounded border-gray-300">
+                                                            <span>Chess</span>
+                                                        </label>
+                                                    </div>
+                                                    
+                                                    <!-- Other Sports Input -->
+                                                    <div id="otherSportsContainer" class="hidden">
+                                                        <div class="flex items-center space-x-2">
+                                                            <input type="text" id="otherSportsInput" placeholder="Enter other sports (comma separated)" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm">
+                                                            <button type="button" onclick="addOtherSports()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm">
+                                                                Add
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Other Sports Checkbox -->
+                                                    <label class="flex items-center space-x-2 cursor-pointer">
+                                                        <input type="checkbox" id="otherSportsCheckbox" class="rounded border-gray-300" onchange="toggleOtherSports()">
+                                                        <span class="text-sm text-gray-700">Other (please specify)</span>
                                                     </label>
-                                                    <label class="flex items-center space-x-2">
-                                                        <input type="checkbox" name="sports[]" value="football" class="rounded border-gray-300">
-                                                        <span class="text-sm">Football</span>
-                                                    </label>
-                                                    <label class="flex items-center space-x-2">
-                                                        <input type="checkbox" name="sports[]" value="basketball" class="rounded border-gray-300">
-                                                        <span class="text-sm">Basketball</span>
-                                                    </label>
-                                                    <label class="flex items-center space-x-2">
-                                                        <input type="checkbox" name="sports[]" value="chess" class="rounded border-gray-300">
-                                                        <span class="text-sm">Chess</span>
-                                                    </label>
+                                                    
+                                                    <!-- Selected Other Sports Display -->
+                                                    <div id="otherSportsDisplay" class="space-y-1 hidden">
+                                                        <!-- Other sports will be displayed here -->
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -991,23 +1103,46 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
                                         <i class="fas fa-book mr-2"></i>Subjects
                                     </label>
-                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                            <input type="checkbox" name="subjects[]" value="english" class="rounded border-gray-300">
-                                            <span>English</span>
+                                    <div class="space-y-3">
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                            <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                <input type="checkbox" name="subjects[]" value="english" class="rounded border-gray-300">
+                                                <span>English</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                <input type="checkbox" name="subjects[]" value="hindi" class="rounded border-gray-300">
+                                                <span>Hindi</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                <input type="checkbox" name="subjects[]" value="mathematics" class="rounded border-gray-300">
+                                                <span>Mathematics</span>
+                                            </label>
+                                            <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                                                <input type="checkbox" name="subjects[]" value="science" class="rounded border-gray-300">
+                                                <span>Science</span>
+                                            </label>
+                                        </div>
+                                        
+                                        <!-- Other Subjects Input -->
+                                        <div id="otherSubjectsContainer" class="hidden">
+                                            <div class="flex items-center space-x-2">
+                                                <input type="text" id="otherSubjectsInput" placeholder="Enter other subjects (comma separated)" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-sm">
+                                                <button type="button" onclick="addOtherSubjects()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm">
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Other Subjects Checkbox -->
+                                        <label class="flex items-center space-x-2 cursor-pointer">
+                                            <input type="checkbox" id="otherSubjectsCheckbox" class="rounded border-gray-300" onchange="toggleOtherSubjects()">
+                                            <span class="text-sm text-gray-700">Other (please specify)</span>
                                         </label>
-                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                            <input type="checkbox" name="subjects[]" value="hindi" class="rounded border-gray-300">
-                                            <span>Hindi</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                            <input type="checkbox" name="subjects[]" value="mathematics" class="rounded border-gray-300">
-                                            <span>Mathematics</span>
-                                        </label>
-                                        <label class="flex items-center space-x-2 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
-                                            <input type="checkbox" name="subjects[]" value="science" class="rounded border-gray-300">
-                                            <span>Science</span>
-                                        </label>
+                                        
+                                        <!-- Selected Other Subjects Display -->
+                                        <div id="otherSubjectsDisplay" class="space-y-1 hidden">
+                                            <!-- Other subjects will be displayed here -->
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -1162,6 +1297,209 @@
                                     <button type="button" onclick="switchTab('academic')" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
                                         <i class="fas fa-arrow-left mr-2"></i>Back to Academic Details
                                     </button>
+                                    <button type="button" onclick="switchTab('documents')" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium">
+                                        Next: Documents Upload <i class="fas fa-arrow-right ml-2"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Documents Upload Tab -->
+                        <div id="documentsTabContent" class="tab-content p-4 lg:p-8 form-tab-container">
+                            <div class="space-y-6">
+                                <!-- Information Notice -->
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                                    <h4 class="text-lg font-semibold text-blue-800 mb-4">
+                                        <i class="fas fa-info-circle mr-2"></i>Important Information
+                                    </h4>
+                                    <ul class="space-y-2 text-sm text-blue-700">
+                                        <li><i class="fas fa-check-circle mr-2"></i>All documents are optional but recommended</li>
+                                        <li><i class="fas fa-check-circle mr-2"></i>Maximum file size: 2MB per document</li>
+                                        <li><i class="fas fa-check-circle mr-2"></i>Accepted formats: JPG, PNG, PDF</li>
+                                        <li><i class="fas fa-check-circle mr-2"></i>You can upload documents later from student profile</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Document Upload Grid -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Student Aadhar Card -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                        <h5 class="font-semibold text-gray-700 mb-3">
+                                            <i class="fas fa-id-card mr-2 text-blue-600"></i>Student's Aadhar Card
+                                        </h5>
+                                        <div class="file-upload-container">
+                                            <div id="studentAadharPreview" class="h-40 w-full bg-gray-100 rounded-lg mb-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4">
+                                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                                <p class="text-sm text-gray-500 text-center">Upload student's Aadhar card image</p>
+                                                <p class="text-xs text-gray-400">Front side</p>
+                                            </div>
+                                            <input type="file" id="studentAadharImage" accept=".jpg,.jpeg,.png,.pdf" class="hidden" onchange="previewDocument(this, 'studentAadharPreview')">
+                                            <div class="flex items-center justify-between">
+                                                <button type="button" onclick="document.getElementById('studentAadharImage').click()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm">
+                                                    <i class="fas fa-upload mr-2"></i>Upload
+                                                </button>
+                                                <button type="button" onclick="removeDocument('studentAadharImage', 'studentAadharPreview')" class="px-3 py-1 text-red-600 hover:text-red-800 text-sm">
+                                                    <i class="fas fa-trash mr-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Birth Certificate -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                        <h5 class="font-semibold text-gray-700 mb-3">
+                                            <i class="fas fa-certificate mr-2 text-green-600"></i>Birth Certificate
+                                        </h5>
+                                        <div class="file-upload-container">
+                                            <div id="birthCertificatePreview" class="h-40 w-full bg-gray-100 rounded-lg mb-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4">
+                                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                                <p class="text-sm text-gray-500 text-center">Upload birth certificate</p>
+                                                <p class="text-xs text-gray-400">PDF or Image</p>
+                                            </div>
+                                            <input type="file" id="birthCertificateImage" accept=".jpg,.jpeg,.png,.pdf" class="hidden" onchange="previewDocument(this, 'birthCertificatePreview')">
+                                            <div class="flex items-center justify-between">
+                                                <button type="button" onclick="document.getElementById('birthCertificateImage').click()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 text-sm">
+                                                    <i class="fas fa-upload mr-2"></i>Upload
+                                                </button>
+                                                <button type="button" onclick="removeDocument('birthCertificateImage', 'birthCertificatePreview')" class="px-3 py-1 text-red-600 hover:text-red-800 text-sm">
+                                                    <i class="fas fa-trash mr-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Father's Aadhar Card -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                        <h5 class="font-semibold text-gray-700 mb-3">
+                                            <i class="fas fa-male mr-2 text-blue-600"></i>Father's Aadhar Card
+                                        </h5>
+                                        <div class="file-upload-container">
+                                            <div id="fatherAadharPreview" class="h-40 w-full bg-gray-100 rounded-lg mb-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4">
+                                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                                <p class="text-sm text-gray-500 text-center">Upload father's Aadhar card</p>
+                                                <p class="text-xs text-gray-400">Front side</p>
+                                            </div>
+                                            <input type="file" id="fatherAadharImage" accept=".jpg,.jpeg,.png,.pdf" class="hidden" onchange="previewDocument(this, 'fatherAadharPreview')">
+                                            <div class="flex items-center justify-between">
+                                                <button type="button" onclick="document.getElementById('fatherAadharImage').click()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm">
+                                                    <i class="fas fa-upload mr-2"></i>Upload
+                                                </button>
+                                                <button type="button" onclick="removeDocument('fatherAadharImage', 'fatherAadharPreview')" class="px-3 py-1 text-red-600 hover:text-red-800 text-sm">
+                                                    <i class="fas fa-trash mr-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Mother's Aadhar Card -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                        <h5 class="font-semibold text-gray-700 mb-3">
+                                            <i class="fas fa-female mr-2 text-pink-600"></i>Mother's Aadhar Card
+                                        </h5>
+                                        <div class="file-upload-container">
+                                            <div id="motherAadharPreview" class="h-40 w-full bg-gray-100 rounded-lg mb-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4">
+                                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                                <p class="text-sm text-gray-500 text-center">Upload mother's Aadhar card</p>
+                                                <p class="text-xs text-gray-400">Front side</p>
+                                            </div>
+                                            <input type="file" id="motherAadharImage" accept=".jpg,.jpeg,.png,.pdf" class="hidden" onchange="previewDocument(this, 'motherAadharPreview')">
+                                            <div class="flex items-center justify-between">
+                                                <button type="button" onclick="document.getElementById('motherAadharImage').click()" class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-all duration-200 text-sm">
+                                                    <i class="fas fa-upload mr-2"></i>Upload
+                                                </button>
+                                                <button type="button" onclick="removeDocument('motherAadharImage', 'motherAadharPreview')" class="px-3 py-1 text-red-600 hover:text-red-800 text-sm">
+                                                    <i class="fas fa-trash mr-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Transfer Certificate -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                        <h5 class="font-semibold text-gray-700 mb-3">
+                                            <i class="fas fa-exchange-alt mr-2 text-purple-600"></i>Transfer Certificate
+                                        </h5>
+                                        <div class="file-upload-container">
+                                            <div id="transferCertificatePreview" class="h-40 w-full bg-gray-100 rounded-lg mb-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4">
+                                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                                <p class="text-sm text-gray-500 text-center">Upload transfer certificate</p>
+                                                <p class="text-xs text-gray-400">From previous school</p>
+                                            </div>
+                                            <input type="file" id="transferCertificateImage" accept=".jpg,.jpeg,.png,.pdf" class="hidden" onchange="previewDocument(this, 'transferCertificatePreview')">
+                                            <div class="flex items-center justify-between">
+                                                <button type="button" onclick="document.getElementById('transferCertificateImage').click()" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 text-sm">
+                                                    <i class="fas fa-upload mr-2"></i>Upload
+                                                </button>
+                                                <button type="button" onclick="removeDocument('transferCertificateImage', 'transferCertificatePreview')" class="px-3 py-1 text-red-600 hover:text-red-800 text-sm">
+                                                    <i class="fas fa-trash mr-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Father's Income Certificate -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                        <h5 class="font-semibold text-gray-700 mb-3">
+                                            <i class="fas fa-money-bill-wave mr-2 text-yellow-600"></i>Father's Income Certificate
+                                        </h5>
+                                        <div class="file-upload-container">
+                                            <div id="fatherIncomePreview" class="h-40 w-full bg-gray-100 rounded-lg mb-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4">
+                                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                                <p class="text-sm text-gray-500 text-center">Upload father's income certificate</p>
+                                                <p class="text-xs text-gray-400">For scholarship/fee concession</p>
+                                            </div>
+                                            <input type="file" id="fatherIncomeCertificateImage" accept=".jpg,.jpeg,.png,.pdf" class="hidden" onchange="previewDocument(this, 'fatherIncomePreview')">
+                                            <div class="flex items-center justify-between">
+                                                <button type="button" onclick="document.getElementById('fatherIncomeCertificateImage').click()" class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all duration-200 text-sm">
+                                                    <i class="fas fa-upload mr-2"></i>Upload
+                                                </button>
+                                                <button type="button" onclick="removeDocument('fatherIncomeCertificateImage', 'fatherIncomePreview')" class="px-3 py-1 text-red-600 hover:text-red-800 text-sm">
+                                                    <i class="fas fa-trash mr-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Caste Certificate -->
+                                    <div class="bg-white border border-gray-200 rounded-lg p-4">
+                                        <h5 class="font-semibold text-gray-700 mb-3">
+                                            <i class="fas fa-file-contract mr-2 text-red-600"></i>Caste Certificate
+                                        </h5>
+                                        <div class="file-upload-container">
+                                            <div id="casteCertificatePreview" class="h-40 w-full bg-gray-100 rounded-lg mb-3 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-4">
+                                                <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+                                                <p class="text-sm text-gray-500 text-center">Upload caste certificate</p>
+                                                <p class="text-xs text-gray-400">For reservation benefits</p>
+                                            </div>
+                                            <input type="file" id="castCertificateImage" accept=".jpg,.jpeg,.png,.pdf" class="hidden" onchange="previewDocument(this, 'casteCertificatePreview')">
+                                            <div class="flex items-center justify-between">
+                                                <button type="button" onclick="document.getElementById('castCertificateImage').click()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 text-sm">
+                                                    <i class="fas fa-upload mr-2"></i>Upload
+                                                </button>
+                                                <button type="button" onclick="removeDocument('castCertificateImage', 'casteCertificatePreview')" class="px-3 py-1 text-red-600 hover:text-red-800 text-sm">
+                                                    <i class="fas fa-trash mr-1"></i>Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Document Summary -->
+                                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                    <h5 class="font-semibold text-gray-700 mb-3">
+                                        <i class="fas fa-clipboard-list mr-2"></i>Document Upload Status
+                                    </h5>
+                                    <div id="documentStatus" class="text-sm text-gray-600">
+                                        <!-- Status will be updated here -->
+                                        No documents uploaded yet
+                                    </div>
+                                </div>
+
+                                <!-- Navigation Buttons -->
+                                <div class="flex justify-between mt-8 pt-6 border-t border-gray-200">
+                                    <button type="button" onclick="switchTab('parent')" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                                        <i class="fas fa-arrow-left mr-2"></i>Back to Parent Details
+                                    </button>
                                     <button type="button" onclick="switchTab('fees')" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium">
                                         Next: Fees Details <i class="fas fa-arrow-right ml-2"></i>
                                     </button>
@@ -1237,7 +1575,7 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Payment Mode -->
+                               <!-- Payment Method - UPDATED WITH ONLY TWO OPTIONS -->
                                 <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
                                     <h4 class="text-lg font-semibold text-green-800 mb-4">
                                         <i class="fas fa-credit-card mr-2"></i>Payment Mode Selection
@@ -1300,28 +1638,68 @@
                                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                                 Initial Payment Amount *
                                             </label>
-                                            <input type="number" id="initialPayment" name="initialPayment" required min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Amount to be paid now" value="10000">
+                                            <input type="number" id="initialPayment" name="initialPayment" required min="0" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Amount to be paid now" value="10000" oninput="updatePaymentDetails()">
                                             <p class="text-sm text-gray-500 mt-1">Balance amount: <span id="balanceAmount" class="font-semibold">₹0</span></p>
                                         </div>
                                         
-                                        <!-- Payment Method -->
+                                        <!-- Payment Method - UPDATED WITH ONLY TWO OPTIONS -->
                                         <div>
                                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                                 Payment Method
                                             </label>
                                             <div class="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
                                                 <label class="flex items-center space-x-2">
-                                                    <input type="radio" name="paymentMethod" value="cash" checked class="h-4 w-4 text-blue-600">
+                                                    <input type="radio" name="paymentMethod" value="cash" checked class="h-4 w-4 text-blue-600" onchange="handlePaymentMethodChange()">
                                                     <span class="text-sm">Cash</span>
                                                 </label>
                                                 <label class="flex items-center space-x-2">
-                                                    <input type="radio" name="paymentMethod" value="cheque" class="h-4 w-4 text-blue-600">
-                                                    <span class="text-sm">Cheque</span>
-                                                </label>
-                                                <label class="flex items-center space-x-2">
-                                                    <input type="radio" name="paymentMethod" value="online" class="h-4 w-4 text-blue-600">
+                                                    <input type="radio" name="paymentMethod" value="online" class="h-4 w-4 text-blue-600" onchange="handlePaymentMethodChange()">
                                                     <span class="text-sm">Online Transfer</span>
                                                 </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- QR Code Section for Online Transfer - ENHANCED -->
+                                        <div id="qrCodeSection" class="hidden mt-6">
+                                            <div class="bg-white rounded-lg p-4 border border-gray-200">
+                                                <h5 class="font-semibold text-gray-700 mb-3">Online Transfer Details</h5>
+                                                <div id="qrCodeContainer" class="flex flex-col items-center justify-center p-4">
+                                                    <!-- QR Code will be generated here -->
+                                                    <div class="text-center mb-4">
+                                                        <p class="text-sm text-gray-600 mb-2">Scan this QR code to make payment</p>
+                                                        <div id="qrCodeDisplay" class="w-48 h-48 bg-gray-100 flex items-center justify-center rounded-lg mb-4 border border-gray-300">
+                                                            <div class="text-center p-4">
+                                                                <div id="qrCodeCanvas"></div>
+                                                            </div>
+                                                        </div>
+                                                        <p class="text-sm font-semibold">Amount: <span id="qrAmount">₹10,000</span></p>
+                                                        <p class="text-xs text-gray-500 mt-1">Bank: Kunash School Account</p>
+                                                        <p class="text-xs text-gray-500">Account No: 123456789012</p>
+                                                        <p class="text-xs text-gray-500">IFSC: KUNS0001234</p>
+                                                    </div>
+                                                    <div class="flex space-x-2">
+                                                        <button type="button" onclick="closeQRCode()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 text-sm">
+                                                            <i class="fas fa-times mr-2"></i>Close QR Code
+                                                        </button>
+                                                        <button type="button" onclick="markPaymentAsComplete()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 text-sm">
+                                                            <i class="fas fa-check mr-2"></i>Payment Done
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <!-- Transaction ID Section -->
+                                                <div id="transactionIdSection" class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                                        Transaction ID *
+                                                    </label>
+                                                    <div class="flex items-center space-x-2">
+                                                        <input type="text" id="transactionId" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200" placeholder="Enter transaction ID">
+                                                        <button type="button" onclick="verifyTransactionId()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm">
+                                                            <i class="fas fa-check mr-2"></i>Verify
+                                                        </button>
+                                                    </div>
+                                                    <div id="transactionStatus" class="mt-2"></div>
+                                                    <p class="text-xs text-gray-500 mt-1">Please enter the transaction ID provided by your bank after payment</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1365,8 +1743,8 @@
                                 
                                 <!-- Form Actions -->
                                 <div class="flex flex-col lg:flex-row justify-between mt-8 pt-6 border-t border-gray-200">
-                                    <button type="button" onclick="switchTab('parent')" class="mb-4 lg:mb-0 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
-                                        <i class="fas fa-arrow-left mr-2"></i>Back to Parent Details
+                                    <button type="button" onclick="switchTab('documents')" class="mb-4 lg:mb-0 px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                                        <i class="fas fa-arrow-left mr-2"></i>Back to Documents Upload
                                     </button>
                                     
                                     <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
@@ -1374,7 +1752,7 @@
                                             <i class="fas fa-redo mr-2"></i>Reset Form
                                         </button>
                                         
-                                        <button type="button" onclick="handleAddStudent()" class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl">
+                                        <button type="button" id="submitButton" onclick="handleAddStudent()" class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl">
                                             <i class="fas fa-check-circle mr-2"></i>Register Student
                                         </button>
                                     </div>
@@ -1402,5 +1780,319 @@
     </div>
 
    <script src="/student-management/student-management.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+   <script>
+    // Global variables
+    let otherSports = [];
+    let otherSubjects = [];
+    let transactionVerified = false;
+
+    // 1. Fix image upload
+    function previewStudentPhoto(input) {
+        const file = input.files[0];
+        if (!file) return;
+        
+        // Validate file size (2MB limit)
+        if (file.size > 2 * 1024 * 1024) {
+            Toast.show('File size exceeds 2MB limit', 'error');
+            input.value = '';
+            return;
+        }
+        
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+        if (!validTypes.includes(file.type)) {
+            Toast.show('Please upload JPG or PNG files only', 'error');
+            input.value = '';
+            return;
+        }
+        
+        const previewElement = document.getElementById('studentPhotoPreview');
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            previewElement.innerHTML = `
+                <img src="${e.target.result}" class="h-full w-full object-cover rounded-full" alt="Student Photo">
+            `;
+        };
+        
+        reader.readAsDataURL(file);
+        Toast.show('Photo uploaded successfully', 'success');
+    }
+
+    // 2. Handle Student ID and Password
+    function generateStudentId() {
+        const year = new Date().getFullYear().toString().slice(-2);
+        const random = Math.floor(1000 + Math.random() * 9000);
+        return `STU${year}${random}`;
+    }
+
+    // Auto-generate student ID when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const autoGeneratedId = generateStudentId();
+        document.getElementById('autoGeneratedId').textContent = autoGeneratedId;
+        document.getElementById('studentId').value = autoGeneratedId;
+        
+        // Validate password match
+        const password = document.getElementById('studentPassword');
+        const confirmPassword = document.getElementById('confirmStudentPassword');
+        const mismatchMessage = document.getElementById('passwordMismatch');
+        
+        function checkPasswordMatch() {
+            if (password.value && confirmPassword.value && password.value !== confirmPassword.value) {
+                mismatchMessage.classList.remove('hidden');
+            } else {
+                mismatchMessage.classList.add('hidden');
+            }
+        }
+        
+        password.addEventListener('input', checkPasswordMatch);
+        confirmPassword.addEventListener('input', checkPasswordMatch);
+
+        // Set default date for first installment
+        const today = new Date();
+        const firstInstallmentDate = document.getElementById('firstInstallmentDate');
+        if (firstInstallmentDate) {
+            today.setMonth(today.getMonth() + 1);
+            const nextMonth = today.toISOString().split('T')[0];
+            firstInstallmentDate.value = nextMonth;
+        }
+    });
+
+    // 3. Enhanced manual add options for sports and subjects
+    function toggleOtherSports() {
+        const checkbox = document.getElementById('otherSportsCheckbox');
+        const container = document.getElementById('otherSportsContainer');
+        
+        if (checkbox.checked) {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+
+    function addOtherSports() {
+        const input = document.getElementById('otherSportsInput');
+        const value = input.value.trim();
+        
+        if (!value) {
+            Toast.show('Please enter sports names', 'error');
+            return;
+        }
+        
+        const sports = value.split(',').map(sport => sport.trim()).filter(sport => sport);
+        const display = document.getElementById('otherSportsDisplay');
+        
+        if (sports.length > 0) {
+            display.classList.remove('hidden');
+            sports.forEach(sport => {
+                if (!otherSports.includes(sport.toLowerCase())) {
+                    otherSports.push(sport.toLowerCase());
+                }
+            });
+            updateOtherSportsDisplay();
+            input.value = '';
+            Toast.show(`${sports.length} sport(s) added`, 'success');
+        }
+    }
+
+    function toggleOtherSubjects() {
+        const checkbox = document.getElementById('otherSubjectsCheckbox');
+        const container = document.getElementById('otherSubjectsContainer');
+        
+        if (checkbox.checked) {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+    }
+
+    function addOtherSubjects() {
+        const input = document.getElementById('otherSubjectsInput');
+        const value = input.value.trim();
+        
+        if (!value) {
+            Toast.show('Please enter subject names', 'error');
+            return;
+        }
+        
+        const subjects = value.split(',').map(subject => subject.trim()).filter(subject => subject);
+        const display = document.getElementById('otherSubjectsDisplay');
+        
+        if (subjects.length > 0) {
+            display.classList.remove('hidden');
+            subjects.forEach(subject => {
+                if (!otherSubjects.includes(subject.toLowerCase())) {
+                    otherSubjects.push(subject.toLowerCase());
+                }
+            });
+            updateOtherSubjectsDisplay();
+            input.value = '';
+            Toast.show(`${subjects.length} subject(s) added`, 'success');
+        }
+    }
+
+    // 4. Handle Payment Method Change
+    function handlePaymentMethodChange() {
+        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+        const qrCodeSection = document.getElementById('qrCodeSection');
+        
+        if (paymentMethod === 'online') {
+            // Show QR code section
+            qrCodeSection.classList.remove('hidden');
+            
+            // Generate QR code based on initial payment amount
+            generateQRCode();
+        } else {
+            // Hide both sections for cash payment
+            qrCodeSection.classList.add('hidden');
+            transactionVerified = false;
+        }
+        
+        // Reset transaction verification status
+        document.getElementById('transactionStatus').innerHTML = '';
+        document.getElementById('transactionId').value = '';
+    }
+
+    // Generate QR Code
+    function generateQRCode() {
+        const qrCodeCanvas = document.getElementById('qrCodeCanvas');
+        const initialPayment = document.getElementById('initialPayment').value;
+        
+        // Clear previous QR code
+        qrCodeCanvas.innerHTML = '';
+        
+        // Update QR code amount display
+        document.getElementById('qrAmount').textContent = `₹${parseInt(initialPayment).toLocaleString()}`;
+        
+        // Generate payment details for QR code
+        const paymentData = {
+            account: '123456789012',
+            ifsc: 'KUNS0001234',
+            amount: initialPayment,
+            name: 'Kunash School',
+            note: 'Student Fees Payment'
+        };
+        
+        // Create QR code using the qrcode library
+        const qr = new QRCode(qrCodeCanvas, {
+            text: JSON.stringify(paymentData),
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        Toast.show('QR code generated successfully', 'success');
+    }
+
+    // Update payment details
+    function updatePaymentDetails() {
+        // Update QR code if online payment is selected
+        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+        if (paymentMethod && paymentMethod.value === 'online') {
+            generateQRCode();
+        }
+        
+        // Update fee calculations
+        updateFeeCalculations();
+    }
+
+    // Close QR Code
+    function closeQRCode() {
+        document.getElementById('qrCodeSection').classList.add('hidden');
+    }
+
+    // Mark payment as complete
+    function markPaymentAsComplete() {
+        const transactionIdInput = document.getElementById('transactionId');
+        const transactionId = transactionIdInput.value.trim();
+        
+        if (!transactionId) {
+            Toast.show('Please enter transaction ID before marking payment as complete', 'error');
+            transactionIdInput.focus();
+            return;
+        }
+        
+        // Show verification in progress
+        const statusElement = document.getElementById('transactionStatus');
+        statusElement.innerHTML = '<div class="flex items-center text-yellow-600"><i class="fas fa-spinner fa-spin mr-2"></i> Verifying transaction...</div>';
+        
+        // Simulate verification process
+        setTimeout(() => {
+            if (transactionId.length >= 8) {
+                statusElement.innerHTML = '<div class="flex items-center text-green-600"><i class="fas fa-check-circle mr-2"></i> Transaction verified successfully!</div>';
+                transactionVerified = true;
+                Toast.show('Transaction verified successfully!', 'success');
+            } else {
+                statusElement.innerHTML = '<div class="flex items-center text-red-600"><i class="fas fa-times-circle mr-2"></i> Invalid transaction ID. Please check and try again.</div>';
+                transactionVerified = false;
+                Toast.show('Invalid transaction ID', 'error');
+            }
+        }, 1500);
+    }
+
+    // Verify Transaction ID
+    function verifyTransactionId() {
+        markPaymentAsComplete();
+    }
+
+    // Update other sports display
+    function updateOtherSportsDisplay() {
+        const display = document.getElementById('otherSportsDisplay');
+        if (otherSports.length === 0) {
+            display.classList.add('hidden');
+            return;
+        }
+        
+        let html = '<div class="flex flex-wrap gap-2 mt-2">';
+        otherSports.forEach((sport, index) => {
+            html += `
+                <div class="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                    <span>${sport}</span>
+                    <button type="button" onclick="removeOtherSport(${index})" class="ml-2 text-red-500 hover:text-red-700">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+            `;
+        });
+        html += '</div>';
+        display.innerHTML = html;
+    }
+
+    // Update other subjects display
+    function updateOtherSubjectsDisplay() {
+        const display = document.getElementById('otherSubjectsDisplay');
+        if (otherSubjects.length === 0) {
+            display.classList.add('hidden');
+            return;
+        }
+        
+        let html = '<div class="flex flex-wrap gap-2 mt-2">';
+        otherSubjects.forEach((subject, index) => {
+            html += `
+                <div class="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                    <span>${subject}</span>
+                    <button type="button" onclick="removeOtherSubject(${index})" class="ml-2 text-red-500 hover:text-red-700">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+            `;
+        });
+        html += '</div>';
+        display.innerHTML = html;
+    }
+
+    function removeOtherSport(index) {
+        otherSports.splice(index, 1);
+        updateOtherSportsDisplay();
+    }
+
+    function removeOtherSubject(index) {
+        otherSubjects.splice(index, 1);
+        updateOtherSubjectsDisplay();
+    }
+   </script>
 </body>
 </html>

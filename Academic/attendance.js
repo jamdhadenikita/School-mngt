@@ -25,6 +25,11 @@ let summaryMonth = new Date().getMonth();
 let summaryYear = new Date().getFullYear();
 let summaryClass = 'all';
 
+// Bulk update variables
+let bulkSelectedStudents = new Set(); // Set of student IDs
+let bulkStatus = 'present';
+let bulkStudentListData = []; // Store the filtered student list for bulk update
+
 // Define holidays (example dates)
 const holidays = [
     '2024-01-01', // New Year's Day
@@ -717,8 +722,19 @@ function nextPage() {
     }
 }
 
-// Modal Functions
+// Bulk Update Modal Functions
 function openBulkUpdateModal() {
+    // Reset bulk selection
+    bulkSelectedStudents.clear();
+    bulkStatus = 'present';
+    
+    // Load students for bulk update (use filteredData or all students based on filters)
+    bulkStudentListData = [...filteredData];
+    
+    // Update UI
+    updateBulkModalUI();
+    
+    // Show modal
     document.getElementById('bulkUpdateModal').classList.add('active');
 }
 
@@ -726,42 +742,241 @@ function closeBulkUpdateModal() {
     document.getElementById('bulkUpdateModal').classList.remove('active');
 }
 
-let bulkStatus = 'present';
+function updateBulkModalUI() {
+    // Update student count
+    const totalStudents = bulkStudentListData.length;
+    document.getElementById('bulkStudentCount').textContent = `${totalStudents} students`;
+    
+    // Update status display
+    document.getElementById('bulkStatusDisplay').textContent = bulkStatus.charAt(0).toUpperCase() + bulkStatus.slice(1);
+    
+    // Update selected count
+    updateSelectedCount();
+    
+    // Highlight selected status button
+    document.querySelectorAll('.bulk-status-btn').forEach(btn => {
+        btn.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+    });
+    
+    const selectedBtn = document.getElementById(`bulkBtn${bulkStatus.charAt(0).toUpperCase() + bulkStatus.slice(1)}`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
+    }
+    
+    // Render student list
+    renderBulkStudentList();
+}
+
+function renderBulkStudentList() {
+    const studentListContainer = document.getElementById('bulkStudentList');
+    
+    if (bulkStudentListData.length === 0) {
+        studentListContainer.innerHTML = `
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-user-slash text-3xl mb-3"></i>
+                <p>No students found</p>
+                <p class="text-sm mt-1">Apply different filters to see students</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let studentListHTML = '';
+    
+    bulkStudentListData.forEach(student => {
+        const isSelected = bulkSelectedStudents.has(student.id);
+        const currentStatus = student.todayStatus || 'none';
+        const statusClass = getStatusIndicatorClass(currentStatus);
+        const statusText = currentStatus === 'none' ? 'Not marked' : currentStatus.charAt(0).toUpperCase() + currentStatus.slice(1);
+        
+        studentListHTML += `
+            <div class="student-list-item ${isSelected ? 'selected' : ''}" onclick="toggleStudentSelection(${student.id}, event)">
+                <div class="flex items-center">
+                    <input type="checkbox" 
+                           class="student-checkbox h-4 w-4 mr-3" 
+                           ${isSelected ? 'checked' : ''}
+                           onclick="event.stopPropagation(); toggleStudentSelection(${student.id})">
+                    <div class="flex-1">
+                        <div class="font-medium text-gray-800">${student.name}</div>
+                        <div class="text-sm text-gray-600 flex items-center mt-1">
+                            <span class="px-2 py-0.5 bg-gray-100 rounded text-xs mr-3">${student.class}</span>
+                            <span class="mr-3">Roll No: ${student.rollNo}</span>
+                            <span class="flex items-center">
+                                <span class="status-indicator ${statusClass}"></span>
+                                <span>${statusText}</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    studentListContainer.innerHTML = studentListHTML;
+}
+
+function getStatusIndicatorClass(status) {
+    switch(status) {
+        case 'present': return 'present';
+        case 'absent': return 'absent';
+        case 'late': return 'late';
+        case 'halfday': return 'halfday';
+        default: return 'none';
+    }
+}
 
 function selectBulkStatus(status) {
     bulkStatus = status;
-    // Update UI to show selected status
-    const buttons = document.querySelectorAll('#bulkUpdateModal button');
-    buttons.forEach(btn => {
-        if (btn.textContent.includes(status.charAt(0).toUpperCase() + status.slice(1))) {
-            btn.classList.add('ring-2', 'ring-blue-500');
-        } else {
-            btn.classList.remove('ring-2', 'ring-blue-500');
+    updateBulkModalUI();
+}
+
+function toggleStudentSelection(studentId, event = null) {
+    if (event) {
+        event.stopPropagation();
+    }
+    
+    if (bulkSelectedStudents.has(studentId)) {
+        bulkSelectedStudents.delete(studentId);
+    } else {
+        bulkSelectedStudents.add(studentId);
+    }
+    
+    updateSelectedCount();
+    
+    // Update the checkbox in the list
+    const checkbox = document.querySelector(`.student-list-item input[onclick*="${studentId}"]`);
+    if (checkbox) {
+        checkbox.checked = bulkSelectedStudents.has(studentId);
+        const listItem = checkbox.closest('.student-list-item');
+        if (listItem) {
+            if (bulkSelectedStudents.has(studentId)) {
+                listItem.classList.add('selected');
+            } else {
+                listItem.classList.remove('selected');
+            }
         }
+    }
+    
+    // Update "Select All" checkbox
+    updateSelectAllCheckbox();
+}
+
+function updateSelectedCount() {
+    const selectedCount = bulkSelectedStudents.size;
+    const totalStudents = bulkStudentListData.length;
+    
+    document.getElementById('bulkSelectedCount').textContent = `${selectedCount} of ${totalStudents} students selected`;
+    document.getElementById('bulkUpdateCount').textContent = selectedCount;
+    document.getElementById('applyCountBadge').textContent = selectedCount;
+    
+    // Update apply button state
+    const applyBtn = document.getElementById('applyBulkBtn');
+    if (selectedCount === 0) {
+        applyBtn.disabled = true;
+        applyBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        applyBtn.disabled = false;
+        applyBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+function selectAllStudents() {
+    bulkStudentListData.forEach(student => {
+        bulkSelectedStudents.add(student.id);
     });
+    updateSelectedCount();
+    renderBulkStudentList();
+}
+
+function deselectAllStudents() {
+    bulkSelectedStudents.clear();
+    updateSelectedCount();
+    renderBulkStudentList();
+}
+
+function toggleSelectAll(checked) {
+    if (checked) {
+        selectAllStudents();
+    } else {
+        deselectAllStudents();
+    }
+}
+
+function updateSelectAllCheckbox() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const totalStudents = bulkStudentListData.length;
+    
+    if (bulkSelectedStudents.size === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (bulkSelectedStudents.size === totalStudents) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
 }
 
 function applyBulkUpdate() {
+    const selectedCount = bulkSelectedStudents.size;
+    if (selectedCount === 0) {
+        showToast('Please select at least one student', 'error');
+        return;
+    }
+    
     const notes = document.getElementById('bulkNotes').value;
+    const confirmMessage = `Are you sure you want to update attendance for ${selectedCount} student(s) to ${bulkStatus}?`;
+    
+    if (!confirm(confirmMessage)) {
+        return;
+    }
     
     showLoading();
     
-    // Update all filtered students
-    filteredData.forEach(student => {
-        updateAttendance(student.id, bulkStatus);
-        
-        // Add notes if provided
-        if (notes) {
-            const attendance = student.attendance.find(a => a.date === selectedDate);
-            if (attendance) {
-                attendance.notes = notes;
+    // Update attendance for selected students
+    let updatedCount = 0;
+    bulkSelectedStudents.forEach(studentId => {
+        const student = mockStudents.find(s => s.id === studentId);
+        if (student) {
+            // Update attendance
+            const existingAttendance = student.attendance.find(a => a.date === selectedDate);
+            const time = bulkStatus === 'present' || bulkStatus === 'late' ? 
+                new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) : null;
+            
+            if (existingAttendance) {
+                existingAttendance.status = bulkStatus;
+                existingAttendance.time = time;
+                if (notes) {
+                    existingAttendance.notes = notes;
+                } else if (!existingAttendance.notes) {
+                    existingAttendance.notes = getDefaultNote(bulkStatus);
+                }
+            } else {
+                student.attendance.push({
+                    date: selectedDate,
+                    status: bulkStatus,
+                    time: time,
+                    notes: notes || getDefaultNote(bulkStatus)
+                });
             }
+            updatedCount++;
         }
     });
     
+    // Close modal
     closeBulkUpdateModal();
-    showToast(`Attendance updated for ${filteredData.length} students`, 'success');
+    
+    // Show success message
+    showToast(`Attendance updated to ${bulkStatus} for ${updatedCount} student(s)`, 'success');
+    
+    // Reload data
     loadAttendanceData();
+    
+    // Clear selection
+    bulkSelectedStudents.clear();
+    
+    hideLoading();
 }
 
 function closeStudentDetailsModal() {

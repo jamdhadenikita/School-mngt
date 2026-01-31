@@ -16,14 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
         showAllStudentsSection();
     }
     
-    // Set default date for first installment
-    const today = new Date();
-    const firstInstallmentDate = document.getElementById('firstInstallmentDate');
-    if (firstInstallmentDate) {
-        today.setMonth(today.getMonth() + 1);
-        const nextMonth = today.toISOString().split('T')[0];
-        firstInstallmentDate.value = nextMonth;
-    }
+    // Initialize document upload status
+    updateDocumentStatus();
+    
+    // Initialize sports and subjects
+    updateOtherSportsDisplay();
+    updateOtherSubjectsDisplay();
 });
 
 // Global variables
@@ -32,6 +30,10 @@ let isMobile = window.innerWidth < 1024;
 let additionalFees = [];
 let editingStudentId = null;
 let originalAdditionalFees = [];
+let uploadedDocuments = {};
+let otherSports = [];
+let otherSubjects = [];
+let transactionVerified = false;
 
 // Session Management
 const USER_SESSION_KEY = 'school_portal_session';
@@ -108,7 +110,10 @@ function generateSampleStudents() {
         {
             id: 1,
             studentId: 'STU1001',
-            name: 'Rahul Sharma',
+            firstName: 'Rahul',
+            middleName: '',
+            lastName: 'Sharma',
+            fullName: 'Rahul Sharma',
             dob: '2010-05-15',
             gender: 'Male',
             bloodGroup: 'A+',
@@ -148,6 +153,7 @@ function generateSampleStudents() {
                 pending: 20000,
                 paymentMode: 'installment',
                 paymentMethod: 'cash',
+                transactionId: '',
                 installments: [
                     { installmentNumber: 1, amount: 10000, dueDate: '2023-07-01', status: 'paid', paidAmount: 10000, paymentDate: '2023-07-01' },
                     { installmentNumber: 2, amount: 10000, dueDate: '2023-08-01', status: 'pending', paidAmount: 0, paymentDate: null }
@@ -161,7 +167,10 @@ function generateSampleStudents() {
         {
             id: 2,
             studentId: 'STU1002',
-            name: 'Priya Patel',
+            firstName: 'Priya',
+            middleName: '',
+            lastName: 'Patel',
+            fullName: 'Priya Patel',
             dob: '2011-08-22',
             gender: 'Female',
             bloodGroup: 'B+',
@@ -201,6 +210,7 @@ function generateSampleStudents() {
                 pending: 0,
                 paymentMode: 'one-time',
                 paymentMethod: 'online',
+                transactionId: 'TXN123456789',
                 installments: [],
                 receiptNumber: 'REC00123457',
                 initialPaymentDate: '2023-06-10'
@@ -288,7 +298,7 @@ function setupEventListeners() {
     // Initial payment input
     const initialPayment = document.getElementById('initialPayment');
     if (initialPayment) {
-        initialPayment.addEventListener('input', updateFeeCalculations);
+        initialPayment.addEventListener('input', updatePaymentDetails);
     }
     
     // Student search and filters
@@ -435,8 +445,9 @@ function showAddStudentSection() {
     document.getElementById('addStudentSection').classList.remove('hidden');
     resetForm();
     switchTab('personal');
-    document.getElementById('addStudentForm').querySelector('button[type="button"]').innerHTML = '<i class="fas fa-check-circle mr-2"></i>Register Student';
-    document.getElementById('addStudentForm').querySelector('button[type="button"]').onclick = handleAddStudent;
+    document.getElementById('formTitle').textContent = 'Add New Student';
+    document.getElementById('submitButton').innerHTML = '<i class="fas fa-check-circle mr-2"></i>Register Student';
+    document.getElementById('submitButton').onclick = handleAddStudent;
     editingStudentId = null;
 }
 
@@ -489,6 +500,282 @@ function togglePermanentAddress() {
             input.disabled = false;
         });
     }
+}
+
+// Document Upload Functions
+function previewDocument(input, previewId) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validate file size (2MB limit)
+    if (file.size > 2 * 1024 * 1024) {
+        Toast.show('File size exceeds 2MB limit', 'error');
+        input.value = '';
+        return;
+    }
+    
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+        Toast.show('Please upload JPG, PNG, or PDF files only', 'error');
+        input.value = '';
+        return;
+    }
+    
+    const previewElement = document.getElementById(previewId);
+    const fileName = file.name;
+    
+    // Store file data
+    uploadedDocuments[input.id] = {
+        file: file,
+        fileName: fileName,
+        fileType: file.type
+    };
+    
+    // Update preview
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewElement.innerHTML = `
+                <div class="h-full w-full relative">
+                    <img src="${e.target.result}" class="h-full w-full object-cover rounded-lg" alt="${fileName}">
+                    <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-xs truncate">
+                        ${fileName}
+                    </div>
+                </div>
+            `;
+        };
+        reader.readAsDataURL(file);
+    } else if (file.type === 'application/pdf') {
+        previewElement.innerHTML = `
+            <div class="h-full w-full flex flex-col items-center justify-center">
+                <i class="fas fa-file-pdf text-4xl text-red-500 mb-2"></i>
+                <p class="text-sm text-gray-700 text-center truncate max-w-full">${fileName}</p>
+                <p class="text-xs text-gray-500">PDF Document</p>
+            </div>
+        `;
+    }
+    
+    updateDocumentStatus();
+    Toast.show(`${fileName} uploaded successfully`, 'success');
+}
+
+function removeDocument(inputId, previewId) {
+    const input = document.getElementById(inputId);
+    const previewElement = document.getElementById(previewId);
+    
+    // Reset input
+    input.value = '';
+    
+    // Remove from stored documents
+    delete uploadedDocuments[inputId];
+    
+    // Reset preview
+    previewElement.innerHTML = `
+        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+        <p class="text-sm text-gray-500 text-center">${getUploadTextForDocument(inputId)}</p>
+        <p class="text-xs text-gray-400">${getDocumentDescription(inputId)}</p>
+    `;
+    
+    updateDocumentStatus();
+}
+
+function getUploadTextForDocument(inputId) {
+    const texts = {
+        'studentAadharImage': 'Upload student\'s Aadhar card image',
+        'fatherAadharImage': 'Upload father\'s Aadhar card',
+        'motherAadharImage': 'Upload mother\'s Aadhar card',
+        'birthCertificateImage': 'Upload birth certificate',
+        'transferCertificateImage': 'Upload transfer certificate',
+        'fatherIncomeCertificateImage': 'Upload father\'s income certificate',
+        'castCertificateImage': 'Upload caste certificate'
+    };
+    return texts[inputId] || 'Upload document';
+}
+
+function getDocumentDescription(inputId) {
+    const descriptions = {
+        'studentAadharImage': 'Front side',
+        'fatherAadharImage': 'Front side',
+        'motherAadharImage': 'Front side',
+        'birthCertificateImage': 'PDF or Image',
+        'transferCertificateImage': 'From previous school',
+        'fatherIncomeCertificateImage': 'For scholarship/fee concession',
+        'castCertificateImage': 'For reservation benefits'
+    };
+    return descriptions[inputId] || '';
+}
+
+function updateDocumentStatus() {
+    const statusElement = document.getElementById('documentStatus');
+    const uploadedCount = Object.keys(uploadedDocuments).length;
+    
+    if (uploadedCount === 0) {
+        statusElement.innerHTML = 'No documents uploaded yet';
+        return;
+    }
+    
+    let html = `<div class="space-y-2">`;
+    html += `<div class="text-green-600"><i class="fas fa-check-circle mr-2"></i>${uploadedCount} document(s) uploaded:</div>`;
+    html += `<ul class="list-disc list-inside pl-4 text-sm">`;
+    
+    Object.entries(uploadedDocuments).forEach(([docId, doc]) => {
+        const docName = docId.replace('Image', '').replace(/([A-Z])/g, ' $1').trim();
+        html += `<li class="truncate">${docName}: ${doc.fileName}</li>`;
+    });
+    
+    html += `</ul></div>`;
+    statusElement.innerHTML = html;
+}
+
+// Sports "Other" functionality
+function toggleOtherSports() {
+    const checkbox = document.getElementById('otherSportsCheckbox');
+    const container = document.getElementById('otherSportsContainer');
+    const display = document.getElementById('otherSportsDisplay');
+    
+    if (checkbox.checked) {
+        container.classList.remove('hidden');
+        if (otherSports.length > 0) {
+            display.classList.remove('hidden');
+        }
+    } else {
+        container.classList.add('hidden');
+        display.classList.add('hidden');
+    }
+}
+
+function addOtherSports() {
+    const input = document.getElementById('otherSportsInput');
+    const value = input.value.trim();
+    
+    if (!value) {
+        Toast.show('Please enter sports names', 'error');
+        return;
+    }
+    
+    // Split by comma and trim each sport
+    const newSports = value.split(',').map(sport => sport.trim()).filter(sport => sport);
+    
+    // Add unique sports
+    newSports.forEach(sport => {
+        if (!otherSports.includes(sport.toLowerCase()) && sport) {
+            otherSports.push(sport.toLowerCase());
+        }
+    });
+    
+    // Update display
+    updateOtherSportsDisplay();
+    
+    // Clear input
+    input.value = '';
+    Toast.show(`${newSports.length} sport(s) added`, 'success');
+}
+
+function updateOtherSportsDisplay() {
+    const display = document.getElementById('otherSportsDisplay');
+    
+    if (otherSports.length === 0) {
+        display.classList.add('hidden');
+        return;
+    }
+    
+    display.classList.remove('hidden');
+    let html = '<div class="flex flex-wrap gap-2 mt-2">';
+    
+    otherSports.forEach((sport, index) => {
+        html += `
+            <div class="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                <span>${sport}</span>
+                <button type="button" onclick="removeOtherSport(${index})" class="ml-2 text-red-500 hover:text-red-700">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    display.innerHTML = html;
+}
+
+function removeOtherSport(index) {
+    otherSports.splice(index, 1);
+    updateOtherSportsDisplay();
+}
+
+// Subjects "Other" functionality
+function toggleOtherSubjects() {
+    const checkbox = document.getElementById('otherSubjectsCheckbox');
+    const container = document.getElementById('otherSubjectsContainer');
+    const display = document.getElementById('otherSubjectsDisplay');
+    
+    if (checkbox.checked) {
+        container.classList.remove('hidden');
+        if (otherSubjects.length > 0) {
+            display.classList.remove('hidden');
+        }
+    } else {
+        container.classList.add('hidden');
+        display.classList.add('hidden');
+    }
+}
+
+function addOtherSubjects() {
+    const input = document.getElementById('otherSubjectsInput');
+    const value = input.value.trim();
+    
+    if (!value) {
+        Toast.show('Please enter subject names', 'error');
+        return;
+    }
+    
+    // Split by comma and trim each subject
+    const newSubjects = value.split(',').map(subject => subject.trim()).filter(subject => subject);
+    
+    // Add unique subjects
+    newSubjects.forEach(subject => {
+        if (!otherSubjects.includes(subject.toLowerCase()) && subject) {
+            otherSubjects.push(subject.toLowerCase());
+        }
+    });
+    
+    // Update display
+    updateOtherSubjectsDisplay();
+    
+    // Clear input
+    input.value = '';
+    Toast.show(`${newSubjects.length} subject(s) added`, 'success');
+}
+
+function updateOtherSubjectsDisplay() {
+    const display = document.getElementById('otherSubjectsDisplay');
+    
+    if (otherSubjects.length === 0) {
+        display.classList.add('hidden');
+        return;
+    }
+    
+    display.classList.remove('hidden');
+    let html = '<div class="flex flex-wrap gap-2 mt-2">';
+    
+    otherSubjects.forEach((subject, index) => {
+        html += `
+            <div class="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                <span>${subject}</span>
+                <button type="button" onclick="removeOtherSubject(${index})" class="ml-2 text-red-500 hover:text-red-700">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    display.innerHTML = html;
+}
+
+function removeOtherSubject(index) {
+    otherSubjects.splice(index, 1);
+    updateOtherSubjectsDisplay();
 }
 
 // Fee Calculations
@@ -697,6 +984,112 @@ function calculateDueDate(installmentNumber) {
     return date.toISOString().split('T')[0];
 }
 
+// Payment Method Change Handler
+function handlePaymentMethodChange() {
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const qrCodeSection = document.getElementById('qrCodeSection');
+    
+    if (paymentMethod === 'online') {
+        // Show QR code section
+        qrCodeSection.classList.remove('hidden');
+        
+        // Generate QR code based on initial payment amount
+        generateQRCode();
+    } else {
+        // Hide both sections for cash payment
+        qrCodeSection.classList.add('hidden');
+        transactionVerified = false;
+    }
+    
+    // Reset transaction verification status
+    document.getElementById('transactionStatus').innerHTML = '';
+    document.getElementById('transactionId').value = '';
+}
+
+// Generate QR Code
+function generateQRCode() {
+    const qrCodeCanvas = document.getElementById('qrCodeCanvas');
+    const initialPayment = document.getElementById('initialPayment').value;
+    
+    // Clear previous QR code
+    qrCodeCanvas.innerHTML = '';
+    
+    // Update QR code amount display
+    document.getElementById('qrAmount').textContent = `₹${parseInt(initialPayment).toLocaleString()}`;
+    
+    // Generate payment details for QR code
+    const paymentData = {
+        account: '123456789012',
+        ifsc: 'KUNS0001234',
+        amount: initialPayment,
+        name: 'Kunash School',
+        note: 'Student Fees Payment'
+    };
+    
+    // Create QR code using the qrcode library
+    const qr = new QRCode(qrCodeCanvas, {
+        text: JSON.stringify(paymentData),
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    Toast.show('QR code generated successfully', 'success');
+}
+
+// Update payment details
+function updatePaymentDetails() {
+    // Update QR code if online payment is selected
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+    if (paymentMethod && paymentMethod.value === 'online') {
+        generateQRCode();
+    }
+    
+    // Update fee calculations
+    updateFeeCalculations();
+}
+
+// Close QR Code
+function closeQRCode() {
+    document.getElementById('qrCodeSection').classList.add('hidden');
+}
+
+// Mark payment as complete
+function markPaymentAsComplete() {
+    const transactionIdInput = document.getElementById('transactionId');
+    const transactionId = transactionIdInput.value.trim();
+    
+    if (!transactionId) {
+        Toast.show('Please enter transaction ID before marking payment as complete', 'error');
+        transactionIdInput.focus();
+        return;
+    }
+    
+    // Show verification in progress
+    const statusElement = document.getElementById('transactionStatus');
+    statusElement.innerHTML = '<div class="flex items-center text-yellow-600"><i class="fas fa-spinner fa-spin mr-2"></i> Verifying transaction...</div>';
+    
+    // Simulate verification process
+    setTimeout(() => {
+        if (transactionId.length >= 8) {
+            statusElement.innerHTML = '<div class="flex items-center text-green-600"><i class="fas fa-check-circle mr-2"></i> Transaction verified successfully!</div>';
+            transactionVerified = true;
+            Toast.show('Transaction verified successfully!', 'success');
+        } else {
+            statusElement.innerHTML = '<div class="flex items-center text-red-600"><i class="fas fa-times-circle mr-2"></i> Invalid transaction ID. Please check and try again.</div>';
+            transactionVerified = false;
+            Toast.show('Invalid transaction ID', 'error');
+        }
+    }, 1500);
+}
+
+// Verify Transaction ID
+function verifyTransactionId() {
+    markPaymentAsComplete();
+}
+
 // Student Management
 function renderStudentsTable() {
     const tbody = document.getElementById('studentTableBody');
@@ -733,12 +1126,12 @@ function renderStudentsTable() {
                     <div class="flex items-center space-x-3">
                         <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
                             ${student.photo ? 
-                                `<img src="${student.photo}" class="h-full w-full rounded-full object-cover" alt="${student.name}">` :
+                                `<img src="${student.photo}" class="h-full w-full rounded-full object-cover" alt="${student.fullName}">` :
                                 `<i class="fas fa-user-graduate text-blue-600"></i>`
                             }
                         </div>
                         <div>
-                            <div class="font-medium text-gray-900">${student.name}</div>
+                            <div class="font-medium text-gray-900">${student.fullName}</div>
                             <div class="text-sm text-gray-500">${student.studentId} • ${student.gender}, ${calculateAge(student.dob)} years</div>
                         </div>
                     </div>
@@ -802,7 +1195,7 @@ function getFilteredStudents() {
     return appState.students.filter(student => {
         // Search filter
         const matchesSearch = !searchTerm || 
-            student.name.toLowerCase().includes(searchTerm) ||
+            student.fullName.toLowerCase().includes(searchTerm) ||
             student.studentId.toLowerCase().includes(searchTerm) ||
             student.fatherName.toLowerCase().includes(searchTerm) ||
             (student.motherName && student.motherName.toLowerCase().includes(searchTerm));
@@ -896,7 +1289,819 @@ function nextPage() {
     }
 }
 
-// Student CRUD Operations
+// Collect Form Data - UPDATED FOR FIRST/MIDDLE/LAST NAME
+function collectFormData() {
+    const firstName = document.querySelector('input[name="firstName"]')?.value || '';
+    const middleName = document.querySelector('input[name="middleName"]')?.value || '';
+    const lastName = document.querySelector('input[name="lastName"]')?.value || '';
+    
+    // Build full name
+    let fullName = firstName;
+    if (middleName) fullName += ` ${middleName}`;
+    fullName += ` ${lastName}`;
+    
+    return {
+        // Personal Details
+        firstName: firstName,
+        middleName: middleName,
+        lastName: lastName,
+        fullName: fullName,
+        dob: document.querySelector('input[name="dob"]')?.value || '',
+        gender: document.querySelector('select[name="gender"]')?.value || '',
+        bloodGroup: document.querySelector('select[name="bloodGroup"]')?.value || '',
+        casteCategory: document.querySelector('select[name="casteCategory"]')?.value || '',
+        aadharNumber: document.querySelector('input[name="aadharNumber"]')?.value || '',
+        previousSchool: document.querySelector('input[name="previousSchool"]')?.value || '',
+        medicalInfo: document.querySelector('textarea[name="medicalInfo"]')?.value || '',
+        
+        // Address Details
+        localAddressLine1: document.querySelector('input[name="localAddressLine1"]')?.value || '',
+        localAddressLine2: document.querySelector('input[name="localAddressLine2"]')?.value || '',
+        localCity: document.querySelector('input[name="localCity"]')?.value || '',
+        localState: document.querySelector('input[name="localState"]')?.value || '',
+        localPincode: document.querySelector('input[name="localPincode"]')?.value || '',
+        
+        // Permanent Address
+        sameAsLocal: document.getElementById('sameAsLocal')?.checked || false,
+        permanentAddressLine1: document.querySelector('input[name="permanentAddressLine1"]')?.value || '',
+        permanentAddressLine2: document.querySelector('input[name="permanentAddressLine2"]')?.value || '',
+        permanentCity: document.querySelector('input[name="permanentCity"]')?.value || '',
+        permanentState: document.querySelector('input[name="permanentState"]')?.value || '',
+        permanentPincode: document.querySelector('input[name="permanentPincode"]')?.value || '',
+        
+        // Academic Details
+        class: document.querySelector('select[name="class"]')?.value || '',
+        section: document.querySelector('select[name="section"]')?.value || '',
+        rollNumber: document.querySelector('input[name="rollNumber"]')?.value || '',
+        admissionDate: document.querySelector('input[name="admissionDate"]')?.value || '',
+        academicYear: document.querySelector('select[name="academicYear"]')?.value || '',
+        classTeacher: document.querySelector('select[name="classTeacher"]')?.value || '',
+        
+        // Subjects (checkboxes)
+        subjects: Array.from(document.querySelectorAll('input[name="subjects[]"]:checked')).map(cb => cb.value),
+        
+        // Sports (checkboxes)
+        sports: Array.from(document.querySelectorAll('input[name="sports[]"]:checked')).map(cb => cb.value),
+        
+        // Parent Details
+        fatherName: document.querySelector('input[name="fatherName"]')?.value || '',
+        fatherAadhar: document.querySelector('input[name="fatherAadhar"]')?.value || '',
+        fatherContact: document.querySelector('input[name="fatherContact"]')?.value || '',
+        fatherOccupation: document.querySelector('input[name="fatherOccupation"]')?.value || '',
+        
+        motherName: document.querySelector('input[name="motherName"]')?.value || '',
+        motherAadhar: document.querySelector('input[name="motherAadhar"]')?.value || '',
+        motherContact: document.querySelector('input[name="motherContact"]')?.value || '',
+        motherOccupation: document.querySelector('input[name="motherOccupation"]')?.value || '',
+        
+        parentEmail: document.querySelector('input[name="parentEmail"]')?.value || '',
+        relationship: document.querySelector('select[name="relationship"]')?.value || '',
+        
+        emergencyContactName: document.querySelector('input[name="emergencyContactName"]')?.value || '',
+        emergencyContactNumber: document.querySelector('input[name="emergencyContactNumber"]')?.value || '',
+        
+        // Fees
+        admissionFees: parseFloat(document.getElementById('admissionFees')?.value || 0),
+        uniformFees: parseFloat(document.getElementById('uniformFees')?.value || 0),
+        bookFees: parseFloat(document.getElementById('bookFees')?.value || 0),
+        tuitionFees: parseFloat(document.getElementById('tuitionFees')?.value || 0),
+        initialPayment: parseFloat(document.getElementById('initialPayment')?.value || 0),
+        paymentMode: document.querySelector('input[name="paymentMode"]:checked')?.value || 'one-time',
+        paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cash',
+        installmentCount: parseInt(document.getElementById('installmentCount')?.value || 0),
+        firstInstallmentDate: document.getElementById('firstInstallmentDate')?.value || '',
+        transactionId: document.getElementById('transactionId')?.value || '',
+        
+        // Documents
+        documents: uploadedDocuments,
+        
+        // Other sports
+        otherSports: [...otherSports],
+        
+        // Other subjects
+        otherSubjects: [...otherSubjects]
+    };
+}
+
+// Validate Form Data - UPDATED FOR NAME VALIDATION
+function validateFormData(studentData) {
+    const requiredFields = [
+        { field: 'firstName', name: 'First Name' },
+        { field: 'lastName', name: 'Last Name' },
+        { field: 'dob', name: 'Date of Birth' },
+        { field: 'gender', name: 'Gender' },
+        { field: 'casteCategory', name: 'Caste Category' },
+        { field: 'localAddressLine1', name: 'Local Address Line 1' },
+        { field: 'localCity', name: 'Local City' },
+        { field: 'localState', name: 'Local State' },
+        { field: 'localPincode', name: 'Local Pincode' },
+        { field: 'class', name: 'Class' },
+        { field: 'section', name: 'Section' },
+        { field: 'rollNumber', name: 'Roll Number' },
+        { field: 'admissionDate', name: 'Admission Date' },
+        { field: 'academicYear', name: 'Academic Year' },
+        { field: 'fatherName', name: "Father's Name" },
+        { field: 'fatherContact', name: "Father's Contact" },
+        { field: 'motherName', name: "Mother's Name" },
+        { field: 'parentEmail', name: 'Parent Email' },
+        { field: 'relationship', name: 'Relationship' },
+        { field: 'emergencyContactName', name: 'Emergency Contact Name' },
+        { field: 'emergencyContactNumber', name: 'Emergency Contact Number' }
+    ];
+    
+    for (const { field, name } of requiredFields) {
+        if (!studentData[field] || studentData[field].toString().trim() === '') {
+            Toast.show(`${name} is required`, 'error');
+            return false;
+        }
+    }
+    
+    // Validate transaction ID for online payments
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    if (paymentMethod === 'online') {
+        const transactionId = document.getElementById('transactionId').value.trim();
+        if (!transactionId || transactionId.length < 8) {
+            Toast.show('Please enter a valid transaction ID (minimum 8 characters) for online payment', 'error');
+            return false;
+        }
+        
+        if (!transactionVerified) {
+            Toast.show('Please verify the transaction ID before proceeding', 'error');
+            return false;
+        }
+    }
+    
+    // Validate phone numbers
+    const phoneFields = [
+        { field: 'fatherContact', name: "Father's Contact" },
+        { field: 'emergencyContactNumber', name: 'Emergency Contact Number' }
+    ];
+    
+    for (const { field, name } of phoneFields) {
+        if (studentData[field] && !/^\d{10}$/.test(studentData[field])) {
+            Toast.show(`${name} must be 10 digits`, 'error');
+            return false;
+        }
+    }
+    
+    // Validate email
+    if (studentData.parentEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentData.parentEmail)) {
+        Toast.show('Please enter a valid email address', 'error');
+        return false;
+    }
+    
+    // Validate admission date is not in the future
+    const admissionDate = new Date(studentData.admissionDate);
+    const today = new Date();
+    if (admissionDate > today) {
+        Toast.show('Admission date cannot be in the future', 'error');
+        return false;
+    }
+    
+    // Validate date of birth makes sense (not in future and reasonable age)
+    const dob = new Date(studentData.dob);
+    if (dob > today) {
+        Toast.show('Date of birth cannot be in the future', 'error');
+        return false;
+    }
+    
+    const age = today.getFullYear() - dob.getFullYear();
+    if (age < 3 || age > 25) {
+        Toast.show('Student age should be between 3 and 25 years', 'error');
+        return false;
+    }
+    
+    return true;
+}
+
+// Add Student Handler - UPDATED FOR NEW FIELDS
+function handleAddStudent() {
+    console.log('handleAddStudent called');
+    
+    // Validate online payment transaction
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    if (paymentMethod === 'online' && !transactionVerified) {
+        Toast.show('Please verify the transaction ID before proceeding', 'error');
+        return;
+    }
+    
+    // Collect form data
+    const studentData = collectFormData();
+    if (!studentData) return;
+    
+    // Validate required fields
+    if (!validateFormData(studentData)) return;
+    
+    // Build addresses
+    const localAddress = `${studentData.localAddressLine1}${studentData.localAddressLine2 ? ', ' + studentData.localAddressLine2 : ''}, ${studentData.localCity}, ${studentData.localState} - ${studentData.localPincode}`;
+    
+    let permanentAddress = localAddress;
+    if (!studentData.sameAsLocal && 
+        studentData.permanentAddressLine1 && 
+        studentData.permanentCity && 
+        studentData.permanentState && 
+        studentData.permanentPincode) {
+        permanentAddress = `${studentData.permanentAddressLine1}${studentData.permanentAddressLine2 ? ', ' + studentData.permanentAddressLine2 : ''}, ${studentData.permanentCity}, ${studentData.permanentState} - ${studentData.permanentPincode}`;
+    }
+    
+    // Calculate fees
+    const baseTotal = studentData.admissionFees + studentData.uniformFees + studentData.bookFees + studentData.tuitionFees;
+    const additionalTotal = calculateAdditionalFeesTotal();
+    const totalFees = baseTotal + additionalTotal;
+    
+    if (studentData.initialPayment > totalFees) {
+        Toast.show('Initial payment cannot exceed total fees', 'error');
+        return;
+    }
+    
+    if (studentData.initialPayment < 0) {
+        Toast.show('Initial payment cannot be negative', 'error');
+        return;
+    }
+    
+    // Calculate installments if payment mode is installment
+    let installments = [];
+    if (studentData.paymentMode === 'installment' && studentData.initialPayment < totalFees) {
+        const balanceAmount = totalFees - studentData.initialPayment;
+        const installmentCount = studentData.installmentCount;
+        
+        if (installmentCount > 0 && studentData.firstInstallmentDate) {
+            const baseInstallmentAmount = Math.floor(balanceAmount / installmentCount);
+            const remainder = balanceAmount % installmentCount;
+            
+            for (let i = 1; i <= installmentCount; i++) {
+                const dueDate = calculateDueDate(i);
+                const amount = (i === installmentCount) ? 
+                    baseInstallmentAmount + remainder : 
+                    baseInstallmentAmount;
+                
+                installments.push({
+                    installmentNumber: i,
+                    amount: amount,
+                    dueDate: dueDate,
+                    status: 'pending',
+                    paidAmount: 0,
+                    paymentDate: null
+                });
+            }
+        }
+    }
+    
+    // Combine sports from checkboxes and other sports
+    const sportsFromCheckboxes = studentData.sports;
+    const allSports = [...sportsFromCheckboxes, ...otherSports];
+    
+    // Combine subjects from checkboxes and other subjects
+    const subjectsFromCheckboxes = studentData.subjects;
+    const allSubjects = [...subjectsFromCheckboxes, ...otherSubjects];
+    
+    // Generate unique student ID
+    const studentId = document.getElementById('studentId').value || `STU${appState.studentIdCounter++}`;
+    
+    // Generate receipt number
+    const receiptNumber = `REC${Date.now().toString().slice(-8)}`;
+    
+    // Create student object
+    const newStudent = {
+        id: Date.now(),
+        studentId: studentId,
+        firstName: studentData.firstName,
+        middleName: studentData.middleName,
+        lastName: studentData.lastName,
+        fullName: studentData.fullName,
+        dob: studentData.dob,
+        gender: studentData.gender,
+        bloodGroup: studentData.bloodGroup || '',
+        casteCategory: studentData.casteCategory,
+        localAddress: localAddress,
+        permanentAddress: permanentAddress,
+        aadharNumber: studentData.aadharNumber || '',
+        previousSchool: studentData.previousSchool || '',
+        medicalInfo: studentData.medicalInfo || '',
+        sports: allSports,
+        otherSports: otherSports,
+        class: studentData.class,
+        section: studentData.section,
+        rollNumber: studentData.rollNumber,
+        admissionDate: studentData.admissionDate,
+        academicYear: studentData.academicYear,
+        classTeacher: studentData.classTeacher || '',
+        subjects: allSubjects,
+        otherSubjects: otherSubjects,
+        fatherName: studentData.fatherName,
+        fatherContact: studentData.fatherContact,
+        fatherAadhar: studentData.fatherAadhar || '',
+        fatherOccupation: studentData.fatherOccupation || '',
+        motherName: studentData.motherName,
+        motherContact: studentData.motherContact || '',
+        motherAadhar: studentData.motherAadhar || '',
+        motherOccupation: studentData.motherOccupation || '',
+        parentEmail: studentData.parentEmail,
+        relationship: studentData.relationship,
+        emergencyContactName: studentData.emergencyContactName,
+        emergencyContactNumber: studentData.emergencyContactNumber,
+        fees: {
+            total: totalFees,
+            admission: studentData.admissionFees,
+            uniform: studentData.uniformFees,
+            books: studentData.bookFees,
+            tuition: studentData.tuitionFees,
+            additional: additionalTotal,
+            paid: studentData.initialPayment,
+            pending: totalFees - studentData.initialPayment,
+            paymentMode: studentData.paymentMode,
+            paymentMethod: studentData.paymentMethod,
+            transactionId: studentData.transactionId || '',
+            installments: installments,
+            receiptNumber: receiptNumber,
+            initialPaymentDate: new Date().toISOString().split('T')[0]
+        },
+        status: 'Active',
+        createdAt: new Date().toISOString(),
+        photo: null,
+        documents: uploadedDocuments
+    };
+    
+    console.log('New student object created:', newStudent);
+    
+    // Add to database
+    appState.students.push(newStudent);
+    
+    // Save data to localStorage
+    const saved = saveData();
+    
+    if (saved) {
+        // Generate receipt
+        generateReceipt(newStudent, studentData.initialPayment);
+        
+        // Reset and show success
+        resetForm();
+        Toast.show(`Student ${newStudent.fullName} registered successfully! Student ID: ${newStudent.studentId}`, 'success');
+        
+        // Redirect after delay
+        setTimeout(() => {
+            window.location.href = 'student-management.html';
+        }, 2000);
+    } else {
+        Toast.show('Failed to save student data. Please try again.', 'error');
+    }
+}
+
+// EDIT STUDENT FUNCTIONALITY - UPDATED FOR FIRST/MIDDLE/LAST NAME
+function editStudent(id) {
+    editingStudentId = id;
+    const student = appState.students.find(s => s.id === id);
+    
+    if (!student) {
+        Toast.show('Student not found', 'error');
+        return;
+    }
+    
+    // Show the add student section but in edit mode
+    showAddStudentSection();
+    
+    // Change the form title and button
+    document.getElementById('formTitle').textContent = 'Edit Student';
+    
+    const submitButton = document.getElementById('submitButton');
+    if (submitButton) {
+        submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Update Student';
+        submitButton.onclick = handleUpdateStudent;
+    }
+    
+    // Split full name into first, middle, last
+    const nameParts = student.fullName.split(' ');
+    let firstName = '', middleName = '', lastName = '';
+    
+    if (nameParts.length === 1) {
+        firstName = nameParts[0];
+    } else if (nameParts.length === 2) {
+        firstName = nameParts[0];
+        lastName = nameParts[1];
+    } else if (nameParts.length >= 3) {
+        firstName = nameParts[0];
+        lastName = nameParts[nameParts.length - 1];
+        middleName = nameParts.slice(1, nameParts.length - 1).join(' ');
+    }
+    
+    // Parse addresses
+    const localAddressParts = parseAddress(student.localAddress);
+    const permanentAddressParts = parseAddress(student.permanentAddress || student.localAddress);
+    
+    // Fill Personal Details Tab
+    document.querySelector('input[name="firstName"]').value = firstName;
+    document.querySelector('input[name="middleName"]').value = middleName;
+    document.querySelector('input[name="lastName"]').value = lastName;
+    document.querySelector('input[name="dob"]').value = student.dob;
+    document.querySelector('select[name="gender"]').value = student.gender;
+    document.querySelector('select[name="bloodGroup"]').value = student.bloodGroup || '';
+    document.querySelector('select[name="casteCategory"]').value = student.casteCategory;
+    document.querySelector('input[name="aadharNumber"]').value = student.aadharNumber || '';
+    document.querySelector('input[name="previousSchool"]').value = student.previousSchool || '';
+    document.querySelector('textarea[name="medicalInfo"]').value = student.medicalInfo || '';
+    
+    // Fill Local Address
+    document.querySelector('input[name="localAddressLine1"]').value = localAddressParts.line1;
+    document.querySelector('input[name="localAddressLine2"]').value = localAddressParts.line2 || '';
+    document.querySelector('input[name="localCity"]').value = localAddressParts.city;
+    document.querySelector('input[name="localState"]').value = localAddressParts.state;
+    document.querySelector('input[name="localPincode"]').value = localAddressParts.pincode;
+    
+    // Fill Permanent Address
+    const sameAsLocal = student.permanentAddress === student.localAddress || !student.permanentAddress;
+    document.getElementById('sameAsLocal').checked = sameAsLocal;
+    
+    if (!sameAsLocal && student.permanentAddress) {
+        document.querySelector('input[name="permanentAddressLine1"]').value = permanentAddressParts.line1;
+        document.querySelector('input[name="permanentAddressLine2"]').value = permanentAddressParts.line2 || '';
+        document.querySelector('input[name="permanentCity"]').value = permanentAddressParts.city;
+        document.querySelector('input[name="permanentState"]').value = permanentAddressParts.state;
+        document.querySelector('input[name="permanentPincode"]').value = permanentAddressParts.pincode;
+    }
+    
+    togglePermanentAddress();
+    
+    // Fill Sports checkboxes
+    if (Array.isArray(student.sports)) {
+        student.sports.forEach(sport => {
+            const checkbox = document.querySelector(`input[name="sports[]"][value="${sport.toLowerCase()}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+    
+    // Fill other sports if any
+    otherSports = student.otherSports || [];
+    updateOtherSportsDisplay();
+    
+    // Fill Academic Details Tab
+    document.querySelector('select[name="class"]').value = student.class;
+    document.querySelector('select[name="section"]').value = student.section;
+    document.querySelector('input[name="rollNumber"]').value = student.rollNumber;
+    document.querySelector('input[name="admissionDate"]').value = student.admissionDate;
+    document.querySelector('select[name="academicYear"]').value = student.academicYear;
+    document.querySelector('select[name="classTeacher"]').value = student.classTeacher || '';
+    
+    // Fill Subjects checkboxes
+    if (Array.isArray(student.subjects)) {
+        student.subjects.forEach(subject => {
+            const checkbox = document.querySelector(`input[name="subjects[]"][value="${subject.toLowerCase()}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+    
+    // Fill other subjects if any
+    otherSubjects = student.otherSubjects || [];
+    updateOtherSubjectsDisplay();
+    
+    // Fill Parent Details Tab
+    document.querySelector('input[name="fatherName"]').value = student.fatherName;
+    document.querySelector('input[name="fatherAadhar"]').value = student.fatherAadhar || '';
+    document.querySelector('input[name="fatherContact"]').value = student.fatherContact;
+    document.querySelector('input[name="fatherOccupation"]').value = student.fatherOccupation || '';
+    
+    document.querySelector('input[name="motherName"]').value = student.motherName;
+    document.querySelector('input[name="motherAadhar"]').value = student.motherAadhar || '';
+    document.querySelector('input[name="motherContact"]').value = student.motherContact || '';
+    document.querySelector('input[name="motherOccupation"]').value = student.motherOccupation || '';
+    
+    document.querySelector('input[name="parentEmail"]').value = student.parentEmail;
+    document.querySelector('select[name="relationship"]').value = student.relationship;
+    
+    document.querySelector('input[name="emergencyContactName"]').value = student.emergencyContactName;
+    document.querySelector('input[name="emergencyContactNumber"]').value = student.emergencyContactNumber;
+    
+    // Fill Fees Details Tab
+    document.getElementById('admissionFees').value = student.fees.admission;
+    document.getElementById('uniformFees').value = student.fees.uniform;
+    document.getElementById('bookFees').value = student.fees.books;
+    document.getElementById('tuitionFees').value = student.fees.tuition;
+    document.getElementById('initialPayment').value = student.fees.paid;
+    
+    // Set payment mode
+    const paymentMode = student.fees.paymentMode || 'one-time';
+    document.querySelector(`input[name="paymentMode"][value="${paymentMode}"]`).checked = true;
+    toggleInstallmentOptions();
+    
+    // Set payment method
+    const paymentMethod = student.fees.paymentMethod || 'cash';
+    document.querySelector(`input[name="paymentMethod"][value="${paymentMethod}"]`).checked = true;
+    
+    // Set transaction ID if exists
+    if (student.fees.transactionId) {
+        document.getElementById('transactionId').value = student.fees.transactionId;
+        transactionVerified = true;
+    }
+    
+    // Set installment count if applicable
+    if (student.fees.paymentMode === 'installment' && student.fees.installments?.length > 0) {
+        document.getElementById('installmentCount').value = student.fees.installments.length;
+        if (student.fees.installments[0]?.dueDate) {
+            document.getElementById('firstInstallmentDate').value = student.fees.installments[0].dueDate;
+        }
+    }
+    
+    // Handle additional fees
+    additionalFees = [];
+    if (student.fees.additional > 0) {
+        additionalFees.push({
+            id: Date.now(),
+            name: 'Additional Fees',
+            amount: student.fees.additional
+        });
+    }
+    originalAdditionalFees = [...additionalFees];
+    renderAdditionalFeesList();
+    
+    updateFeeCalculations();
+    
+    Toast.show('Student data loaded for editing', 'info');
+}
+
+// Handle Update Student - UPDATED FOR NEW FIELDS
+function handleUpdateStudent() {
+    if (!editingStudentId) {
+        Toast.show('No student selected for editing', 'error');
+        return;
+    }
+    
+    const studentIndex = appState.students.findIndex(s => s.id === editingStudentId);
+    if (studentIndex === -1) {
+        Toast.show('Student not found', 'error');
+        return;
+    }
+    
+    // Validate online payment transaction
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    if (paymentMethod === 'online' && !transactionVerified) {
+        Toast.show('Please verify the transaction ID before proceeding', 'error');
+        return;
+    }
+    
+    // Collect form data
+    const studentData = collectFormData();
+    if (!studentData) return;
+    
+    // Validate required fields
+    if (!validateFormData(studentData)) return;
+    
+    // Build addresses
+    const localAddress = `${studentData.localAddressLine1}${studentData.localAddressLine2 ? ', ' + studentData.localAddressLine2 : ''}, ${studentData.localCity}, ${studentData.localState} - ${studentData.localPincode}`;
+    
+    let permanentAddress = localAddress;
+    if (!studentData.sameAsLocal && 
+        studentData.permanentAddressLine1 && 
+        studentData.permanentCity && 
+        studentData.permanentState && 
+        studentData.permanentPincode) {
+        permanentAddress = `${studentData.permanentAddressLine1}${studentData.permanentAddressLine2 ? ', ' + studentData.permanentAddressLine2 : ''}, ${studentData.permanentCity}, ${studentData.permanentState} - ${studentData.permanentPincode}`;
+    }
+    
+    // Calculate fees
+    const baseTotal = studentData.admissionFees + studentData.uniformFees + studentData.bookFees + studentData.tuitionFees;
+    const additionalTotal = calculateAdditionalFeesTotal();
+    const totalFees = baseTotal + additionalTotal;
+    
+    if (studentData.initialPayment > totalFees) {
+        Toast.show('Initial payment cannot exceed total fees', 'error');
+        return;
+    }
+    
+    if (studentData.initialPayment < 0) {
+        Toast.show('Initial payment cannot be negative', 'error');
+        return;
+    }
+    
+    // Calculate installments if payment mode is installment
+    let installments = [];
+    if (studentData.paymentMode === 'installment' && studentData.initialPayment < totalFees) {
+        const balanceAmount = totalFees - studentData.initialPayment;
+        const installmentCount = studentData.installmentCount;
+        
+        if (installmentCount > 0 && studentData.firstInstallmentDate) {
+            const baseInstallmentAmount = Math.floor(balanceAmount / installmentCount);
+            const remainder = balanceAmount % installmentCount;
+            
+            for (let i = 1; i <= installmentCount; i++) {
+                const dueDate = calculateDueDateForEdit(i, studentData.firstInstallmentDate);
+                const amount = (i === installmentCount) ? 
+                    baseInstallmentAmount + remainder : 
+                    baseInstallmentAmount;
+                
+                installments.push({
+                    installmentNumber: i,
+                    amount: amount,
+                    dueDate: dueDate,
+                    status: 'pending',
+                    paidAmount: 0,
+                    paymentDate: null
+                });
+            }
+        }
+    }
+    
+    // Combine sports from checkboxes and other sports
+    const sportsFromCheckboxes = studentData.sports;
+    const allSports = [...sportsFromCheckboxes, ...otherSports];
+    
+    // Combine subjects from checkboxes and other subjects
+    const subjectsFromCheckboxes = studentData.subjects;
+    const allSubjects = [...subjectsFromCheckboxes, ...otherSubjects];
+    
+    // Update student object
+    const updatedStudent = {
+        ...appState.students[studentIndex],
+        firstName: studentData.firstName,
+        middleName: studentData.middleName,
+        lastName: studentData.lastName,
+        fullName: studentData.fullName,
+        dob: studentData.dob,
+        gender: studentData.gender,
+        bloodGroup: studentData.bloodGroup || '',
+        casteCategory: studentData.casteCategory,
+        localAddress: localAddress,
+        permanentAddress: permanentAddress,
+        aadharNumber: studentData.aadharNumber || '',
+        previousSchool: studentData.previousSchool || '',
+        medicalInfo: studentData.medicalInfo || '',
+        sports: allSports,
+        otherSports: otherSports,
+        class: studentData.class,
+        section: studentData.section,
+        rollNumber: studentData.rollNumber,
+        admissionDate: studentData.admissionDate,
+        academicYear: studentData.academicYear,
+        classTeacher: studentData.classTeacher || '',
+        subjects: allSubjects,
+        otherSubjects: otherSubjects,
+        fatherName: studentData.fatherName,
+        fatherContact: studentData.fatherContact,
+        fatherAadhar: studentData.fatherAadhar || '',
+        fatherOccupation: studentData.fatherOccupation || '',
+        motherName: studentData.motherName,
+        motherContact: studentData.motherContact || '',
+        motherAadhar: studentData.motherAadhar || '',
+        motherOccupation: studentData.motherOccupation || '',
+        parentEmail: studentData.parentEmail,
+        relationship: studentData.relationship,
+        emergencyContactName: studentData.emergencyContactName,
+        emergencyContactNumber: studentData.emergencyContactNumber,
+        fees: {
+            ...appState.students[studentIndex].fees,
+            total: totalFees,
+            admission: studentData.admissionFees,
+            uniform: studentData.uniformFees,
+            books: studentData.bookFees,
+            tuition: studentData.tuitionFees,
+            additional: additionalTotal,
+            paid: studentData.initialPayment,
+            pending: totalFees - studentData.initialPayment,
+            paymentMode: studentData.paymentMode,
+            paymentMethod: studentData.paymentMethod,
+            transactionId: studentData.transactionId || '',
+            installments: installments
+        },
+        updatedAt: new Date().toISOString(),
+        documents: uploadedDocuments
+    };
+    
+    // Update in array
+    appState.students[studentIndex] = updatedStudent;
+    
+    // Save data
+    const saved = saveData();
+    
+    if (saved) {
+        Toast.show(`Student ${updatedStudent.fullName} updated successfully!`, 'success');
+        
+        // Redirect after delay
+        setTimeout(() => {
+            window.location.href = 'student-management.html';
+        }, 1500);
+    } else {
+        Toast.show('Failed to update student data. Please try again.', 'error');
+    }
+}
+
+// Reset Form - UPDATED FOR NEW FIELDS
+function resetForm() {
+    const form = document.getElementById('addStudentForm');
+    if (form) form.reset();
+    
+    // Reset address checkbox
+    document.getElementById('sameAsLocal').checked = false;
+    togglePermanentAddress();
+    
+    // Reset fee inputs to defaults
+    document.getElementById('admissionFees').value = '5000';
+    document.getElementById('uniformFees').value = '2000';
+    document.getElementById('bookFees').value = '3000';
+    document.getElementById('tuitionFees').value = '40000';
+    document.getElementById('initialPayment').value = '10000';
+    
+    // Clear additional fees
+    additionalFees = [];
+    renderAdditionalFeesList();
+    
+    // Reset payment mode
+    document.querySelector('input[name="paymentMode"][value="one-time"]').checked = true;
+    toggleInstallmentOptions();
+    
+    // Reset payment method
+    document.querySelector('input[name="paymentMethod"][value="cash"]').checked = true;
+    
+    // Clear uploaded documents
+    uploadedDocuments = {};
+    updateDocumentStatus();
+    
+    // Clear other sports and subjects
+    otherSports = [];
+    otherSubjects = [];
+    updateOtherSportsDisplay();
+    updateOtherSubjectsDisplay();
+    
+    // Reset other checkboxes
+    document.getElementById('otherSportsCheckbox').checked = false;
+    document.getElementById('otherSubjectsCheckbox').checked = false;
+    toggleOtherSports();
+    toggleOtherSubjects();
+    
+    // Reset transaction verification
+    transactionVerified = false;
+    document.getElementById('transactionStatus').innerHTML = '';
+    document.getElementById('transactionId').value = '';
+    document.getElementById('qrCodeSection').classList.add('hidden');
+    
+    // Set default date for first installment
+    const today = new Date();
+    const firstInstallmentDate = document.getElementById('firstInstallmentDate');
+    if (firstInstallmentDate) {
+        today.setMonth(today.getMonth() + 1);
+        const nextMonth = today.toISOString().split('T')[0];
+        firstInstallmentDate.value = nextMonth;
+    }
+    
+    updateFeeCalculations();
+    switchTab('personal');
+    
+    // Reset form title and button if in edit mode
+    if (editingStudentId) {
+        document.getElementById('formTitle').textContent = 'Add New Student';
+        editingStudentId = null;
+    }
+}
+
+// Utility Functions
+function parseAddress(address) {
+    if (!address) return { line1: '', line2: '', city: '', state: '', pincode: '' };
+    
+    // Try to parse the address format: "line1, line2, city, state - pincode"
+    const parts = address.split(', ');
+    let line1 = parts[0] || '';
+    let line2 = '';
+    let city = '';
+    let state = '';
+    let pincode = '';
+    
+    if (parts.length > 1) {
+        // Check if last part has " - " for state-pincode
+        const lastPart = parts[parts.length - 1];
+        const statePincodeMatch = lastPart.match(/(.+)\s+-\s+(\d+)/);
+        
+        if (statePincodeMatch) {
+            state = statePincodeMatch[1];
+            pincode = statePincodeMatch[2];
+            // City is the part before state
+            if (parts.length > 2) {
+                city = parts[parts.length - 2];
+                // Line2 is everything between line1 and city
+                if (parts.length > 3) {
+                    line2 = parts.slice(1, parts.length - 2).join(', ');
+                }
+            }
+        } else {
+            // Simple format
+            if (parts.length === 2) {
+                city = parts[1];
+            } else if (parts.length === 3) {
+                line2 = parts[1];
+                city = parts[2];
+            }
+        }
+    }
+    
+    return { line1, line2, city, state, pincode };
+}
+
+function calculateDueDateForEdit(installmentNumber, firstInstallmentDate) {
+    const date = new Date(firstInstallmentDate);
+    date.setMonth(date.getMonth() + (installmentNumber - 1));
+    return date.toISOString().split('T')[0];
+}
+
+// The rest of the functions (deleteStudent, viewStudent, generateReceipt, etc.) remain the same
+// but need to be updated to use student.fullName instead of student.name
+
+// Update viewStudent function to show first/middle/last name
 function viewStudent(id) {
     const student = appState.students.find(s => s.id === id);
     if (!student) return;
@@ -904,10 +2109,15 @@ function viewStudent(id) {
     const modal = document.getElementById('viewModalOverlay');
     modal.classList.add('show');
     
+    // Build name display
+    let nameDisplay = student.firstName;
+    if (student.middleName) nameDisplay += ` ${student.middleName}`;
+    nameDisplay += ` ${student.lastName}`;
+    
     modal.querySelector('.modal-content').innerHTML = `
         <div class="p-6 lg:p-8">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl lg:text-2xl font-bold text-gray-800">Student Details - ${student.name}</h3>
+                <h3 class="text-xl lg:text-2xl font-bold text-gray-800">Student Details - ${nameDisplay}</h3>
                 <button onclick="closeModal('viewModalOverlay')" class="text-gray-500 hover:text-gray-700">
                     <i class="fas fa-times text-2xl"></i>
                 </button>
@@ -919,11 +2129,11 @@ function viewStudent(id) {
                     <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 text-center">
                         <div class="h-32 w-32 bg-white rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
                             ${student.photo ? 
-                                `<img src="${student.photo}" class="h-full w-full object-cover" alt="${student.name}">` :
+                                `<img src="${student.photo}" class="h-full w-full object-cover" alt="${student.fullName}">` :
                                 `<i class="fas fa-user-graduate text-6xl text-blue-600"></i>`
                             }
                         </div>
-                        <h4 class="text-xl font-bold text-gray-800">${student.name}</h4>
+                        <h4 class="text-xl font-bold text-gray-800">${nameDisplay}</h4>
                         <p class="text-gray-600">${student.studentId}</p>
                         <div class="mt-4 space-y-2">
                             <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
@@ -950,6 +2160,16 @@ function viewStudent(id) {
                                 <span class="text-gray-600">Pending Amount:</span>
                                 <span class="font-medium text-red-600">₹${student.fees.pending.toLocaleString()}</span>
                             </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Payment Method:</span>
+                                <span class="font-medium capitalize">${student.fees.paymentMethod}</span>
+                            </div>
+                            ${student.fees.transactionId ? `
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Transaction ID:</span>
+                                <span class="font-medium">${student.fees.transactionId}</span>
+                            </div>
+                            ` : ''}
                             <div class="pt-2 border-t">
                                 <div class="flex justify-between font-bold">
                                     <span>Balance:</span>
@@ -1000,6 +2220,20 @@ function viewStudent(id) {
                         <div class="bg-white rounded-xl border border-gray-200 p-4">
                             <h5 class="font-semibold text-gray-700 mb-3">Personal Details</h5>
                             <div class="space-y-2 text-sm">
+                                <div class="flex">
+                                    <span class="w-32 text-gray-600">First Name:</span>
+                                    <span>${student.firstName}</span>
+                                </div>
+                                ${student.middleName ? `
+                                <div class="flex">
+                                    <span class="w-32 text-gray-600">Middle Name:</span>
+                                    <span>${student.middleName}</span>
+                                </div>
+                                ` : ''}
+                                <div class="flex">
+                                    <span class="w-32 text-gray-600">Last Name:</span>
+                                    <span>${student.lastName}</span>
+                                </div>
                                 <div class="flex">
                                     <span class="w-32 text-gray-600">Date of Birth:</span>
                                     <span>${formatDate(student.dob)} (${calculateAge(student.dob)} years)</span>
@@ -1150,486 +2384,7 @@ function viewStudent(id) {
     `;
 }
 
-function viewReceipt(id) {
-    const student = appState.students.find(s => s.id === id);
-    if (!student) return;
-    
-    generateReceipt(student, student.fees.paid);
-}
-
-// EDIT STUDENT FUNCTIONALITY
-function editStudent(id) {
-    editingStudentId = id;
-    const student = appState.students.find(s => s.id === id);
-    
-    if (!student) {
-        Toast.show('Student not found', 'error');
-        return;
-    }
-    
-    // Show the add student section but in edit mode
-    showAddStudentSection();
-    
-    // Change the form title and button
-    document.querySelector('#addStudentSection h2').textContent = 'Edit Student';
-    
-    const submitButton = document.querySelector('#feesTabContent button[onclick="handleAddStudent()"]');
-    if (submitButton) {
-        submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Update Student';
-        submitButton.onclick = handleUpdateStudent;
-    }
-    
-    // Parse addresses
-    const localAddressParts = parseAddress(student.localAddress);
-    const permanentAddressParts = parseAddress(student.permanentAddress || student.localAddress);
-    
-    // Fill Personal Details Tab
-    document.querySelector('input[name="studentName"]').value = student.name;
-    document.querySelector('input[name="dob"]').value = student.dob;
-    document.querySelector('select[name="gender"]').value = student.gender;
-    document.querySelector('select[name="bloodGroup"]').value = student.bloodGroup || '';
-    document.querySelector('select[name="casteCategory"]').value = student.casteCategory;
-    document.querySelector('input[name="aadharNumber"]').value = student.aadharNumber || '';
-    document.querySelector('input[name="previousSchool"]').value = student.previousSchool || '';
-    document.querySelector('textarea[name="medicalInfo"]').value = student.medicalInfo || '';
-    
-    // Fill Local Address
-    document.querySelector('input[name="localAddressLine1"]').value = localAddressParts.line1;
-    document.querySelector('input[name="localAddressLine2"]').value = localAddressParts.line2 || '';
-    document.querySelector('input[name="localCity"]').value = localAddressParts.city;
-    document.querySelector('input[name="localState"]').value = localAddressParts.state;
-    document.querySelector('input[name="localPincode"]').value = localAddressParts.pincode;
-    
-    // Fill Permanent Address
-    const sameAsLocal = student.permanentAddress === student.localAddress || !student.permanentAddress;
-    document.getElementById('sameAsLocal').checked = sameAsLocal;
-    
-    if (!sameAsLocal && student.permanentAddress) {
-        document.querySelector('input[name="permanentAddressLine1"]').value = permanentAddressParts.line1;
-        document.querySelector('input[name="permanentAddressLine2"]').value = permanentAddressParts.line2 || '';
-        document.querySelector('input[name="permanentCity"]').value = permanentAddressParts.city;
-        document.querySelector('input[name="permanentState"]').value = permanentAddressParts.state;
-        document.querySelector('input[name="permanentPincode"]').value = permanentAddressParts.pincode;
-    }
-    
-    togglePermanentAddress();
-    
-    // Fill Sports checkboxes
-    if (Array.isArray(student.sports)) {
-        student.sports.forEach(sport => {
-            const checkbox = document.querySelector(`input[name="sports[]"][value="${sport.toLowerCase()}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-    }
-    
-    // Fill Academic Details Tab
-    document.querySelector('select[name="class"]').value = student.class;
-    document.querySelector('select[name="section"]').value = student.section;
-    document.querySelector('input[name="rollNumber"]').value = student.rollNumber;
-    document.querySelector('input[name="admissionDate"]').value = student.admissionDate;
-    document.querySelector('select[name="academicYear"]').value = student.academicYear;
-    document.querySelector('select[name="classTeacher"]').value = student.classTeacher || '';
-    
-    // Fill Subjects checkboxes
-    if (Array.isArray(student.subjects)) {
-        student.subjects.forEach(subject => {
-            const checkbox = document.querySelector(`input[name="subjects[]"][value="${subject.toLowerCase()}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-    }
-    
-    // Fill Parent Details Tab
-    document.querySelector('input[name="fatherName"]').value = student.fatherName;
-    document.querySelector('input[name="fatherAadhar"]').value = student.fatherAadhar || '';
-    document.querySelector('input[name="fatherContact"]').value = student.fatherContact;
-    document.querySelector('input[name="fatherOccupation"]').value = student.fatherOccupation || '';
-    
-    document.querySelector('input[name="motherName"]').value = student.motherName;
-    document.querySelector('input[name="motherAadhar"]').value = student.motherAadhar || '';
-    document.querySelector('input[name="motherContact"]').value = student.motherContact || '';
-    document.querySelector('input[name="motherOccupation"]').value = student.motherOccupation || '';
-    
-    document.querySelector('input[name="parentEmail"]').value = student.parentEmail;
-    document.querySelector('select[name="relationship"]').value = student.relationship;
-    
-    document.querySelector('input[name="emergencyContactName"]').value = student.emergencyContactName;
-    document.querySelector('input[name="emergencyContactNumber"]').value = student.emergencyContactNumber;
-    
-    // Fill Fees Details Tab
-    document.getElementById('admissionFees').value = student.fees.admission;
-    document.getElementById('uniformFees').value = student.fees.uniform;
-    document.getElementById('bookFees').value = student.fees.books;
-    document.getElementById('tuitionFees').value = student.fees.tuition;
-    document.getElementById('initialPayment').value = student.fees.paid;
-    
-    // Set payment mode
-    const paymentMode = student.fees.paymentMode || 'one-time';
-    document.querySelector(`input[name="paymentMode"][value="${paymentMode}"]`).checked = true;
-    toggleInstallmentOptions();
-    
-    // Set payment method
-    const paymentMethod = student.fees.paymentMethod || 'cash';
-    document.querySelector(`input[name="paymentMethod"][value="${paymentMethod}"]`).checked = true;
-    
-    // Set installment count if applicable
-    if (student.fees.paymentMode === 'installment' && student.fees.installments?.length > 0) {
-        document.getElementById('installmentCount').value = student.fees.installments.length;
-        if (student.fees.installments[0]?.dueDate) {
-            document.getElementById('firstInstallmentDate').value = student.fees.installments[0].dueDate;
-        }
-    }
-    
-    // Handle additional fees
-    additionalFees = [];
-    if (student.fees.additional > 0) {
-        additionalFees.push({
-            id: Date.now(),
-            name: 'Additional Fees',
-            amount: student.fees.additional
-        });
-    }
-    originalAdditionalFees = [...additionalFees];
-    renderAdditionalFeesList();
-    
-    updateFeeCalculations();
-    
-    Toast.show('Student data loaded for editing', 'info');
-}
-
-function parseAddress(address) {
-    if (!address) return { line1: '', line2: '', city: '', state: '', pincode: '' };
-    
-    // Try to parse the address format: "line1, line2, city, state - pincode"
-    const parts = address.split(', ');
-    let line1 = parts[0] || '';
-    let line2 = '';
-    let city = '';
-    let state = '';
-    let pincode = '';
-    
-    if (parts.length > 1) {
-        // Check if last part has " - " for state-pincode
-        const lastPart = parts[parts.length - 1];
-        const statePincodeMatch = lastPart.match(/(.+)\s+-\s+(\d+)/);
-        
-        if (statePincodeMatch) {
-            state = statePincodeMatch[1];
-            pincode = statePincodeMatch[2];
-            // City is the part before state
-            if (parts.length > 2) {
-                city = parts[parts.length - 2];
-                // Line2 is everything between line1 and city
-                if (parts.length > 3) {
-                    line2 = parts.slice(1, parts.length - 2).join(', ');
-                }
-            }
-        } else {
-            // Simple format
-            if (parts.length === 2) {
-                city = parts[1];
-            } else if (parts.length === 3) {
-                line2 = parts[1];
-                city = parts[2];
-            }
-        }
-    }
-    
-    return { line1, line2, city, state, pincode };
-}
-
-function collectFormData() {
-    return {
-        // Personal Details
-        studentName: document.querySelector('input[name="studentName"]')?.value || '',
-        dob: document.querySelector('input[name="dob"]')?.value || '',
-        gender: document.querySelector('select[name="gender"]')?.value || '',
-        bloodGroup: document.querySelector('select[name="bloodGroup"]')?.value || '',
-        casteCategory: document.querySelector('select[name="casteCategory"]')?.value || '',
-        aadharNumber: document.querySelector('input[name="aadharNumber"]')?.value || '',
-        previousSchool: document.querySelector('input[name="previousSchool"]')?.value || '',
-        medicalInfo: document.querySelector('textarea[name="medicalInfo"]')?.value || '',
-        
-        // Address Details
-        localAddressLine1: document.querySelector('input[name="localAddressLine1"]')?.value || '',
-        localAddressLine2: document.querySelector('input[name="localAddressLine2"]')?.value || '',
-        localCity: document.querySelector('input[name="localCity"]')?.value || '',
-        localState: document.querySelector('input[name="localState"]')?.value || '',
-        localPincode: document.querySelector('input[name="localPincode"]')?.value || '',
-        
-        // Permanent Address
-        sameAsLocal: document.getElementById('sameAsLocal')?.checked || false,
-        permanentAddressLine1: document.querySelector('input[name="permanentAddressLine1"]')?.value || '',
-        permanentAddressLine2: document.querySelector('input[name="permanentAddressLine2"]')?.value || '',
-        permanentCity: document.querySelector('input[name="permanentCity"]')?.value || '',
-        permanentState: document.querySelector('input[name="permanentState"]')?.value || '',
-        permanentPincode: document.querySelector('input[name="permanentPincode"]')?.value || '',
-        
-        // Academic Details
-        class: document.querySelector('select[name="class"]')?.value || '',
-        section: document.querySelector('select[name="section"]')?.value || '',
-        rollNumber: document.querySelector('input[name="rollNumber"]')?.value || '',
-        admissionDate: document.querySelector('input[name="admissionDate"]')?.value || '',
-        academicYear: document.querySelector('select[name="academicYear"]')?.value || '',
-        classTeacher: document.querySelector('select[name="classTeacher"]')?.value || '',
-        
-        // Subjects (checkboxes)
-        subjects: Array.from(document.querySelectorAll('input[name="subjects[]"]:checked')).map(cb => cb.value),
-        
-        // Sports (checkboxes)
-        sports: Array.from(document.querySelectorAll('input[name="sports[]"]:checked')).map(cb => cb.value),
-        
-        // Parent Details
-        fatherName: document.querySelector('input[name="fatherName"]')?.value || '',
-        fatherAadhar: document.querySelector('input[name="fatherAadhar"]')?.value || '',
-        fatherContact: document.querySelector('input[name="fatherContact"]')?.value || '',
-        fatherOccupation: document.querySelector('input[name="fatherOccupation"]')?.value || '',
-        
-        motherName: document.querySelector('input[name="motherName"]')?.value || '',
-        motherAadhar: document.querySelector('input[name="motherAadhar"]')?.value || '',
-        motherContact: document.querySelector('input[name="motherContact"]')?.value || '',
-        motherOccupation: document.querySelector('input[name="motherOccupation"]')?.value || '',
-        
-        parentEmail: document.querySelector('input[name="parentEmail"]')?.value || '',
-        relationship: document.querySelector('select[name="relationship"]')?.value || '',
-        
-        emergencyContactName: document.querySelector('input[name="emergencyContactName"]')?.value || '',
-        emergencyContactNumber: document.querySelector('input[name="emergencyContactNumber"]')?.value || '',
-        
-        // Fees
-        admissionFees: parseFloat(document.getElementById('admissionFees')?.value || 0),
-        uniformFees: parseFloat(document.getElementById('uniformFees')?.value || 0),
-        bookFees: parseFloat(document.getElementById('bookFees')?.value || 0),
-        tuitionFees: parseFloat(document.getElementById('tuitionFees')?.value || 0),
-        initialPayment: parseFloat(document.getElementById('initialPayment')?.value || 0),
-        paymentMode: document.querySelector('input[name="paymentMode"]:checked')?.value || 'one-time',
-        paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cash',
-        installmentCount: parseInt(document.getElementById('installmentCount')?.value || 0),
-        firstInstallmentDate: document.getElementById('firstInstallmentDate')?.value || ''
-    };
-}
-
-function validateFormData(studentData) {
-    const requiredFields = [
-        { field: 'studentName', name: 'Student Name' },
-        { field: 'dob', name: 'Date of Birth' },
-        { field: 'gender', name: 'Gender' },
-        { field: 'casteCategory', name: 'Caste Category' },
-        { field: 'localAddressLine1', name: 'Local Address Line 1' },
-        { field: 'localCity', name: 'Local City' },
-        { field: 'localState', name: 'Local State' },
-        { field: 'localPincode', name: 'Local Pincode' },
-        { field: 'class', name: 'Class' },
-        { field: 'section', name: 'Section' },
-        { field: 'rollNumber', name: 'Roll Number' },
-        { field: 'admissionDate', name: 'Admission Date' },
-        { field: 'academicYear', name: 'Academic Year' },
-        { field: 'fatherName', name: "Father's Name" },
-        { field: 'fatherContact', name: "Father's Contact" },
-        { field: 'motherName', name: "Mother's Name" },
-        { field: 'parentEmail', name: 'Parent Email' },
-        { field: 'relationship', name: 'Relationship' },
-        { field: 'emergencyContactName', name: 'Emergency Contact Name' },
-        { field: 'emergencyContactNumber', name: 'Emergency Contact Number' }
-    ];
-    
-    for (const { field, name } of requiredFields) {
-        if (!studentData[field] || studentData[field].toString().trim() === '') {
-            Toast.show(`${name} is required`, 'error');
-            return false;
-        }
-    }
-    
-    // Validate phone numbers
-    const phoneFields = [
-        { field: 'fatherContact', name: "Father's Contact" },
-        { field: 'emergencyContactNumber', name: 'Emergency Contact Number' }
-    ];
-    
-    for (const { field, name } of phoneFields) {
-        if (studentData[field] && !/^\d{10}$/.test(studentData[field])) {
-            Toast.show(`${name} must be 10 digits`, 'error');
-            return false;
-        }
-    }
-    
-    // Validate email
-    if (studentData.parentEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentData.parentEmail)) {
-        Toast.show('Please enter a valid email address', 'error');
-        return false;
-    }
-    
-    // Validate admission date is not in the future
-    const admissionDate = new Date(studentData.admissionDate);
-    const today = new Date();
-    if (admissionDate > today) {
-        Toast.show('Admission date cannot be in the future', 'error');
-        return false;
-    }
-    
-    // Validate date of birth makes sense (not in future and reasonable age)
-    const dob = new Date(studentData.dob);
-    if (dob > today) {
-        Toast.show('Date of birth cannot be in the future', 'error');
-        return false;
-    }
-    
-    const age = today.getFullYear() - dob.getFullYear();
-    if (age < 3 || age > 25) {
-        Toast.show('Student age should be between 3 and 25 years', 'error');
-        return false;
-    }
-    
-    return true;
-}
-
-function handleUpdateStudent() {
-    if (!editingStudentId) {
-        Toast.show('No student selected for editing', 'error');
-        return;
-    }
-    
-    const studentIndex = appState.students.findIndex(s => s.id === editingStudentId);
-    if (studentIndex === -1) {
-        Toast.show('Student not found', 'error');
-        return;
-    }
-    
-    // Collect form data
-    const studentData = collectFormData();
-    if (!studentData) return;
-    
-    // Validate required fields
-    if (!validateFormData(studentData)) return;
-    
-    // Build addresses
-    const localAddress = `${studentData.localAddressLine1}${studentData.localAddressLine2 ? ', ' + studentData.localAddressLine2 : ''}, ${studentData.localCity}, ${studentData.localState} - ${studentData.localPincode}`;
-    
-    let permanentAddress = localAddress;
-    if (!studentData.sameAsLocal && 
-        studentData.permanentAddressLine1 && 
-        studentData.permanentCity && 
-        studentData.permanentState && 
-        studentData.permanentPincode) {
-        permanentAddress = `${studentData.permanentAddressLine1}${studentData.permanentAddressLine2 ? ', ' + studentData.permanentAddressLine2 : ''}, ${studentData.permanentCity}, ${studentData.permanentState} - ${studentData.permanentPincode}`;
-    }
-    
-    // Calculate fees
-    const baseTotal = studentData.admissionFees + studentData.uniformFees + studentData.bookFees + studentData.tuitionFees;
-    const additionalTotal = calculateAdditionalFeesTotal();
-    const totalFees = baseTotal + additionalTotal;
-    
-    if (studentData.initialPayment > totalFees) {
-        Toast.show('Initial payment cannot exceed total fees', 'error');
-        return;
-    }
-    
-    if (studentData.initialPayment < 0) {
-        Toast.show('Initial payment cannot be negative', 'error');
-        return;
-    }
-    
-    // Calculate installments if payment mode is installment
-    let installments = [];
-    if (studentData.paymentMode === 'installment' && studentData.initialPayment < totalFees) {
-        const balanceAmount = totalFees - studentData.initialPayment;
-        const installmentCount = studentData.installmentCount;
-        
-        if (installmentCount > 0 && studentData.firstInstallmentDate) {
-            const baseInstallmentAmount = Math.floor(balanceAmount / installmentCount);
-            const remainder = balanceAmount % installmentCount;
-            
-            for (let i = 1; i <= installmentCount; i++) {
-                const dueDate = calculateDueDateForEdit(i, studentData.firstInstallmentDate);
-                const amount = (i === installmentCount) ? 
-                    baseInstallmentAmount + remainder : 
-                    baseInstallmentAmount;
-                
-                installments.push({
-                    installmentNumber: i,
-                    amount: amount,
-                    dueDate: dueDate,
-                    status: 'pending',
-                    paidAmount: 0,
-                    paymentDate: null
-                });
-            }
-        }
-    }
-    
-    // Update student object
-    const updatedStudent = {
-        ...appState.students[studentIndex],
-        name: studentData.studentName,
-        dob: studentData.dob,
-        gender: studentData.gender,
-        bloodGroup: studentData.bloodGroup || '',
-        casteCategory: studentData.casteCategory,
-        localAddress: localAddress,
-        permanentAddress: permanentAddress,
-        aadharNumber: studentData.aadharNumber || '',
-        previousSchool: studentData.previousSchool || '',
-        medicalInfo: studentData.medicalInfo || '',
-        sports: studentData.sports || [],
-        class: studentData.class,
-        section: studentData.section,
-        rollNumber: studentData.rollNumber,
-        admissionDate: studentData.admissionDate,
-        academicYear: studentData.academicYear,
-        classTeacher: studentData.classTeacher || '',
-        subjects: studentData.subjects || [],
-        fatherName: studentData.fatherName,
-        fatherContact: studentData.fatherContact,
-        fatherAadhar: studentData.fatherAadhar || '',
-        fatherOccupation: studentData.fatherOccupation || '',
-        motherName: studentData.motherName,
-        motherContact: studentData.motherContact || '',
-        motherAadhar: studentData.motherAadhar || '',
-        motherOccupation: studentData.motherOccupation || '',
-        parentEmail: studentData.parentEmail,
-        relationship: studentData.relationship,
-        emergencyContactName: studentData.emergencyContactName,
-        emergencyContactNumber: studentData.emergencyContactNumber,
-        fees: {
-            ...appState.students[studentIndex].fees,
-            total: totalFees,
-            admission: studentData.admissionFees,
-            uniform: studentData.uniformFees,
-            books: studentData.bookFees,
-            tuition: studentData.tuitionFees,
-            additional: additionalTotal,
-            paid: studentData.initialPayment,
-            pending: totalFees - studentData.initialPayment,
-            paymentMode: studentData.paymentMode,
-            paymentMethod: studentData.paymentMethod,
-            installments: installments
-        },
-        updatedAt: new Date().toISOString()
-    };
-    
-    // Update in array
-    appState.students[studentIndex] = updatedStudent;
-    
-    // Save data
-    const saved = saveData();
-    
-    if (saved) {
-        Toast.show(`Student ${updatedStudent.name} updated successfully!`, 'success');
-        
-        // Redirect after delay
-        setTimeout(() => {
-            window.location.href = 'student-management.html';
-        }, 1500);
-    } else {
-        Toast.show('Failed to update student data. Please try again.', 'error');
-    }
-}
-
-function calculateDueDateForEdit(installmentNumber, firstInstallmentDate) {
-    const date = new Date(firstInstallmentDate);
-    date.setMonth(date.getMonth() + (installmentNumber - 1));
-    return date.toISOString().split('T')[0];
-}
-
+// Delete Student function (unchanged except using fullName)
 function deleteStudent(id) {
     const student = appState.students.find(s => s.id === id);
     if (!student) {
@@ -1656,7 +2411,7 @@ function deleteStudent(id) {
                             <i class="fas fa-user-graduate text-red-600"></i>
                         </div>
                         <div>
-                            <p class="font-medium text-gray-800">${student.name}</p>
+                            <p class="font-medium text-gray-800">${student.fullName}</p>
                             <p class="text-sm text-gray-600">${student.studentId} • Class ${student.class}${student.section}</p>
                         </div>
                     </div>
@@ -1698,163 +2453,12 @@ function confirmDelete(id) {
             renderStudentsTable();
             updateStudentStats();
             closeDeleteConfirmation();
-            Toast.show(`Student ${student.name} deleted successfully`, 'success');
+            Toast.show(`Student ${student.fullName} deleted successfully`, 'success');
         }
     }
 }
 
-// Add Student Handler
-function handleAddStudent() {
-    console.log('handleAddStudent called');
-    
-    // Collect form data
-    const studentData = collectFormData();
-    if (!studentData) return;
-    
-    // Validate required fields
-    if (!validateFormData(studentData)) return;
-    
-    // Build addresses
-    const localAddress = `${studentData.localAddressLine1}${studentData.localAddressLine2 ? ', ' + studentData.localAddressLine2 : ''}, ${studentData.localCity}, ${studentData.localState} - ${studentData.localPincode}`;
-    
-    let permanentAddress = localAddress;
-    if (!studentData.sameAsLocal && 
-        studentData.permanentAddressLine1 && 
-        studentData.permanentCity && 
-        studentData.permanentState && 
-        studentData.permanentPincode) {
-        permanentAddress = `${studentData.permanentAddressLine1}${studentData.permanentAddressLine2 ? ', ' + studentData.permanentAddressLine2 : ''}, ${studentData.permanentCity}, ${studentData.permanentState} - ${studentData.permanentPincode}`;
-    }
-    
-    // Calculate fees
-    const baseTotal = studentData.admissionFees + studentData.uniformFees + studentData.bookFees + studentData.tuitionFees;
-    const additionalTotal = calculateAdditionalFeesTotal();
-    const totalFees = baseTotal + additionalTotal;
-    
-    if (studentData.initialPayment > totalFees) {
-        Toast.show('Initial payment cannot exceed total fees', 'error');
-        return;
-    }
-    
-    if (studentData.initialPayment < 0) {
-        Toast.show('Initial payment cannot be negative', 'error');
-        return;
-    }
-    
-    // Calculate installments if payment mode is installment
-    let installments = [];
-    if (studentData.paymentMode === 'installment' && studentData.initialPayment < totalFees) {
-        const balanceAmount = totalFees - studentData.initialPayment;
-        const installmentCount = studentData.installmentCount;
-        
-        if (installmentCount > 0 && studentData.firstInstallmentDate) {
-            const baseInstallmentAmount = Math.floor(balanceAmount / installmentCount);
-            const remainder = balanceAmount % installmentCount;
-            
-            for (let i = 1; i <= installmentCount; i++) {
-                const dueDate = calculateDueDate(i);
-                const amount = (i === installmentCount) ? 
-                    baseInstallmentAmount + remainder : 
-                    baseInstallmentAmount;
-                
-                installments.push({
-                    installmentNumber: i,
-                    amount: amount,
-                    dueDate: dueDate,
-                    status: 'pending',
-                    paidAmount: 0,
-                    paymentDate: null
-                });
-            }
-        }
-    }
-    
-    // Generate unique student ID
-    const studentId = `STU${appState.studentIdCounter++}`;
-    
-    // Generate receipt number
-    const receiptNumber = `REC${Date.now().toString().slice(-8)}`;
-    
-    // Create student object
-    const newStudent = {
-        id: Date.now(),
-        studentId: studentId,
-        name: studentData.studentName,
-        dob: studentData.dob,
-        gender: studentData.gender,
-        bloodGroup: studentData.bloodGroup || '',
-        casteCategory: studentData.casteCategory,
-        localAddress: localAddress,
-        permanentAddress: permanentAddress,
-        aadharNumber: studentData.aadharNumber || '',
-        previousSchool: studentData.previousSchool || '',
-        medicalInfo: studentData.medicalInfo || '',
-        sports: studentData.sports || [],
-        class: studentData.class,
-        section: studentData.section,
-        rollNumber: studentData.rollNumber,
-        admissionDate: studentData.admissionDate,
-        academicYear: studentData.academicYear,
-        classTeacher: studentData.classTeacher || '',
-        subjects: studentData.subjects || [],
-        fatherName: studentData.fatherName,
-        fatherContact: studentData.fatherContact,
-        fatherAadhar: studentData.fatherAadhar || '',
-        fatherOccupation: studentData.fatherOccupation || '',
-        motherName: studentData.motherName,
-        motherContact: studentData.motherContact || '',
-        motherAadhar: studentData.motherAadhar || '',
-        motherOccupation: studentData.motherOccupation || '',
-        parentEmail: studentData.parentEmail,
-        relationship: studentData.relationship,
-        emergencyContactName: studentData.emergencyContactName,
-        emergencyContactNumber: studentData.emergencyContactNumber,
-        fees: {
-            total: totalFees,
-            admission: studentData.admissionFees,
-            uniform: studentData.uniformFees,
-            books: studentData.bookFees,
-            tuition: studentData.tuitionFees,
-            additional: additionalTotal,
-            paid: studentData.initialPayment,
-            pending: totalFees - studentData.initialPayment,
-            paymentMode: studentData.paymentMode,
-            paymentMethod: studentData.paymentMethod,
-            installments: installments,
-            receiptNumber: receiptNumber,
-            initialPaymentDate: new Date().toISOString().split('T')[0]
-        },
-        status: 'Active',
-        createdAt: new Date().toISOString(),
-        photo: null
-    };
-    
-    console.log('New student object created:', newStudent);
-    
-    // Add to database
-    appState.students.push(newStudent);
-    
-    // Save data to localStorage
-    const saved = saveData();
-    
-    if (saved) {
-        // Generate receipt
-        generateReceipt(newStudent, studentData.initialPayment);
-        
-        // Reset and show success
-        resetForm();
-        Toast.show(`Student ${newStudent.name} registered successfully! Student ID: ${newStudent.studentId}`, 'success');
-        
-        // Redirect after delay
-        setTimeout(() => {
-            window.location.href = 'student-management.html';
-        }, 2000);
-    } else {
-        Toast.show('Failed to save student data. Please try again.', 'error');
-    }
-}
-
-// Receipt Generation
+// Receipt Generation (updated for new fields)
 function generateReceipt(student, amountPaid) {
     // Create receipt HTML
     const receiptHTML = `
@@ -1885,7 +2489,7 @@ function generateReceipt(student, amountPaid) {
                             <div class="space-y-2 text-sm">
                                 <div class="flex">
                                     <span class="w-32 text-gray-600">Name:</span>
-                                    <span class="font-medium">${student.name}</span>
+                                    <span class="font-medium">${student.fullName}</span>
                                 </div>
                                 <div class="flex">
                                     <span class="w-32 text-gray-600">Student ID:</span>
@@ -1922,6 +2526,12 @@ function generateReceipt(student, amountPaid) {
                                     <span class="w-32 text-gray-600">Method:</span>
                                     <span class="capitalize">${student.fees.paymentMethod}</span>
                                 </div>
+                                ${student.fees.transactionId ? `
+                                <div class="flex">
+                                    <span class="w-32 text-gray-600">Transaction ID:</span>
+                                    <span class="font-medium">${student.fees.transactionId}</span>
+                                </div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
@@ -2058,48 +2668,6 @@ function printReceipt() {
     }
 }
 
-function resetForm() {
-    const form = document.getElementById('addStudentForm');
-    if (form) form.reset();
-    
-    // Reset address checkbox
-    document.getElementById('sameAsLocal').checked = false;
-    togglePermanentAddress();
-    
-    // Reset fee inputs to defaults
-    document.getElementById('admissionFees').value = '5000';
-    document.getElementById('uniformFees').value = '2000';
-    document.getElementById('bookFees').value = '3000';
-    document.getElementById('tuitionFees').value = '40000';
-    document.getElementById('initialPayment').value = '10000';
-    
-    // Clear additional fees
-    additionalFees = [];
-    renderAdditionalFeesList();
-    
-    // Reset payment mode
-    document.querySelector('input[name="paymentMode"][value="one-time"]').checked = true;
-    toggleInstallmentOptions();
-    
-    // Set default date for first installment
-    const today = new Date();
-    const firstInstallmentDate = document.getElementById('firstInstallmentDate');
-    if (firstInstallmentDate) {
-        today.setMonth(today.getMonth() + 1);
-        const nextMonth = today.toISOString().split('T')[0];
-        firstInstallmentDate.value = nextMonth;
-    }
-    
-    updateFeeCalculations();
-    switchTab('personal');
-    
-    // Reset form title and button if in edit mode
-    if (editingStudentId) {
-        document.querySelector('#addStudentSection h2').textContent = 'Add New Student';
-        editingStudentId = null;
-    }
-}
-
 // Utility Functions
 function calculateAge(dob) {
     const birthDate = new Date(dob);
@@ -2132,4 +2700,11 @@ function exportStudents() {
 
 function printStudentDetails(id) {
     Toast.show('Print functionality will be implemented here', 'info');
+}
+
+function viewReceipt(id) {
+    const student = appState.students.find(s => s.id === id);
+    if (!student) return;
+    
+    generateReceipt(student, student.fees.paid);
 }
