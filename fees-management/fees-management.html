@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <!-- QR Code Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
     <style>
         /* ============================================================================
            MODERN MINIMAL ADMIN DASHBOARD STYLES - 2025/2026 STYLE
@@ -326,6 +326,11 @@
             color: #1e40af;
         }
 
+        .status-unpaid {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
         .status-overdue {
             background-color: #fee2e2;
             color: #991b1b;
@@ -424,20 +429,129 @@
             height: auto;
         }
 
-        /* QR Code grid for fallback */
-        .qr-grid {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            grid-template-rows: repeat(5, 1fr);
-            gap: 1px;
-            background-color: white;
+        /* Installment Styles */
+        .installment-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
         }
 
-        .qr-cell {
-            width: 100%;
-            padding-bottom: 100%;
-            /* Square cells */
-            border: 1px solid #e5e7eb;
+        .installment-card.paid {
+            background-color: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .installment-card.partial {
+            background-color: #fef7c3;
+            border-color: #fde047;
+        }
+
+        .installment-card.unpaid {
+            background-color: #fef2f2;
+            border-color: #fecaca;
+        }
+
+        .installment-card.upcoming {
+            background-color: #f0f9ff;
+            border-color: #bae6fd;
+        }
+
+        .due-date-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .due-date-overdue {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .due-date-upcoming {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .due-date-future {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .pay-now-btn {
+            padding: 6px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .pay-now-btn.active {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .pay-now-btn.active:hover {
+            background-color: #059669;
+        }
+
+        .pay-now-btn.inactive {
+            background-color: #9ca3af;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        .installment-option {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 8px;
+        }
+
+        .installment-option:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .installment-option.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .installment-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Custom Amount Overlay */
+        .custom-amount-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .custom-amount-overlay.show {
+            display: flex;
+        }
+
+        .custom-amount-container {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -454,6 +568,33 @@
 
     <!-- Mobile Sidebar Overlay -->
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <!-- Custom Amount Overlay -->
+    <div id="customAmountOverlay" class="custom-amount-overlay">
+        <div class="custom-amount-container">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Enter Payment Amount</h3>
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Installment Amount: ₹<span id="installmentFullAmount">0</span>
+                </label>
+                <p class="text-sm text-gray-600 mb-3">You can pay any amount up to the installment due</p>
+                <input type="number" id="customPaymentAmount" 
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 text-lg"
+                       placeholder="Enter amount to pay" min="1" step="100">
+                <p class="text-sm text-gray-500 mt-2">Remaining amount: ₹<span id="remainingAmountDisplay">0</span></p>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeCustomAmountOverlay()"
+                        class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                    Cancel
+                </button>
+                <button onclick="submitCustomAmount()"
+                        class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 font-medium">
+                    Submit
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Admin Dashboard -->
     <div id="adminDashboard">
@@ -647,6 +788,12 @@
                         <span class="nav-text text-black">Create Class</span>
                     </a>
 
+                    <a data-tooltip="AssignmentManagement" href="/Academic/assignment.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-tasks text-black nav-icon"></i>
+                        <span class="nav-text text-black">Assignment</span>
+                    </a>
+
                     <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Financial</p>
                     </div>
@@ -694,7 +841,7 @@
                         </div>
                     </div>
 
-                    <!-- Quick Stats - Removed Collection Rate and Overdue Payments -->
+                    <!-- Quick Stats -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
                         <div class="bg-white p-4 rounded-xl shadow border border-gray-200">
                             <div class="flex items-center">
@@ -723,7 +870,7 @@
                         </div>
                     </div>
 
-                    <!-- Main Content Tabs - Removed Overview Tab -->
+                    <!-- Main Content Tabs -->
                     <div class="bg-white rounded-xl shadow mb-6">
                         <div class="border-b border-gray-200">
                             <div class="flex overflow-x-auto">
@@ -746,7 +893,7 @@
                             </div>
                         </div>
 
-                        <!-- Students Tab - Now the first/default tab -->
+                        <!-- Students Tab -->
                         <div id="studentsTabContent" class="tab-content active p-4 lg:p-6">
                             <!-- Filters -->
                             <div class="bg-gray-50 rounded-lg p-4 mb-6">
@@ -786,8 +933,8 @@
                                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
                                             <option value="">All Status</option>
                                             <option value="paid">Paid</option>
-                                            <option value="pending">Pending</option>
-
+                                            <option value="partial">Partial Paid</option>
+                                            <option value="unpaid">Unpaid</option>
                                         </select>
                                     </div>
 
@@ -993,7 +1140,27 @@
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-200">
-                                            <!-- Table rows remain the same -->
+                                            <tr>
+                                                <td class="px-4 py-3">April 2024</td>
+                                                <td class="px-4 py-3 font-medium text-green-600">₹2,45,000</td>
+                                                <td class="px-4 py-3">85</td>
+                                                <td class="px-4 py-3 font-medium text-red-600">₹55,000</td>
+                                                <td class="px-4 py-3">81.7%</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-3">May 2024</td>
+                                                <td class="px-4 py-3 font-medium text-green-600">₹1,98,500</td>
+                                                <td class="px-4 py-3">72</td>
+                                                <td class="px-4 py-3 font-medium text-red-600">₹1,01,500</td>
+                                                <td class="px-4 py-3">66.2%</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="px-4 py-3">June 2024</td>
+                                                <td class="px-4 py-3 font-medium text-green-600">₹2,15,000</td>
+                                                <td class="px-4 py-3">78</td>
+                                                <td class="px-4 py-3 font-medium text-red-600">₹85,000</td>
+                                                <td class="px-4 py-3">71.7%</td>
+                                            </tr>
                                         </tbody>
                                     </table>
                                 </div>
@@ -1037,6 +1204,40 @@
                         </div>
                     </div>
 
+                    <!-- Installment Selection (Replaces Amount to Pay) -->
+                    <div id="installmentSelectionSection" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">
+                            <i class="fas fa-calendar-alt mr-2"></i>Select Installment *
+                        </label>
+                        <div id="installmentOptionsContainer" class="space-y-3">
+                            <!-- Installment options will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Selected Installment Details -->
+                    <div id="selectedInstallmentDetails" class="hidden">
+                        <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-gray-800 mb-3">Installment Details</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Installment</p>
+                                    <p id="installmentNumberDisplay" class="font-semibold text-gray-800">-</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Due Date</p>
+                                    <p id="installmentDueDateDisplay" class="font-semibold text-gray-800">-</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-700">Amount</p>
+                                    <p id="installmentAmountDisplay" class="font-semibold text-gray-800">-</p>
+                                </div>
+                            </div>
+                            <div id="installmentPaymentSection">
+                                <!-- Status and Pay Now button will appear here -->
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Payment Details -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -1054,7 +1255,7 @@
                             </label>
                             <input type="number" id="paymentAmount" min="0"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                                placeholder="Enter amount">
+                                placeholder="Enter amount" readonly>
                         </div>
                     </div>
 
@@ -1207,6 +1408,10 @@
                                 <span id="summaryStudentName" class="font-medium">Not selected</span>
                             </div>
                             <div class="flex justify-between">
+                                <span class="text-gray-600">Installment:</span>
+                                <span id="summaryInstallment" class="font-medium">Not selected</span>
+                            </div>
+                            <div class="flex justify-between">
                                 <span class="text-gray-600">Payment Amount:</span>
                                 <span id="summaryPaymentAmount" class="font-medium text-green-600">₹0</span>
                             </div>
@@ -1260,4 +1465,3 @@
 </body>
 
 </html>
-

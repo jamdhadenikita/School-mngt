@@ -133,6 +133,7 @@
             backdrop-filter: blur(4px);
             display: none;
             z-index: 100;
+
         }
 
         .modal-overlay.active {
@@ -144,8 +145,8 @@
         .modal {
             background: white;
             border-radius: 1rem;
-            max-width: 600px;
-            width: 90%;
+            max-width: 900px;
+            width: 100%;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -253,6 +254,212 @@
         .status-pending {
             background-color: #fef3c7;
             color: #92400e;
+        }
+
+        /* Bulk Assign Dropdown Styles */
+        .bulk-assign-dropdown {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .bulk-assign-btn {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #4b5563;
+        }
+
+        .bulk-assign-btn:hover {
+            border-color: #9ca3af;
+        }
+
+        .bulk-assign-btn.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .bulk-assign-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            width: 100%;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            border: 1px solid #e5e7eb;
+            z-index: 1000;
+            margin-top: 0.25rem;
+        }
+
+        .bulk-assign-dropdown-content.show {
+            display: block;
+        }
+
+        .bulk-assign-header {
+            padding: 0.75rem 1rem;
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 600;
+            color: #374151;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bulk-assign-list {
+            padding: 0.5rem;
+        }
+
+        .bulk-assign-item {
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s;
+        }
+
+        .bulk-assign-item:hover {
+            background-color: #f3f4f6;
+        }
+
+        .bulk-assign-checkbox {
+            margin-right: 0.75rem;
+        }
+
+        .bulk-assign-footer {
+            padding: 1rem;
+            background-color: #f9fafb;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .bulk-assign-selected-count {
+            font-size: 0.875rem;
+            color: #6b7280;
+            padding: 0 1rem;
+        }
+
+        /* Search bar in dropdown */
+        .search-container {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Teachers Table Styles */
+        .teachers-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .teachers-table th {
+            background-color: #f9fafb;
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
+            font-size: 0.875rem;
+        }
+
+        .teachers-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+        }
+
+        .teachers-table tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .subject-dropdown {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .subject-dropdown:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .others-btn {
+            padding: 0.5rem 1rem;
+            background-color: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            color: #4b5563;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .others-btn:hover {
+            background-color: #e5e7eb;
+        }
+
+        .add-subject-btn {
+            padding: 0.5rem 1rem;
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .add-subject-btn:hover {
+            background-color: #2563eb;
+        }
+
+        .no-teachers {
+            padding: 2rem;
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .no-teachers i {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: #d1d5db;
         }
 
         /* ============================================================================
@@ -400,6 +607,11 @@
             .schedule-grid {
                 grid-template-columns: 1fr !important;
             }
+
+            .teachers-table {
+                display: block;
+                overflow-x: auto;
+            }
         }
 
         @media (min-width: 1024px) {
@@ -420,6 +632,22 @@
         /* Make sure main content doesn't get overlapped */
         main#mainContent {
             min-height: calc(100vh - 64px);
+        }
+
+        /* Subject field animation */
+        .subject-field {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.4s ease-in-out;
+        }
+
+        .subject-field.show {
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e5e7eb;
         }
     </style>
 </head>
@@ -515,9 +743,10 @@
                             </div>
                         </div>
 
+
                         <!-- Class Teacher -->
                         <div>
-                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Class Teacher</h4>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Teaching Staff</h4>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">Select Class
@@ -525,11 +754,7 @@
                                     <select id="classTeacher" name="classTeacher"
                                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Select Teacher</option>
-                                        <option value="1">Ms. Priya Sharma</option>
-                                        <option value="2">Mr. Rajesh Kumar</option>
-                                        <option value="3">Ms. Anjali Singh</option>
-                                        <option value="4">Mr. Vikram Patel</option>
-                                        <option value="5">Ms. Neha Gupta</option>
+                                        <!-- Options will be populated by JavaScript -->
                                     </select>
                                 </div>
                                 <div>
@@ -538,10 +763,170 @@
                                     <select id="assistantTeacher" name="assistantTeacher"
                                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="">Select Assistant Teacher</option>
-                                        <option value="6">Ms. Sangeeta Roy</option>
-                                        <option value="7">Mr. Amit Verma</option>
-                                        <option value="8">Ms. Deepika Nair</option>
+                                        <!-- Options will be populated by JavaScript -->
                                     </select>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Teacher Subject Assignments (Combined Section) -->
+                        <div id="teacherSubjectAssignments" class="hidden">
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Assign Subjects to Teachers</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="mb-4">
+                                    <p class="text-sm text-gray-600">
+                                        Assign subjects to teachers. Once a subject is assigned to one teacher, it will
+                                        not be available for other teachers.
+                                    </p>
+                                </div>
+
+                                <div class="space-y-4 max-h-[400px] overflow-y-auto pr-2"
+                                    id="subjectAssignmentsContainer">
+                                    <!-- Class Teacher Subject Assignment -->
+                                    <div id="classTeacherSubjectItem" class="hidden">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div>
+                                                <span class="font-medium text-gray-800" id="classTeacherNameLabel">Class
+                                                    Teacher</span>
+                                                <span class="text-sm text-gray-600 ml-2" id="classTeacherInfo"></span>
+                                            </div>
+                                            <span
+                                                class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Required</span>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <select id="classTeacherSubject" name="classTeacherSubject"
+                                                class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                disabled>
+                                                <option value="">Select Subject</option>
+                                            </select>
+                                            <button type="button" onclick="clearClassTeacherSubject()"
+                                                class="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium whitespace-nowrap">
+                                                Clear
+                                            </button>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">Select a subject for the class teacher</p>
+                                    </div>
+
+                                    <!-- Assistant Teacher Subject Assignment -->
+                                    <div id="assistantTeacherSubjectItem" class="hidden">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <div>
+                                                <span class="font-medium text-gray-800"
+                                                    id="assistantTeacherNameLabel">Assistant Teacher</span>
+                                                <span class="text-sm text-gray-600 ml-2"
+                                                    id="assistantTeacherInfo"></span>
+                                            </div>
+                                            <span
+                                                class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">Optional</span>
+                                        </div>
+                                        <div class="flex gap-4">
+                                            <select id="assistantTeacherSubject" name="assistantTeacherSubject"
+                                                class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                disabled>
+                                                <option value="">Select Subject</option>
+                                            </select>
+                                            <button type="button" onclick="clearAssistantTeacherSubject()"
+                                                class="px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium whitespace-nowrap">
+                                                Clear
+                                            </button>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">Select a subject for the assistant teacher
+                                        </p>
+                                    </div>
+
+                                    <!-- No Teachers Selected Message -->
+                                    <div id="noTeachersMessage" class="text-center py-8">
+                                        <i class="fas fa-chalkboard-teacher text-gray-300 text-4xl mb-4"></i>
+                                        <p class="text-gray-500">Select teachers above to assign subjects</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <!-- Bulk Assign Section -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-800 mb-4">Bulk Assign Teachers</h4>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-4">Bulk assign teachers to subjects for this class.
+                                    Teachers can be assigned to their available subjects.</p>
+
+                                <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+                                    <!-- Assign Teachers Field -->
+                                    <div class="bulk-assign-dropdown">
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Assign Teachers
+                                            *</label>
+                                        <button type="button" class="bulk-assign-btn"
+                                            onclick="toggleBulkAssignDropdown('teachers')">
+                                            <span id="teachersDropdownText">Select teachers...</span>
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                        <div id="teachersDropdown" class="bulk-assign-dropdown-content">
+                                            <div class="bulk-assign-header">
+                                                <span>Select Teachers</span>
+                                                <button type="button" onclick="closeBulkAssignDropdown('teachers')"
+                                                    class="text-gray-500 hover:text-gray-700">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                            <div class="search-container">
+                                                <input type="text" id="teachersSearch" class="search-input"
+                                                    placeholder="Search teachers by name or ID..."
+                                                    onkeyup="filterTeachers(this.value)">
+                                                <div class="text-xs text-gray-500 mt-1">
+                                                    Type teacher name or ID to search
+                                                </div>
+                                            </div>
+                                            <div class="bulk-assign-selected-count">
+                                                <span id="teachersSelectedCount">0</span> selected
+                                            </div>
+                                            <div class="bulk-assign-list" id="teachersList">
+                                                <!-- Teachers will be populated by JavaScript -->
+                                            </div>
+                                            <div class="bulk-assign-footer">
+                                                <button type="button" onclick="clearSelection('teachers')"
+                                                    class="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800">
+                                                    Clear All
+                                                </button>
+                                                <button type="button" onclick="saveBulkAssignSelection('teachers')"
+                                                    class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                                                    Save Selection
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Selected Teachers Table -->
+                                <div id="teachersTableContainer" class="mt-6 hidden">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h5 class="font-medium text-gray-800">Teacher Assignments</h5>
+                                        <div class="text-sm text-gray-600">
+                                            <span id="selectedTeachersCount">0</span> teachers selected
+                                        </div>
+                                    </div>
+
+                                    <div class="overflow-x-auto">
+                                        <table class="teachers-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 40px;">#</th>
+                                                    <th>Teacher Name</th>
+                                                    <th style="width: 250px;">Assigned Subjects</th>
+                                                    <th style="width: 150px;">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="teachersTableBody">
+                                                <!-- Teachers will be populated here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- <div class="mt-4 flex justify-end">
+                                        <button type="button" onclick="addNewSubject()" class="add-subject-btn">
+                                            <i class="fas fa-plus mr-2"></i> Add New Subject
+                                        </button>
+                                    </div> -->
                                 </div>
                             </div>
                         </div>
@@ -613,6 +998,140 @@
                             </div>
                         </div>
 
+                         <!-- Create New Subject Section -->
+<div class="pt-4 border-t border-gray-200">
+    <button type="button" id="toggleSubjectSectionBtn" onclick="toggleCreateSubjectSection()"
+       class="w-full px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-medium flex items-center justify-center">
+       <i class="fas fa-plus mr-2"></i> Create New Subject
+     </button>
+    
+    <div id="createSubjectSection" class="hidden mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
+         <div class="flex justify-between items-center mb-4">
+            <h4 class="text-lg font-semibold text-gray-800">Create New Subject</h4>
+             <button type="button" onclick="resetSubjectForm()" class="text-sm text-blue-600 hover:text-blue-800">
+                <i class="fas fa-redo mr-1"></i> Reset Form
+            </button>
+        </div>
+        
+       <form id="createSubjectForm" onsubmit="saveSubject(event)" class="space-y-4">
+            <!-- Subject Basic Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Subject Code *</label>
+                     <input type="text" id="subjectCode" name="subjectCode" required
+                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                         placeholder="e.g., MATH101">
+                     <p class="text-xs text-gray-500 mt-1">Unique identifier for the subject</p>
+                 </div>
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Subject Name *</label>
+                     <input type="text" id="subjectName" name="subjectName" required
+                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                         placeholder="e.g., Mathematics" onchange="generateSubjectCode()">
+                     <p class="text-xs text-gray-500 mt-1">Full name of the subject</p>
+                 </div>
+             </div>
+            
+             <!-- Subject Type and Grade Level -->
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Subject Type *</label>
+                     <select id="subjectType" name="subjectType" required
+                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                         <option value="CORE">Core Subject</option>
+                         <option value="ELECTIVE">Elective Subject</option>
+                         <option value="COMPULSORY">Compulsory Subject</option>
+                         <option value="ADDITIONAL">Additional Subject</option>
+                         <option value="CO_CURRICULAR">Co-curricular</option>
+                     </select>
+                 </div>
+                 <div>
+                     <!-- <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level *</label> -->
+                     <!-- <div class="flex space-x-4">
+                         <div class="flex-1">
+                             <select id="gradeFrom" name="gradeFrom" required
+                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                 <option value="PG">PG</option>
+                                 <option value="LKG">LKG</option>
+                                 <option value="UKG">UKG</option>
+                                 <option value="1st">1st</option>
+                                 <option value="2nd" selected>2nd</option>
+                             </select>
+                             <p class="text-xs text-gray-500 mt-1 text-center">From</p>
+                         </div>
+                         <div class="flex-1">
+                             <select id="gradeTo" name="gradeTo" required
+                                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                 <option value="PG">PG</option>
+                                 <option value="LKG">LKG</option>
+                                 <option value="UKG">UKG</option>
+                                 <option value="1st">1st</option>
+                                 <option value="2nd" selected>2nd</option>
+                             </select>
+                             <p class="text-xs text-gray-500 mt-1 text-center">To</p>
+                         </div>
+                     </div> -->
+                </div>
+             </div>
+            
+             <!-- Marks and Academic Details -->
+             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Maximum Marks *</label>
+                     <input type="number" id="maxMarks" name="maxMarks" required min="0" max="200"
+                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                         value="100">
+                     <p class="text-xs text-gray-500 mt-1">Total marks</p>
+                 </div>
+                 <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Passing Marks *</label>
+                     <input type="number" id="passingMarks" name="passingMarks" required min="0"
+                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                         value="35">
+                     <p class="text-xs text-gray-500 mt-1">Minimum passing marks</p>
+                 </div>
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Credit Hours</label>
+                     <input type="number" id="creditHours" name="creditHours" min="1" max="10"
+                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                         value="4">
+                     <p class="text-xs text-gray-500 mt-1">Credits per semester</p>
+                 </div>
+                 <div>
+                     <label class="block text-sm font-medium text-gray-700 mb-2">Periods/Week</label>
+                     <input type="number" id="periodsPerWeek" name="periodsPerWeek" min="1" max="10"
+                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                         value="5">
+                     <p class="text-xs text-gray-500 mt-1">Weekly periods</p>
+                 </div>
+             </div>
+            
+             <!-- Subject Description -->
+             <div>
+                 <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                 <textarea id="subjectDescription" name="subjectDescription" rows="2"
+                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                     placeholder="Enter subject description..."></textarea>
+             </div>
+            
+             <!-- Subject Color and Teacher -->
+             
+            
+             <!-- Form Actions -->
+             <div class="flex justify-end space-x-4 pt-4">
+                 <button type="button" onclick="toggleCreateSubjectSection()"
+                     class="px-5 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all font-medium">
+                     Cancel
+                 </button>
+                 <button type="submit"
+                     class="px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-medium">
+                     <i class="fas fa-save mr-2"></i> Save Subject
+                 </button>
+             </div>
+         </form>
+     </div>
+ </div>
+
                         <!-- Form Actions -->
                         <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                             <button type="button" onclick="closeCreateClassModal()"
@@ -668,7 +1187,7 @@
                     </button>
                     <div class="flex items-center">
                         <div class="h-10 w-36 rounded-lg flex items-center justify-center">
-                            <img src="/assets/kunash_logo.png" alt="School Logo">
+                            <img src="../assets/kunash_logo.png" alt="School Logo">
                         </div>
                     </div>
                 </div>
@@ -769,22 +1288,26 @@
         <!-- Sidebar -->
         <aside id="sidebar" class="sidebar shadow-lg">
             <div class="sidebar-scroll">
-                 <a data-tooltip="Dashboard" href="/index.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                <div class="space-y-1 p-4">
+                    <a data-tooltip="Dashboard" href="../index.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
                         <i class="fas fa-home text-black nav-icon"></i>
-                        <span class="nav-text text-black">Dashboard</span>  
+                        <span class="nav-text text-black">Dashboard</span>
                     </a>
-                    
+
                     <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Student Management</p>
                     </div>
-                    
-                    <a data-tooltip="All Students" href="/student-management/student-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+
+                    <a data-tooltip="All Students" href="student-management.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
                         <i class="fas fa-user-graduate text-black nav-icon"></i>
                         <span class="nav-text text-black">All Students</span>
-                        <!-- <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">245</span> -->
+
                     </a>
-                    
-                    <a data-tooltip="Add Student" href="/student-management/student-management.html?action=add" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+
+                    <a data-tooltip="Add Student" href="student-management.html?action=add"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-user-plus text-black nav-icon"></i>
                         <span class="nav-text text-black">Add Student</span>
                     </a>
@@ -793,17 +1316,15 @@
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Teacher Management</p>
                     </div>
 
-                    <a data-tooltip="Teachers Attendance" href="/teachers-management/teacher-attendance.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
-                             <i class="fas fa-calendar-check text-black nav-icon"></i>
-                            <span class="nav-text text-black">Teachers Attendance</span>
-                    </a>
-                    
-                    <a data-tooltip="All Teachers" href="/teachers-management/teachers-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                    <a data-tooltip="All Teachers" href="teacher-management.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
                         <i class="fas fa-chalkboard-teacher text-black nav-icon"></i>
                         <span class="nav-text text-black">All Teachers</span>
+
                     </a>
-                    
-                    <a data-tooltip="Add Teacher" href="/teachers-management/teachers-management.html?action=add" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+
+                    <a data-tooltip="Add Teacher" href="teacher-management.html?action=add"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-user-tie text-black nav-icon"></i>
                         <span class="nav-text text-black">Add Teacher</span>
                     </a>
@@ -811,32 +1332,34 @@
                     <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Academic</p>
                     </div>
-                    
-                    <a data-tooltip="Attendance" href="/Academic/attendance.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg bg-blue-700 transition-all duration-200 group">
-                        <i class="fas fa-calendar-check text-white nav-icon"></i>
-                        <span class="nav-text text-white">Students Attendance</span>
+
+                    <a data-tooltip="Attendance" href="./attendance.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-calendar-check text-black nav-icon"></i>
+                        <span class="nav-text text-black">Attendance</span>
                     </a>
 
-                    <a data-tooltip="Marks & Reports" href="/Academic/marks&reports.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                    <a data-tooltip="Marks & Reports" href="./marks&reports.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-chart-line text-black nav-icon"></i>
                         <span class="nav-text text-black">Marks & Reports</span>
                     </a>
 
-                    <a data-tooltip="CreateClass" href="/Academic/create-class.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
-                        <i class="fas fa-chart-line text-black nav-icon"></i>
-                        <span class="nav-text text-black">Create Class</span>
+                    <a data-tooltip="CreateClass" href="./create-class.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-chalkboard text-white nav-icon"></i>
+                        <span class="nav-text text-white">Create Class</span>
                     </a>
-                
 
                     <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Financial</p>
                     </div>
 
-                    <a data-tooltip="Fees Management" href="/fees-management/fees-management.html"
+                    <a data-tooltip="Fees Management" href="../fees-management/fee-management.html"
                         class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-money-bill-wave text-black nav-icon"></i>
                         <span class="nav-text text-black">Fees Management</span>
-                        <span class="ml-auto bg-red-500 text-black text-xs px-2 py-1 rounded-full nav-text">₹45k</span>
+
                     </a>
 
                     <div class="pt-4 pb-2">
@@ -849,7 +1372,7 @@
                         <span class="nav-text text-black">School Calendar</span>
                     </a>
 
-                    <!-- <div class="pt-4 pb-2">
+                    <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">System</p>
                     </div>
 
@@ -864,7 +1387,7 @@
                         class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-chart-pie text-black nav-icon"></i>
                         <span class="nav-text text-black">Analytics & Reports</span>
-                    </a> -->
+                    </a>
                 </div>
             </div>
         </aside>
@@ -894,7 +1417,6 @@
                     <div class="class-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                         <div class="flex items-center justify-between">
                             <div>
-                                <!-- <p class="text-sm font-medium text-gray-600">Pre-Kindergarten</p> -->
                                 <p class="text-xl font-bold text-gray-800 mt-1">PG</p>
                             </div>
                             <div class="h-10 w-10 bg-purple-100 rounded-full flex items-center justify-center">
@@ -910,7 +1432,6 @@
                     <div class="class-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                         <div class="flex items-center justify-between">
                             <div>
-                                <!-- <p class="text-sm font-medium text-gray-600">Lower Kindergarten</p> -->
                                 <p class="text-xl font-bold text-gray-800 mt-1">LKG</p>
                             </div>
                             <div class="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -926,7 +1447,6 @@
                     <div class="class-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                         <div class="flex items-center justify-between">
                             <div>
-                                <!-- <p class="text-sm font-medium text-gray-600">Upper Kindergarten</p> -->
                                 <p class="text-xl font-bold text-gray-800 mt-1">UKG</p>
                             </div>
                             <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -942,7 +1462,6 @@
                     <div class="class-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                         <div class="flex items-center justify-between">
                             <div>
-                                <!-- <p class="text-sm font-medium text-gray-600">First Standard</p> -->
                                 <p class="text-xl font-bold text-gray-800 mt-1">1st</p>
                             </div>
                             <div class="h-10 w-10 bg-yellow-100 rounded-full flex items-center justify-center">
@@ -958,7 +1477,6 @@
                     <div class="class-card bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                         <div class="flex items-center justify-between">
                             <div>
-                                <!-- <p class="text-sm font-medium text-gray-600">Second Standard</p> -->
                                 <p class="text-xl font-bold text-gray-800 mt-1">2nd</p>
                             </div>
                             <div class="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -1136,5 +1654,4 @@
 </body>
 
 </html>
-
 
