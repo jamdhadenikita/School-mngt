@@ -1,29 +1,3 @@
-// Initialize application
-document.addEventListener('DOMContentLoaded', function() {
-    checkSession();
-    setupEventListeners();
-    setupResponsiveSidebar();
-    loadInitialData();
-    updateFeeCalculations();
-    
-    // Check URL parameters to show appropriate section
-    const urlParams = new URLSearchParams(window.location.search);
-    const action = urlParams.get('action');
-    
-    if (action === 'add') {
-        showAddStudentSection();
-    } else {
-        showAllStudentsSection();
-    }
-    
-    // Initialize document upload status
-    updateDocumentStatus();
-    
-    // Initialize sports and subjects
-    updateOtherSportsDisplay();
-    updateOtherSubjectsDisplay();
-});
-
 // Global variables
 let sidebarCollapsed = false;
 let isMobile = window.innerWidth < 1024;
@@ -34,476 +8,642 @@ let uploadedDocuments = {};
 let otherSports = [];
 let otherSubjects = [];
 let transactionVerified = false;
+let qrCodeGenerated = false;
 
-// Session Management
-const USER_SESSION_KEY = 'school_portal_session';
-const SCHOOL_DATA_KEY = 'school_portal_data';
-const ITEMS_PER_PAGE = 10;
-
-function checkSession() {
-    const session = localStorage.getItem(USER_SESSION_KEY);
-    if (!session) {
-        window.location.href = 'login.html';
-        return;
-    }
-    
-    const { username, expires } = JSON.parse(session);
-    if (new Date(expires) < new Date()) {
-        localStorage.removeItem(USER_SESSION_KEY);
-        window.location.href = 'login.html';
-    }
-}
-
-function handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
-        localStorage.removeItem(USER_SESSION_KEY);
-        window.location.href = 'login.html';
-    }
-}
-
-// Application State
-let appState = {
-    students: [],
-    currentPage: 1,
-    filteredStudents: [],
-    studentIdCounter: 1001
-};
-
-// Data Management
-function loadInitialData() {
-    const savedData = localStorage.getItem(SCHOOL_DATA_KEY);
-    if (savedData) {
-        try {
-            const parsedData = JSON.parse(savedData);
-            appState.students = parsedData.students || [];
-            appState.studentIdCounter = parsedData.studentIdCounter || 1001;
-        } catch (e) {
-            console.error('Error loading saved data:', e);
-            appState.students = generateSampleStudents();
-            appState.studentIdCounter = 1001 + appState.students.length;
-        }
-    } else {
-        appState.students = generateSampleStudents();
-        appState.studentIdCounter = 1001 + appState.students.length;
-    }
-    renderStudentsTable();
-    updateStudentStats();
-}
-
-function saveData() {
-    try {
-        localStorage.setItem(SCHOOL_DATA_KEY, JSON.stringify({
-            students: appState.students,
-            studentIdCounter: appState.studentIdCounter
-        }));
-        console.log('Data saved successfully:', appState.students.length, 'students');
-        return true;
-    } catch (e) {
-        console.error('Error saving data:', e);
-        Toast.show('Error saving data to local storage', 'error');
-        return false;
-    }
-}
-
-function generateSampleStudents() {
-    return [
-        {
-            id: 1,
-            studentId: 'STU1001',
-            firstName: 'Rahul',
-            middleName: '',
-            lastName: 'Sharma',
-            fullName: 'Rahul Sharma',
-            dob: '2010-05-15',
-            gender: 'Male',
-            bloodGroup: 'A+',
-            casteCategory: 'General',
-            localAddress: '123 Main Street, Pimpri, Pune - 411017',
-            permanentAddress: '456 Family Home, Mumbai - 400001',
-            photo: null,
-            class: '5',
-            section: 'A',
-            rollNumber: '101',
-            admissionDate: '2023-06-01',
-            academicYear: '2023-2024',
-            classTeacher: 'Mr. Sharma',
-            subjects: ['English', 'Hindi', 'Mathematics', 'Science'],
-            fatherName: 'Mr. Vijay Sharma',
-            fatherContact: '9876543210',
-            fatherAadhar: '123456789012',
-            fatherOccupation: 'Engineer',
-            motherName: 'Mrs. Sunita Sharma',
-            motherContact: '9876543211',
-            motherAadhar: '234567890123',
-            motherOccupation: 'Teacher',
-            parentEmail: 'vijay.sharma@example.com',
-            relationship: 'Father',
-            emergencyContactName: 'Mrs. Sharma',
-            emergencyContactNumber: '9876543211',
-            medicalInfo: 'No known allergies',
-            sports: ['Cricket', 'Chess'],
-            fees: {
-                total: 50000,
-                admission: 5000,
-                uniform: 2000,
-                books: 3000,
-                tuition: 40000,
-                additional: 0,
-                paid: 30000,
-                pending: 20000,
-                paymentMode: 'installment',
-                paymentMethod: 'cash',
-                transactionId: '',
-                installments: [
-                    { installmentNumber: 1, amount: 10000, dueDate: '2023-07-01', status: 'paid', paidAmount: 10000, paymentDate: '2023-07-01' },
-                    { installmentNumber: 2, amount: 10000, dueDate: '2023-08-01', status: 'pending', paidAmount: 0, paymentDate: null }
-                ],
-                receiptNumber: 'REC00123456',
-                initialPaymentDate: '2023-06-01'
+// Dummy Students Data with comprehensive details
+let dummyStudents = [
+    {
+        id: "STU25001",
+        firstName: "Rohan",
+        middleName: "Kumar",
+        lastName: "Sharma",
+        fullName: "Rohan Kumar Sharma",
+        studentId: "STU25001",
+        class: "10",
+        section: "A",
+        rollNumber: "25",
+        fatherName: "Mr. Rajesh Sharma",
+        motherName: "Mrs. Priya Sharma",
+        fatherContact: "9876543210",
+        motherContact: "9876500000",
+        parentEmail: "sharma.family@example.com",
+        contact: "9876543210",
+        email: "rohan.s@example.com",
+        feesStatus: "paid",
+        studentStatus: "active",
+        admissionDate: "2023-04-01",
+        attendance: "96%",
+        totalFees: 50000,
+        paidFees: 50000,
+        pendingFees: 0,
+        dob: "2008-05-15",
+        gender: "Male",
+        bloodGroup: "O+",
+        casteCategory: "General",
+        aadharNumber: "123456789012",
+        fatherAadhar: "234567890123",
+        motherAadhar: "345678901234",
+        localAddressLine1: "123 MG Road",
+        localAddressLine2: "Near City Center",
+        localCity: "Bangalore",
+        localState: "Karnataka",
+        localPincode: "560001",
+        localAddress: "123 MG Road, Bangalore, Karnataka - 560001",
+        permanentAddressLine1: "123 MG Road",
+        permanentAddressLine2: "Near City Center",
+        permanentCity: "Bangalore",
+        permanentState: "Karnataka",
+        permanentPincode: "560001",
+        permanentAddress: "123 MG Road, Bangalore, Karnataka - 560001",
+        fatherOccupation: "Engineer",
+        motherOccupation: "Teacher",
+        academicYear: "2024-2025",
+        classTeacher: "Mr. Sharma",
+        subjects: ["english", "mathematics", "science", "social"],
+        sports: ["cricket", "chess"],
+        otherSports: [],
+        otherSubjects: [],
+        medicalInfo: "No known allergies",
+        previousSchool: "St. Mary's Convent",
+        emergencyContactName: "Mr. Ramesh Sharma",
+        emergencyContactNumber: "9876512345",
+        relationship: "Father",
+        paymentMethod: "online",
+        paymentMode: "one-time",
+        transactionId: "TXN123456789",
+        admissionFees: 5000,
+        uniformFees: 2000,
+        bookFees: 3000,
+        tuitionFees: 40000,
+        initialPayment: 50000,
+        receiptNumber: "REC202425001",
+        sameAsLocal: true,
+        createdAt: "2023-04-01",
+        updatedAt: "2024-01-15"
+    },
+    {
+        id: "STU25002",
+        firstName: "Priya",
+        lastName: "Patel",
+        fullName: "Priya Patel",
+        studentId: "STU25002",
+        class: "9",
+        section: "B",
+        rollNumber: "12",
+        fatherName: "Mr. Amit Patel",
+        motherName: "Mrs. Neha Patel",
+        fatherContact: "9876543211",
+        motherContact: "9876500001",
+        parentEmail: "patel.family@example.com",
+        contact: "9876543211",
+        email: "priya.p@example.com",
+        feesStatus: "partial",
+        studentStatus: "active",
+        admissionDate: "2023-04-01",
+        attendance: "92%",
+        totalFees: 48000,
+        paidFees: 30000,
+        pendingFees: 18000,
+        dob: "2009-07-22",
+        gender: "Female",
+        bloodGroup: "B+",
+        casteCategory: "OBC",
+        aadharNumber: "456789012345",
+        fatherAadhar: "567890123456",
+        motherAadhar: "678901234567",
+        localAddressLine1: "456 Park Street",
+        localAddressLine2: "Opposite Central Park",
+        localCity: "Mumbai",
+        localState: "Maharashtra",
+        localPincode: "400001",
+        localAddress: "456 Park Street, Mumbai, Maharashtra - 400001",
+        permanentAddressLine1: "789 Village Road",
+        permanentAddressLine2: "",
+        permanentCity: "Ahmedabad",
+        permanentState: "Gujarat",
+        permanentPincode: "380001",
+        permanentAddress: "789 Village Road, Ahmedabad, Gujarat - 380001",
+        fatherOccupation: "Businessman",
+        motherOccupation: "Homemaker",
+        academicYear: "2024-2025",
+        classTeacher: "Ms. Patel",
+        subjects: ["english", "hindi", "mathematics", "science"],
+        sports: ["dancing", "music"],
+        otherSports: ["classical dance"],
+        otherSubjects: ["computer science"],
+        medicalInfo: "Mild asthma",
+        previousSchool: "Little Angels School",
+        emergencyContactName: "Mr. Sunil Patel",
+        emergencyContactNumber: "9876512346",
+        relationship: "Father",
+        paymentMethod: "cash",
+        paymentMode: "installment",
+        transactionId: "",
+        admissionFees: 5000,
+        uniformFees: 2000,
+        bookFees: 3000,
+        tuitionFees: 40000,
+        initialPayment: 30000,
+        receiptNumber: "REC202425002",
+        sameAsLocal: false,
+        installments: [
+            {
+                installmentNumber: 1,
+                amount: 10000,
+                paidAmount: 10000,
+                dueDate: "2024-04-01",
+                status: "paid"
             },
-            status: 'Active',
-            createdAt: '2023-06-01T10:30:00Z'
+            {
+                installmentNumber: 2,
+                amount: 9000,
+                paidAmount: 0,
+                dueDate: "2024-07-01",
+                status: "pending"
+            }
+        ],
+        createdAt: "2023-04-01",
+        updatedAt: "2024-01-15"
+    },
+    // Add these 4 dummy student records to your existing dummyStudents array:
+
+{
+    id: "STU25004",
+    firstName: "Aryan",
+    middleName: "Kumar",
+    lastName: "Gupta",
+    fullName: "Aryan Kumar Gupta",
+    studentId: "STU25004",
+    class: "7",
+    section: "C",
+    rollNumber: "18",
+    fatherName: "Mr. Sanjay Gupta",
+    motherName: "Mrs. Meera Gupta",
+    fatherContact: "9876543213",
+    motherContact: "9876500003",
+    parentEmail: "gupta.family@example.com",
+    contact: "9876543213",
+    email: "aryan.g@example.com",
+    feesStatus: "paid",
+    studentStatus: "active",
+    admissionDate: "2023-04-01",
+    attendance: "94%",
+    totalFees: 42000,
+    paidFees: 42000,
+    pendingFees: 0,
+    dob: "2011-08-10",
+    gender: "Male",
+    bloodGroup: "A-",
+    casteCategory: "General",
+    aadharNumber: "987654321012",
+    fatherAadhar: "876543210987",
+    motherAadhar: "765432109876",
+    localAddressLine1: "101 Tech Park Road",
+    localAddressLine2: "Silicon Valley",
+    localCity: "Hyderabad",
+    localState: "Telangana",
+    localPincode: "500081",
+    localAddress: "101 Tech Park Road, Hyderabad, Telangana - 500081",
+    permanentAddressLine1: "201 Heritage Street",
+    permanentAddressLine2: "Old City",
+    permanentCity: "Varanasi",
+    permanentState: "Uttar Pradesh",
+    permanentPincode: "221001",
+    permanentAddress: "201 Heritage Street, Varanasi, Uttar Pradesh - 221001",
+    fatherOccupation: "Software Engineer",
+    motherOccupation: "Architect",
+    academicYear: "2024-2025",
+    classTeacher: "Mr. Reddy",
+    subjects: ["english", "mathematics", "science", "computer"],
+    sports: ["badminton", "table tennis"],
+    otherSports: ["Robotics"],
+    otherSubjects: ["Artificial Intelligence"],
+    medicalInfo: "Wears glasses, No other issues",
+    previousSchool: "Delhi International School",
+    emergencyContactName: "Mr. Sanjay Gupta",
+    emergencyContactNumber: "9876512348",
+    relationship: "Father",
+    paymentMethod: "online",
+    paymentMode: "one-time",
+    transactionId: "TXN987654321",
+    admissionFees: 5000,
+    uniformFees: 2000,
+    bookFees: 3000,
+    tuitionFees: 32000,
+    initialPayment: 42000,
+    receiptNumber: "REC202425004",
+    sameAsLocal: false,
+    createdAt: "2023-04-01",
+    updatedAt: "2024-01-15"
+},
+{
+    id: "STU25005",
+    firstName: "Sakshi",
+    middleName: "",
+    lastName: "Joshi",
+    fullName: "Sakshi Joshi",
+    studentId: "STU25005",
+    class: "6",
+    section: "A",
+    rollNumber: "7",
+    fatherName: "Mr. Ashok Joshi",
+    motherName: "Mrs. Radha Joshi",
+    fatherContact: "9876543214",
+    motherContact: "9876500004",
+    parentEmail: "joshi.family@example.com",
+    contact: "9876543214",
+    email: "sakshi.j@example.com",
+    feesStatus: "partial",
+    studentStatus: "active",
+    admissionDate: "2023-04-01",
+    attendance: "91%",
+    totalFees: 38000,
+    paidFees: 25000,
+    pendingFees: 13000,
+    dob: "2012-11-25",
+    gender: "Female",
+    bloodGroup: "B-",
+    casteCategory: "OBC",
+    aadharNumber: "876543210123",
+    fatherAadhar: "765432109876",
+    motherAadhar: "654321098765",
+    localAddressLine1: "45 Rose Garden",
+    localAddressLine2: "Civil Lines",
+    localCity: "Lucknow",
+    localState: "Uttar Pradesh",
+    localPincode: "226001",
+    localAddress: "45 Rose Garden, Lucknow, Uttar Pradesh - 226001",
+    permanentAddressLine1: "45 Rose Garden",
+    permanentAddressLine2: "Civil Lines",
+    permanentCity: "Lucknow",
+    permanentState: "Uttar Pradesh",
+    permanentPincode: "226001",
+    permanentAddress: "45 Rose Garden, Lucknow, Uttar Pradesh - 226001",
+    fatherOccupation: "Government Officer",
+    motherOccupation: "Bank Manager",
+    academicYear: "2024-2025",
+    classTeacher: "Ms. Verma",
+    subjects: ["english", "hindi", "mathematics", "science", "social"],
+    sports: ["skating", "yoga"],
+    otherSports: [],
+    otherSubjects: ["Music"],
+    medicalInfo: "Vegetarian, Lactose intolerant",
+    previousSchool: "Lucknow Public School",
+    emergencyContactName: "Mrs. Radha Joshi",
+    emergencyContactNumber: "9876512349",
+    relationship: "Mother",
+    paymentMethod: "cash",
+    paymentMode: "installment",
+    transactionId: "",
+    admissionFees: 5000,
+    uniformFees: 2000,
+    bookFees: 3000,
+    tuitionFees: 28000,
+    initialPayment: 15000,
+    receiptNumber: "REC202425005",
+    sameAsLocal: true,
+    installments: [
+        {
+            installmentNumber: 1,
+            amount: 8000,
+            paidAmount: 8000,
+            dueDate: "2024-03-01",
+            status: "paid"
         },
         {
-            id: 2,
-            studentId: 'STU1002',
-            firstName: 'Priya',
-            middleName: '',
-            lastName: 'Patel',
-            fullName: 'Priya Patel',
-            dob: '2011-08-22',
-            gender: 'Female',
-            bloodGroup: 'B+',
-            casteCategory: 'OBC',
-            localAddress: '456 Park Avenue, Chinchwad, Pune - 411033',
-            permanentAddress: '456 Park Avenue, Chinchwad, Pune - 411033',
-            photo: null,
-            class: '4',
-            section: 'B',
-            rollNumber: '205',
-            admissionDate: '2023-06-10',
-            academicYear: '2023-2024',
-            classTeacher: 'Ms. Patel',
-            subjects: ['English', 'Hindi', 'Mathematics', 'Science'],
-            fatherName: 'Mr. Raj Patel',
-            fatherContact: '9876543212',
-            fatherAadhar: '345678901234',
-            fatherOccupation: 'Business',
-            motherName: 'Mrs. Anita Patel',
-            motherContact: '9876543211',
-            motherAadhar: '456789012345',
-            motherOccupation: 'Teacher',
-            parentEmail: 'anita.patel@example.com',
-            relationship: 'Mother',
-            emergencyContactName: 'Mr. Patel',
-            emergencyContactNumber: '9876543212',
-            medicalInfo: 'Asthma (controlled)',
-            sports: ['Dance', 'Swimming'],
-            fees: {
-                total: 45000,
-                admission: 5000,
-                uniform: 2000,
-                books: 2500,
-                tuition: 35500,
-                additional: 0,
-                paid: 45000,
-                pending: 0,
-                paymentMode: 'one-time',
-                paymentMethod: 'online',
-                transactionId: 'TXN123456789',
-                installments: [],
-                receiptNumber: 'REC00123457',
-                initialPaymentDate: '2023-06-10'
-            },
-            status: 'Active',
-            createdAt: '2023-06-10T14:20:00Z'
+            installmentNumber: 2,
+            amount: 7500,
+            paidAmount: 2000,
+            dueDate: "2024-06-01",
+            status: "partial"
+        },
+        {
+            installmentNumber: 3,
+            amount: 7500,
+            paidAmount: 0,
+            dueDate: "2024-09-01",
+            status: "pending"
         }
-    ];
+    ],
+    createdAt: "2023-04-01",
+    updatedAt: "2024-01-15"
+},
+{
+    id: "STU25006",
+    firstName: "Vikram",
+    middleName: "Singh",
+    lastName: "Rathore",
+    fullName: "Vikram Singh Rathore",
+    studentId: "STU25006",
+    class: "5",
+    section: "B",
+    rollNumber: "22",
+    fatherName: "Mr. Rajendra Rathore",
+    motherName: "Mrs. Sunita Rathore",
+    fatherContact: "9876543215",
+    motherContact: "9876500005",
+    parentEmail: "rathore.family@example.com",
+    contact: "9876543215",
+    email: "vikram.r@example.com",
+    feesStatus: "pending",
+    studentStatus: "active",
+    admissionDate: "2023-04-01",
+    attendance: "89%",
+    totalFees: 35000,
+    paidFees: 0,
+    pendingFees: 35000,
+    dob: "2013-02-14",
+    gender: "Male",
+    bloodGroup: "O-",
+    casteCategory: "SC",
+    aadharNumber: "765432109876",
+    fatherAadhar: "654321098765",
+    motherAadhar: "543210987654",
+    localAddressLine1: "78 Rajput Nagar",
+    localAddressLine2: "",
+    localCity: "Jaipur",
+    localState: "Rajasthan",
+    localPincode: "302001",
+    localAddress: "78 Rajput Nagar, Jaipur, Rajasthan - 302001",
+    permanentAddressLine1: "Village: Rathore Ki Dhani",
+    permanentAddressLine2: "Tehsil: Phalodi",
+    permanentCity: "Jodhpur",
+    permanentState: "Rajasthan",
+    permanentPincode: "342001",
+    permanentAddress: "Village: Rathore Ki Dhani, Jodhpur, Rajasthan - 342001",
+    fatherOccupation: "Farmer",
+    motherOccupation: "Homemaker",
+    academicYear: "2024-2025",
+    classTeacher: "Mr. Mehta",
+    subjects: ["english", "hindi", "mathematics", "evs"],
+    sports: ["kabaddi", "volleyball"],
+    otherSports: ["Marbles"],
+    otherSubjects: ["Rajasthani Culture"],
+    medicalInfo: "Underweight, needs nutritional supplements",
+    previousSchool: "Zila Parishad School",
+    emergencyContactName: "Mr. Rajendra Rathore",
+    emergencyContactNumber: "9876512350",
+    relationship: "Father",
+    paymentMethod: "cash",
+    paymentMode: "one-time",
+    transactionId: "",
+    admissionFees: 5000,
+    uniformFees: 2000,
+    bookFees: 3000,
+    tuitionFees: 25000,
+    initialPayment: 0,
+    receiptNumber: "REC202425006",
+    sameAsLocal: false,
+    scholarshipApplied: true,
+    scholarshipAmount: 10000,
+    createdAt: "2023-04-01",
+    updatedAt: "2024-01-15"
+},
+{
+    id: "STU25007",
+    firstName: "Ishita",
+    middleName: "",
+    lastName: "Desai",
+    fullName: "Ishita Desai",
+    studentId: "STU25007",
+    class: "4",
+    section: "C",
+    rollNumber: "15",
+    fatherName: "Mr. Jayesh Desai",
+    motherName: "Mrs. Pooja Desai",
+    fatherContact: "9876543216",
+    motherContact: "9876500006",
+    parentEmail: "desai.family@example.com",
+    contact: "9876543216",
+    email: "ishita.d@example.com",
+    feesStatus: "paid",
+    studentStatus: "inactive",
+    admissionDate: "2022-04-01",
+    attendance: "87%",
+    totalFees: 32000,
+    paidFees: 32000,
+    pendingFees: 0,
+    dob: "2014-09-30",
+    gender: "Female",
+    bloodGroup: "AB+",
+    casteCategory: "ST",
+    aadharNumber: "654321098765",
+    fatherAadhar: "543210987654",
+    motherAadhar: "432109876543",
+    localAddressLine1: "12 Marine Drive Apartment",
+    localAddressLine2: "5th Floor, Flat 501",
+    localCity: "Mumbai",
+    localState: "Maharashtra",
+    localPincode: "400002",
+    localAddress: "12 Marine Drive Apartment, Mumbai, Maharashtra - 400002",
+    permanentAddressLine1: "12 Marine Drive Apartment",
+    permanentAddressLine2: "5th Floor, Flat 501",
+    permanentCity: "Mumbai",
+    permanentState: "Maharashtra",
+    permanentPincode: "400002",
+    permanentAddress: "12 Marine Drive Apartment, Mumbai, Maharashtra - 400002",
+    fatherOccupation: "Marine Engineer",
+    motherOccupation: "Fashion Designer",
+    academicYear: "2024-2025",
+    classTeacher: "Ms. Kapoor",
+    subjects: ["english", "hindi", "mathematics", "evs", "art"],
+    sports: ["swimming", "painting"],
+    otherSports: ["Pottery"],
+    otherSubjects: ["French"],
+    medicalInfo: "Allergic to dust, uses inhaler occasionally",
+    previousSchool: "Mumbai International School",
+    emergencyContactName: "Mr. Jayesh Desai",
+    emergencyContactNumber: "9876512351",
+    relationship: "Father",
+    paymentMethod: "online",
+    paymentMode: "one-time",
+    transactionId: "TXN456789123",
+    admissionFees: 5000,
+    uniformFees: 2000,
+    bookFees: 3000,
+    tuitionFees: 22000,
+    initialPayment: 32000,
+    receiptNumber: "REC202425007",
+    sameAsLocal: true,
+    studentStatus: "inactive",
+    leavingDate: "2024-12-15",
+    leavingReason: "Family relocation to another city",
+    createdAt: "2022-04-01",
+    updatedAt: "2024-12-15"
+},
+{
+    id: "STU25008",
+    firstName: "Aditya",
+    middleName: "Prakash",
+    lastName: "Choudhary",
+    fullName: "Aditya Prakash Choudhary",
+    studentId: "STU25008",
+    class: "3",
+    section: "A",
+    rollNumber: "3",
+    fatherName: "Mr. Pradeep Choudhary",
+    motherName: "Mrs. Anita Choudhary",
+    fatherContact: "9876543217",
+    motherContact: "9876500007",
+    parentEmail: "choudhary.family@example.com",
+    contact: "9876543217",
+    email: "aditya.c@example.com",
+    feesStatus: "partial",
+    studentStatus: "active",
+    admissionDate: "2023-04-01",
+    attendance: "96%",
+    totalFees: 30000,
+    paidFees: 20000,
+    pendingFees: 10000,
+    dob: "2015-12-05",
+    gender: "Male",
+    bloodGroup: "A+",
+    casteCategory: "General",
+    aadharNumber: "543210987654",
+    fatherAadhar: "432109876543",
+    motherAadhar: "321098765432",
+    localAddressLine1: "34 Green Valley",
+    localAddressLine2: "Sector 15",
+    localCity: "Chandigarh",
+    localState: "Punjab",
+    localPincode: "160015",
+    localAddress: "34 Green Valley, Chandigarh, Punjab - 160015",
+    permanentAddressLine1: "56 Farm House",
+    permanentAddressLine2: "Model Town",
+    permanentCity: "Ludhiana",
+    permanentState: "Punjab",
+    permanentPincode: "141001",
+    permanentAddress: "56 Farm House, Ludhiana, Punjab - 141001",
+    fatherOccupation: "Business Owner",
+    motherOccupation: "Dentist",
+    academicYear: "2024-2025",
+    classTeacher: "Mr. Singh",
+    subjects: ["english", "hindi", "mathematics", "evs"],
+    sports: ["cricket", "skating"],
+    otherSports: [],
+    otherSubjects: ["Punjabi"],
+    medicalInfo: "None",
+    previousSchool: "Chandigarh Montessori",
+    emergencyContactName: "Mrs. Anita Choudhary",
+    emergencyContactNumber: "9876512352",
+    relationship: "Mother",
+    paymentMethod: "online",
+    paymentMode: "installment",
+    transactionId: "TXN789123456",
+    admissionFees: 5000,
+    uniformFees: 2000,
+    bookFees: 3000,
+    tuitionFees: 20000,
+    initialPayment: 10000,
+    receiptNumber: "REC202425008",
+    sameAsLocal: false,
+    installments: [
+        {
+            installmentNumber: 1,
+            amount: 5000,
+            paidAmount: 5000,
+            dueDate: "2024-02-01",
+            status: "paid"
+        },
+        {
+            installmentNumber: 2,
+            amount: 5000,
+            paidAmount: 5000,
+            dueDate: "2024-05-01",
+            status: "paid"
+        },
+        {
+            installmentNumber: 3,
+            amount: 5000,
+            paidAmount: 0,
+            dueDate: "2024-08-01",
+            status: "pending"
+        }
+    ],
+    createdAt: "2023-04-01",
+    updatedAt: "2024-01-15"
 }
+];
 
-// Toast Notification System
-class Toast {
-    static show(message, type = 'success', duration = 3000) {
+// Toast system
+const Toast = {
+    show: function(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
-        const bgColor = {
-            success: 'bg-green-500',
-            error: 'bg-red-500',
-            warning: 'bg-yellow-500',
-            info: 'bg-blue-500'
-        }[type];
         
-        const icon = {
-            success: 'fa-check-circle',
-            error: 'fa-exclamation-circle',
-            warning: 'fa-exclamation-triangle',
-            info: 'fa-info-circle'
-        }[type];
+        const colors = {
+            success: 'bg-green-100 border-green-400 text-green-800',
+            error: 'bg-red-100 border-red-400 text-red-800',
+            warning: 'bg-yellow-100 border-yellow-400 text-yellow-800',
+            info: 'bg-blue-100 border-blue-400 text-blue-800'
+        };
         
-        toast.className = `toast ${bgColor} text-white flex items-center space-x-3`;
+        toast.className = `toast ${colors[type] || colors.info} border`;
         toast.innerHTML = `
-            <i class="fas ${icon} text-xl"></i>
-            <span>${message}</span>
+            <div class="flex items-center">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
+                <span>${message}</span>
+            </div>
         `;
         
-        document.getElementById('toastContainer').appendChild(toast);
+        container.appendChild(toast);
         
-        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
         
         setTimeout(() => {
             toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, duration);
+            setTimeout(() => {
+                if (toast.parentNode === container) {
+                    container.removeChild(toast);
+                }
+            }, 300);
+        }, 3000);
     }
-}
+};
 
-// Setup Event Listeners
-function setupEventListeners() {
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    
-    // Sidebar Toggle
-    document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
-    
-    // Notifications Dropdown
-    document.getElementById('notificationsBtn').addEventListener('click', toggleNotifications);
-    
-    // User Menu Dropdown
-    document.getElementById('userMenuBtn').addEventListener('click', toggleUserMenu);
-    
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function(event) {
-        if (!event.target.closest('#notificationsBtn')) {
-            document.getElementById('notificationsDropdown').classList.add('hidden');
-        }
-        if (!event.target.closest('#userMenuBtn')) {
-            document.getElementById('userMenuDropdown').classList.add('hidden');
-        }
-    });
-    
-    // Close sidebar when clicking on overlay
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    if (sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', closeMobileSidebar);
-    }
-    
-    // Fee calculation inputs
-    const feeInputs = ['admissionFees', 'uniformFees', 'bookFees', 'tuitionFees'];
-    feeInputs.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener('input', updateFeeCalculations);
-        }
-    });
-    
-    // Initial payment input
-    const initialPayment = document.getElementById('initialPayment');
-    if (initialPayment) {
-        initialPayment.addEventListener('input', updatePaymentDetails);
-    }
-    
-    // Student search and filters
-    const searchInput = document.getElementById('searchStudent');
-    if (searchInput) {
-        searchInput.addEventListener('input', filterStudents);
-    }
-    
-    const filters = ['filterClass', 'filterFeeStatus', 'filterStudentStatus'];
-    filters.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener('change', filterStudents);
-        }
-    });
-    
-    // Select all checkbox
-    const selectAll = document.getElementById('selectAll');
-    if (selectAll) {
-        selectAll.addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.student-checkbox');
-            checkboxes.forEach(cb => cb.checked = this.checked);
-        });
-    }
-}
-
-// Responsive Sidebar Setup
-function setupResponsiveSidebar() {
-    isMobile = window.innerWidth < 1024;
-    
-    if (isMobile) {
-        closeMobileSidebar();
-    } else {
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        
-        if (sidebarCollapsed) {
-            sidebar.classList.add('collapsed');
-            mainContent.classList.add('sidebar-collapsed');
-        } else {
-            sidebar.classList.remove('collapsed');
-            mainContent.classList.remove('sidebar-collapsed');
-        }
-    }
-    
-    window.addEventListener('resize', handleResize);
-}
-
-function handleResize() {
-    const wasMobile = isMobile;
-    isMobile = window.innerWidth < 1024;
-    
-    if (wasMobile !== isMobile) {
-        if (isMobile) {
-            closeMobileSidebar();
-        } else {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            const overlay = document.getElementById('sidebarOverlay');
-            
-            sidebar.classList.remove('mobile-open');
-            overlay.classList.remove('active');
-            document.body.classList.remove('sidebar-open');
-            
-            if (sidebarCollapsed) {
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('sidebar-collapsed');
-            } else {
-                sidebar.classList.remove('collapsed');
-                mainContent.classList.remove('sidebar-collapsed');
-            }
-        }
-    }
-}
-
-function toggleSidebar() {
-    if (isMobile) {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-        
-        if (sidebar.classList.contains('mobile-open')) {
-            closeMobileSidebar();
-        } else {
-            openMobileSidebar();
-        }
-    } else {
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('mainContent');
-        
-        sidebarCollapsed = !sidebarCollapsed;
-        
-        if (sidebarCollapsed) {
-            sidebar.classList.add('collapsed');
-            mainContent.classList.add('sidebar-collapsed');
-            document.getElementById('sidebarToggleIcon').className = 'fas fa-bars text-xl';
-        } else {
-            sidebar.classList.remove('collapsed');
-            mainContent.classList.remove('sidebar-collapsed');
-            document.getElementById('sidebarToggleIcon').className = 'fas fa-times text-xl';
-        }
-    }
-}
-
-function openMobileSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    
-    sidebar.classList.add('mobile-open');
-    overlay.classList.add('active');
-    document.body.classList.add('sidebar-open');
-}
-
-function closeMobileSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const overlay = document.getElementById('sidebarOverlay');
-    
-    sidebar.classList.remove('mobile-open');
-    overlay.classList.remove('active');
-    document.body.classList.remove('sidebar-open');
-}
-
-// Dropdown Toggles
-function toggleNotifications() {
-    const dropdown = document.getElementById('notificationsDropdown');
-    dropdown.classList.toggle('hidden');
-}
-
-function toggleUserMenu() {
-    const dropdown = document.getElementById('userMenuDropdown');
-    dropdown.classList.toggle('hidden');
-}
-
-// Show/Hide Sections
-function showAllStudentsSection() {
-    document.getElementById('allStudentsSection').classList.remove('hidden');
-    document.getElementById('addStudentSection').classList.add('hidden');
-    appState.currentPage = 1;
-    renderStudentsTable();
-    updateStudentStats();
-}
-
+// Function to show Add Student section
 function showAddStudentSection() {
     document.getElementById('allStudentsSection').classList.add('hidden');
     document.getElementById('addStudentSection').classList.remove('hidden');
-    resetForm();
-    switchTab('personal');
+    
+    // Reset form title
     document.getElementById('formTitle').textContent = 'Add New Student';
-    document.getElementById('submitButton').innerHTML = '<i class="fas fa-check-circle mr-2"></i>Register Student';
-    document.getElementById('submitButton').onclick = handleAddStudent;
-    editingStudentId = null;
+    
+    // Reset form
+    resetForm();
+    
+    // Auto-generate student ID
+    const autoGeneratedId = generateStudentId();
+    document.getElementById('autoGeneratedId').textContent = autoGeneratedId;
+    document.getElementById('studentId').value = autoGeneratedId;
+    
+    // Reset form to first tab
+    switchTab('personal');
+    
+    // Scroll to top
+    window.scrollTo(0, 0);
+    
+    Toast.show('Add New Student form opened', 'info');
 }
 
-// Tab Switching
-function switchTab(tabName) {
-    // Hide all tab contents
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabContents.forEach(content => content.classList.remove('active'));
+// Function to show All Students section
+function showAllStudentsSection() {
+    document.getElementById('addStudentSection').classList.add('hidden');
+    document.getElementById('allStudentsSection').classList.remove('hidden');
     
-    // Remove active class from all tab buttons
-    const tabButtons = document.querySelectorAll('.tab-button');
-    tabButtons.forEach(button => button.classList.remove('active'));
+    // Reload student table
+    loadStudentTable();
     
-    // Show selected tab content
-    const targetContent = document.getElementById(tabName + 'TabContent');
-    if (targetContent) {
-        targetContent.classList.add('active');
-    }
+    // Scroll to top
+    window.scrollTo(0, 0);
     
-    // Activate selected tab button
-    const targetButton = document.getElementById(tabName + 'Tab');
-    if (targetButton) {
-        targetButton.classList.add('active');
-    }
-    
-    // Update fee calculations when switching to fees tab
-    if (tabName === 'fees') {
-        updateFeeCalculations();
-    }
+    Toast.show('Back to student list', 'info');
 }
 
-// Address Toggle Function
-function togglePermanentAddress() {
-    const sameAsLocal = document.getElementById('sameAsLocal').checked;
-    const permanentAddressSection = document.getElementById('permanentAddressSection');
-    const inputs = permanentAddressSection.querySelectorAll('input');
-    
-    if (sameAsLocal) {
-        permanentAddressSection.classList.add('opacity-50');
-        inputs.forEach(input => {
-            input.disabled = true;
-            // Don't clear values when in edit mode
-            if (!editingStudentId) {
-                input.value = '';
-            }
-        });
-    } else {
-        permanentAddressSection.classList.remove('opacity-50');
-        inputs.forEach(input => {
-            input.disabled = false;
-        });
-    }
-}
-
-// Document Upload Functions
-function previewDocument(input, previewId) {
+// 1. Fix image upload
+function previewStudentPhoto(input) {
     const file = input.files[0];
     if (!file) return;
     
@@ -515,133 +655,42 @@ function previewDocument(input, previewId) {
     }
     
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!validTypes.includes(file.type)) {
-        Toast.show('Please upload JPG, PNG, or PDF files only', 'error');
+        Toast.show('Please upload JPG or PNG files only', 'error');
         input.value = '';
         return;
     }
     
-    const previewElement = document.getElementById(previewId);
-    const fileName = file.name;
+    const previewElement = document.getElementById('studentPhotoPreview');
+    const reader = new FileReader();
     
-    // Store file data
-    uploadedDocuments[input.id] = {
-        file: file,
-        fileName: fileName,
-        fileType: file.type
-    };
-    
-    // Update preview
-    if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewElement.innerHTML = `
-                <div class="h-full w-full relative">
-                    <img src="${e.target.result}" class="h-full w-full object-cover rounded-lg" alt="${fileName}">
-                    <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-xs truncate">
-                        ${fileName}
-                    </div>
-                </div>
-            `;
-        };
-        reader.readAsDataURL(file);
-    } else if (file.type === 'application/pdf') {
+    reader.onload = function(e) {
         previewElement.innerHTML = `
-            <div class="h-full w-full flex flex-col items-center justify-center">
-                <i class="fas fa-file-pdf text-4xl text-red-500 mb-2"></i>
-                <p class="text-sm text-gray-700 text-center truncate max-w-full">${fileName}</p>
-                <p class="text-xs text-gray-500">PDF Document</p>
-            </div>
+            <img src="${e.target.result}" class="h-full w-full object-cover rounded-full" alt="Student Photo">
         `;
-    }
-    
-    updateDocumentStatus();
-    Toast.show(`${fileName} uploaded successfully`, 'success');
-}
-
-function removeDocument(inputId, previewId) {
-    const input = document.getElementById(inputId);
-    const previewElement = document.getElementById(previewId);
-    
-    // Reset input
-    input.value = '';
-    
-    // Remove from stored documents
-    delete uploadedDocuments[inputId];
-    
-    // Reset preview
-    previewElement.innerHTML = `
-        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
-        <p class="text-sm text-gray-500 text-center">${getUploadTextForDocument(inputId)}</p>
-        <p class="text-xs text-gray-400">${getDocumentDescription(inputId)}</p>
-    `;
-    
-    updateDocumentStatus();
-}
-
-function getUploadTextForDocument(inputId) {
-    const texts = {
-        'studentAadharImage': 'Upload student\'s Aadhar card image',
-        'fatherAadharImage': 'Upload father\'s Aadhar card',
-        'motherAadharImage': 'Upload mother\'s Aadhar card',
-        'birthCertificateImage': 'Upload birth certificate',
-        'transferCertificateImage': 'Upload transfer certificate',
-        'fatherIncomeCertificateImage': 'Upload father\'s income certificate',
-        'castCertificateImage': 'Upload caste certificate'
     };
-    return texts[inputId] || 'Upload document';
+    
+    reader.readAsDataURL(file);
+    Toast.show('Photo uploaded successfully', 'success');
 }
 
-function getDocumentDescription(inputId) {
-    const descriptions = {
-        'studentAadharImage': 'Front side',
-        'fatherAadharImage': 'Front side',
-        'motherAadharImage': 'Front side',
-        'birthCertificateImage': 'PDF or Image',
-        'transferCertificateImage': 'From previous school',
-        'fatherIncomeCertificateImage': 'For scholarship/fee concession',
-        'castCertificateImage': 'For reservation benefits'
-    };
-    return descriptions[inputId] || '';
+// 2. Handle Student ID and Password
+function generateStudentId() {
+    const year = new Date().getFullYear().toString().slice(-2);
+    const random = Math.floor(1000 + Math.random() * 9000);
+    return `STU${year}${random}`;
 }
 
-function updateDocumentStatus() {
-    const statusElement = document.getElementById('documentStatus');
-    const uploadedCount = Object.keys(uploadedDocuments).length;
-    
-    if (uploadedCount === 0) {
-        statusElement.innerHTML = 'No documents uploaded yet';
-        return;
-    }
-    
-    let html = `<div class="space-y-2">`;
-    html += `<div class="text-green-600"><i class="fas fa-check-circle mr-2"></i>${uploadedCount} document(s) uploaded:</div>`;
-    html += `<ul class="list-disc list-inside pl-4 text-sm">`;
-    
-    Object.entries(uploadedDocuments).forEach(([docId, doc]) => {
-        const docName = docId.replace('Image', '').replace(/([A-Z])/g, ' $1').trim();
-        html += `<li class="truncate">${docName}: ${doc.fileName}</li>`;
-    });
-    
-    html += `</ul></div>`;
-    statusElement.innerHTML = html;
-}
-
-// Sports "Other" functionality
+// 3. Enhanced manual add options for sports and subjects
 function toggleOtherSports() {
     const checkbox = document.getElementById('otherSportsCheckbox');
     const container = document.getElementById('otherSportsContainer');
-    const display = document.getElementById('otherSportsDisplay');
     
     if (checkbox.checked) {
         container.classList.remove('hidden');
-        if (otherSports.length > 0) {
-            display.classList.remove('hidden');
-        }
     } else {
         container.classList.add('hidden');
-        display.classList.add('hidden');
     }
 }
 
@@ -654,69 +703,30 @@ function addOtherSports() {
         return;
     }
     
-    // Split by comma and trim each sport
-    const newSports = value.split(',').map(sport => sport.trim()).filter(sport => sport);
-    
-    // Add unique sports
-    newSports.forEach(sport => {
-        if (!otherSports.includes(sport.toLowerCase()) && sport) {
-            otherSports.push(sport.toLowerCase());
-        }
-    });
-    
-    // Update display
-    updateOtherSportsDisplay();
-    
-    // Clear input
-    input.value = '';
-    Toast.show(`${newSports.length} sport(s) added`, 'success');
-}
-
-function updateOtherSportsDisplay() {
+    const sports = value.split(',').map(sport => sport.trim()).filter(sport => sport);
     const display = document.getElementById('otherSportsDisplay');
     
-    if (otherSports.length === 0) {
-        display.classList.add('hidden');
-        return;
+    if (sports.length > 0) {
+        display.classList.remove('hidden');
+        sports.forEach(sport => {
+            if (!otherSports.includes(sport.toLowerCase())) {
+                otherSports.push(sport.toLowerCase());
+            }
+        });
+        updateOtherSportsDisplay();
+        input.value = '';
+        Toast.show(`${sports.length} sport(s) added`, 'success');
     }
-    
-    display.classList.remove('hidden');
-    let html = '<div class="flex flex-wrap gap-2 mt-2">';
-    
-    otherSports.forEach((sport, index) => {
-        html += `
-            <div class="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                <span>${sport}</span>
-                <button type="button" onclick="removeOtherSport(${index})" class="ml-2 text-red-500 hover:text-red-700">
-                    <i class="fas fa-times text-xs"></i>
-                </button>
-            </div>
-        `;
-    });
-    
-    html += '</div>';
-    display.innerHTML = html;
 }
 
-function removeOtherSport(index) {
-    otherSports.splice(index, 1);
-    updateOtherSportsDisplay();
-}
-
-// Subjects "Other" functionality
 function toggleOtherSubjects() {
     const checkbox = document.getElementById('otherSubjectsCheckbox');
     const container = document.getElementById('otherSubjectsContainer');
-    const display = document.getElementById('otherSubjectsDisplay');
     
     if (checkbox.checked) {
         container.classList.remove('hidden');
-        if (otherSubjects.length > 0) {
-            display.classList.remove('hidden');
-        }
     } else {
         container.classList.add('hidden');
-        display.classList.add('hidden');
     }
 }
 
@@ -729,262 +739,23 @@ function addOtherSubjects() {
         return;
     }
     
-    // Split by comma and trim each subject
-    const newSubjects = value.split(',').map(subject => subject.trim()).filter(subject => subject);
-    
-    // Add unique subjects
-    newSubjects.forEach(subject => {
-        if (!otherSubjects.includes(subject.toLowerCase()) && subject) {
-            otherSubjects.push(subject.toLowerCase());
-        }
-    });
-    
-    // Update display
-    updateOtherSubjectsDisplay();
-    
-    // Clear input
-    input.value = '';
-    Toast.show(`${newSubjects.length} subject(s) added`, 'success');
-}
-
-function updateOtherSubjectsDisplay() {
+    const subjects = value.split(',').map(subject => subject.trim()).filter(subject => subject);
     const display = document.getElementById('otherSubjectsDisplay');
     
-    if (otherSubjects.length === 0) {
-        display.classList.add('hidden');
-        return;
-    }
-    
-    display.classList.remove('hidden');
-    let html = '<div class="flex flex-wrap gap-2 mt-2">';
-    
-    otherSubjects.forEach((subject, index) => {
-        html += `
-            <div class="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                <span>${subject}</span>
-                <button type="button" onclick="removeOtherSubject(${index})" class="ml-2 text-red-500 hover:text-red-700">
-                    <i class="fas fa-times text-xs"></i>
-                </button>
-            </div>
-        `;
-    });
-    
-    html += '</div>';
-    display.innerHTML = html;
-}
-
-function removeOtherSubject(index) {
-    otherSubjects.splice(index, 1);
-    updateOtherSubjectsDisplay();
-}
-
-// Fee Calculations
-function updateFeeCalculations() {
-    const admission = parseFloat(document.getElementById('admissionFees')?.value || 0);
-    const uniform = parseFloat(document.getElementById('uniformFees')?.value || 0);
-    const books = parseFloat(document.getElementById('bookFees')?.value || 0);
-    const tuition = parseFloat(document.getElementById('tuitionFees')?.value || 0);
-    const initialPayment = parseFloat(document.getElementById('initialPayment')?.value || 0);
-    
-    const baseTotal = admission + uniform + books + tuition;
-    const additionalTotal = calculateAdditionalFeesTotal();
-    const grandTotal = baseTotal + additionalTotal;
-    const balance = grandTotal - initialPayment;
-    
-    // Update displays
-    const totalFeesDisplay = document.getElementById('totalFeesDisplay');
-    if (totalFeesDisplay) totalFeesDisplay.textContent = `₹${grandTotal.toLocaleString()}`;
-    
-    const balanceAmount = document.getElementById('balanceAmount');
-    if (balanceAmount) balanceAmount.textContent = `₹${balance.toLocaleString()}`;
-    
-    // Update summary
-    const summaryTotal = document.getElementById('summaryTotal');
-    if (summaryTotal) summaryTotal.textContent = `₹${baseTotal.toLocaleString()}`;
-    
-    const summaryAdditional = document.getElementById('summaryAdditional');
-    if (summaryAdditional) summaryAdditional.textContent = `₹${additionalTotal.toLocaleString()}`;
-    
-    const summaryGrandTotal = document.getElementById('summaryGrandTotal');
-    if (summaryGrandTotal) summaryGrandTotal.textContent = `₹${grandTotal.toLocaleString()}`;
-    
-    const summaryPaid = document.getElementById('summaryPaid');
-    if (summaryPaid) summaryPaid.textContent = `₹${initialPayment.toLocaleString()}`;
-    
-    const summaryPending = document.getElementById('summaryPending');
-    if (summaryPending) summaryPending.textContent = `₹${balance.toLocaleString()}`;
-    
-    const summaryBalance = document.getElementById('summaryBalance');
-    if (summaryBalance) summaryBalance.textContent = `₹${balance.toLocaleString()}`;
-    
-    // Update installment calculation if needed
-    if (document.querySelector('input[name="paymentMode"]:checked').value === 'installment') {
-        calculateInstallments();
-    }
-}
-
-function calculateAdditionalFeesTotal() {
-    return additionalFees.reduce((total, fee) => total + fee.amount, 0);
-}
-
-function addAdditionalFee() {
-    const nameInput = document.getElementById('additionalFeeName');
-    const amountInput = document.getElementById('additionalFeeAmount');
-    const name = nameInput.value.trim();
-    const amount = parseFloat(amountInput.value);
-    
-    if (!name || isNaN(amount) || amount <= 0) {
-        Toast.show('Please enter valid fee name and amount', 'error');
-        return;
-    }
-    
-    const fee = {
-        id: Date.now(),
-        name: name,
-        amount: amount
-    };
-    
-    additionalFees.push(fee);
-    renderAdditionalFeesList();
-    updateFeeCalculations();
-    
-    // Clear inputs
-    nameInput.value = '';
-    amountInput.value = '';
-    nameInput.focus();
-}
-
-function removeAdditionalFee(id) {
-    additionalFees = additionalFees.filter(fee => fee.id !== id);
-    renderAdditionalFeesList();
-    updateFeeCalculations();
-}
-
-function renderAdditionalFeesList() {
-    const container = document.getElementById('additionalFeesList');
-    if (!container) return;
-    
-    if (additionalFees.length === 0) {
-        container.innerHTML = '<p class="text-sm text-gray-500">No additional fees added</p>';
-        return;
-    }
-    
-    let html = '';
-    additionalFees.forEach(fee => {
-        html += `
-            <div class="flex items-center justify-between bg-gray-50 px-3 py-2 rounded">
-                <div>
-                    <span class="font-medium text-sm">${fee.name}</span>
-                    <span class="text-sm text-gray-600 ml-2">₹${fee.amount.toLocaleString()}</span>
-                </div>
-                <button onclick="removeAdditionalFee(${fee.id})" class="text-red-500 hover:text-red-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-    
-    // Update additional fees summary
-    const additionalTotal = calculateAdditionalFeesTotal();
-    const summaryContainer = document.getElementById('additionalFeesSummary');
-    if (summaryContainer) {
-        if (additionalTotal > 0) {
-            summaryContainer.textContent = `Includes additional fees: ₹${additionalTotal.toLocaleString()}`;
-        } else {
-            summaryContainer.textContent = '';
-        }
-    }
-}
-
-// Installment Calculation
-function calculateInstallments() {
-    const admission = parseFloat(document.getElementById('admissionFees')?.value || 0);
-    const uniform = parseFloat(document.getElementById('uniformFees')?.value || 0);
-    const books = parseFloat(document.getElementById('bookFees')?.value || 0);
-    const tuition = parseFloat(document.getElementById('tuitionFees')?.value || 0);
-    const additionalTotal = calculateAdditionalFeesTotal();
-    const totalFees = admission + uniform + books + tuition + additionalTotal;
-    const initialPayment = parseFloat(document.getElementById('initialPayment')?.value || 0);
-    const balanceAmount = totalFees - initialPayment;
-    
-    const installmentCount = parseInt(document.getElementById('installmentCount').value);
-    const firstInstallmentDate = document.getElementById('firstInstallmentDate').value;
-    
-    if (!firstInstallmentDate || balanceAmount <= 0) {
-        document.getElementById('installmentBreakdown').innerHTML = '<p class="text-sm text-gray-500">No installments needed (fully paid)</p>';
-        return;
-    }
-    
-    // Calculate installment amounts
-    let installments = [];
-    const baseInstallmentAmount = Math.floor(balanceAmount / installmentCount);
-    const remainder = balanceAmount % installmentCount;
-    
-    const startDate = new Date(firstInstallmentDate);
-    
-    for (let i = 1; i <= installmentCount; i++) {
-        const dueDate = new Date(startDate);
-        dueDate.setMonth(startDate.getMonth() + (i - 1));
-        
-        // Last installment gets the remainder
-        const amount = (i === installmentCount) ? 
-            baseInstallmentAmount + remainder : 
-            baseInstallmentAmount;
-        
-        installments.push({
-            installmentNumber: i,
-            dueDate: dueDate.toISOString().split('T')[0],
-            amount: amount,
-            status: 'pending'
+    if (subjects.length > 0) {
+        display.classList.remove('hidden');
+        subjects.forEach(subject => {
+            if (!otherSubjects.includes(subject.toLowerCase())) {
+                otherSubjects.push(subject.toLowerCase());
+            }
         });
-    }
-    
-    // Display installment breakdown
-    const breakdownContainer = document.getElementById('installmentBreakdown');
-    let html = '';
-    
-    installments.forEach(installment => {
-        const formattedDate = new Date(installment.dueDate).toLocaleDateString('en-IN');
-        html += `
-            <div class="flex justify-between items-center p-2 border border-gray-200 rounded hover:bg-gray-50">
-                <div>
-                    <span class="font-medium">Installment ${installment.installmentNumber}</span>
-                    <span class="text-sm text-gray-500 ml-2">Due: ${formattedDate}</span>
-                </div>
-                <span class="font-semibold">₹${installment.amount.toLocaleString()}</span>
-            </div>
-        `;
-    });
-    
-    breakdownContainer.innerHTML = html;
-}
-
-// Installment Handling
-function toggleInstallmentOptions() {
-    const installmentOptions = document.getElementById('installmentOptions');
-    const paymentMode = document.querySelector('input[name="paymentMode"]:checked').value;
-    
-    if (paymentMode === 'installment') {
-        installmentOptions.classList.remove('hidden');
-        calculateInstallments();
-    } else {
-        installmentOptions.classList.add('hidden');
+        updateOtherSubjectsDisplay();
+        input.value = '';
+        Toast.show(`${subjects.length} subject(s) added`, 'success');
     }
 }
 
-// Helper function to calculate due dates
-function calculateDueDate(installmentNumber) {
-    const firstInstallmentDate = document.getElementById('firstInstallmentDate').value;
-    if (!firstInstallmentDate) return null;
-    
-    const date = new Date(firstInstallmentDate);
-    date.setMonth(date.getMonth() + (installmentNumber - 1));
-    return date.toISOString().split('T')[0];
-}
-
-// Payment Method Change Handler
+// 4. QR CODE GENERATION SYSTEM
 function handlePaymentMethodChange() {
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     const qrCodeSection = document.getElementById('qrCodeSection');
@@ -1017,47 +788,67 @@ function generateQRCode() {
     // Update QR code amount display
     document.getElementById('qrAmount').textContent = `₹${parseInt(initialPayment).toLocaleString()}`;
     
-    // Generate payment details for QR code
-    const paymentData = {
-        account: '123456789012',
-        ifsc: 'KUNS0001234',
-        amount: initialPayment,
-        name: 'Kunash School',
-        note: 'Student Fees Payment'
-    };
+    // Generate unique payment reference
+    const paymentRef = `PAY${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    
+    // Generate payment details for QR code - Using UPI format for better compatibility
+    const paymentData = `upi://pay?pa=kunashschool@icici&pn=Kunash%20School&am=${initialPayment}&tn=Student%20Fees%20Payment&tr=${paymentRef}`;
     
     // Create QR code using the qrcode library
-    const qr = new QRCode(qrCodeCanvas, {
-        text: JSON.stringify(paymentData),
-        width: 200,
-        height: 200,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
-    });
-    
-    Toast.show('QR code generated successfully', 'success');
+    try {
+        // Check if QRCode library is available
+        if (typeof QRCode === 'undefined') {
+            Toast.show('QR Code library not loaded. Please refresh the page.', 'error');
+            return;
+        }
+        
+        // Generate QR code with better options
+        new QRCode(qrCodeCanvas, {
+            text: paymentData,
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+        
+        qrCodeGenerated = true;
+        Toast.show('QR code generated successfully. Amount: ₹' + parseInt(initialPayment).toLocaleString(), 'success');
+        
+    } catch (error) {
+        console.error('Error generating QR code:', error);
+        Toast.show('Error generating QR code. Please try again.', 'error');
+        
+        // Fallback: Show error message in QR code container
+        qrCodeCanvas.innerHTML = `
+            <div class="text-center p-4">
+                <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-2"></i>
+                <p class="text-sm text-gray-700">QR Code Generation Failed</p>
+                <p class="text-xs text-gray-500">Please refresh and try again</p>
+            </div>
+        `;
+    }
 }
 
-// Update payment details
-function updatePaymentDetails() {
-    // Update QR code if online payment is selected
-    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
-    if (paymentMethod && paymentMethod.value === 'online') {
-        generateQRCode();
+// Refresh QR Code
+function refreshQRCode() {
+    if (typeof QRCode === 'undefined') {
+        Toast.show('QR Code library not available', 'error');
+        return;
     }
     
-    // Update fee calculations
-    updateFeeCalculations();
+    generateQRCode();
+    Toast.show('QR code refreshed successfully', 'success');
 }
 
 // Close QR Code
 function closeQRCode() {
     document.getElementById('qrCodeSection').classList.add('hidden');
+    qrCodeGenerated = false;
 }
 
-// Mark payment as complete
-function markPaymentAsComplete() {
+// Verify Transaction ID
+function verifyTransactionId() {
     const transactionIdInput = document.getElementById('transactionId');
     const transactionId = transactionIdInput.value.trim();
     
@@ -1071,1040 +862,648 @@ function markPaymentAsComplete() {
     const statusElement = document.getElementById('transactionStatus');
     statusElement.innerHTML = '<div class="flex items-center text-yellow-600"><i class="fas fa-spinner fa-spin mr-2"></i> Verifying transaction...</div>';
     
-    // Simulate verification process
+    // Simulate verification process with realistic delay
     setTimeout(() => {
-        if (transactionId.length >= 8) {
+        if (transactionId.length >= 8 && /^[A-Z0-9]+$/.test(transactionId)) {
             statusElement.innerHTML = '<div class="flex items-center text-green-600"><i class="fas fa-check-circle mr-2"></i> Transaction verified successfully!</div>';
             transactionVerified = true;
-            Toast.show('Transaction verified successfully!', 'success');
+            Toast.show('Transaction verified successfully! Payment confirmed.', 'success');
         } else {
             statusElement.innerHTML = '<div class="flex items-center text-red-600"><i class="fas fa-times-circle mr-2"></i> Invalid transaction ID. Please check and try again.</div>';
             transactionVerified = false;
-            Toast.show('Invalid transaction ID', 'error');
+            Toast.show('Invalid transaction ID. Must be at least 8 alphanumeric characters.', 'error');
         }
-    }, 1500);
+    }, 2000);
 }
 
-// Verify Transaction ID
-function verifyTransactionId() {
-    markPaymentAsComplete();
-}
-
-// Student Management
-function renderStudentsTable() {
-    const tbody = document.getElementById('studentTableBody');
-    if (!tbody) return;
+// Update other sports display
+function updateOtherSportsDisplay() {
+    const display = document.getElementById('otherSportsDisplay');
+    if (otherSports.length === 0) {
+        display.classList.add('hidden');
+        return;
+    }
     
-    tbody.innerHTML = '';
-    
-    const filtered = getFilteredStudents();
-    const startIndex = (appState.currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    const pageStudents = filtered.slice(startIndex, endIndex);
-    
-    if (pageStudents.length === 0) {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td colspan="6" class="px-6 py-12 text-center">
-                <i class="fas fa-user-graduate text-4xl text-gray-300 mb-3"></i>
-                <p class="text-lg text-gray-600">No students found</p>
-                <p class="text-sm text-gray-500 mt-2">Try adjusting your search criteria</p>
-            </td>
+    let html = '<div class="flex flex-wrap gap-2 mt-2">';
+    otherSports.forEach((sport, index) => {
+        html += `
+            <div class="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                <span>${sport}</span>
+                <button type="button" onclick="removeOtherSport(${index})" class="ml-2 text-red-500 hover:text-red-700">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
         `;
-        tbody.appendChild(row);
-    } else {
-        pageStudents.forEach(student => {
-            const feeStatus = getFeeStatusBadge(student.fees);
-            
-            const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50 transition-colors duration-150';
-            row.innerHTML = `
-                <td class="px-4 lg:px-6 py-4">
-                    <input type="checkbox" class="student-checkbox rounded border-gray-300" data-id="${student.id}">
-                </td>
-                <td class="px-4 lg:px-6 py-4">
-                    <div class="flex items-center space-x-3">
-                        <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            ${student.photo ? 
-                                `<img src="${student.photo}" class="h-full w-full rounded-full object-cover" alt="${student.fullName}">` :
-                                `<i class="fas fa-user-graduate text-blue-600"></i>`
-                            }
-                        </div>
-                        <div>
-                            <div class="font-medium text-gray-900">${student.fullName}</div>
-                            <div class="text-sm text-gray-500">${student.studentId} • ${student.gender}, ${calculateAge(student.dob)} years</div>
-                        </div>
-                    </div>
-                </td>
-                <td class="px-4 lg:px-6 py-4">
-                    <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        <i class="fas fa-graduation-cap mr-1"></i>
-                        Class ${student.class} - ${student.section}
-                    </div>
-                    <div class="text-xs text-gray-500 mt-1">Roll No: ${student.rollNumber}</div>
-                </td>
-                <td class="px-4 lg:px-6 py-4">
-                    <div class="text-sm text-gray-900">${student.fatherName}</div>
-                    <div class="text-sm text-gray-500">${student.fatherContact}</div>
-                </td>
-                <td class="px-4 lg:px-6 py-4">
-                    ${feeStatus}
-                    <div class="text-xs text-gray-500 mt-1">
-                        Paid: ₹${student.fees.paid.toLocaleString()} / Total: ₹${student.fees.total.toLocaleString()}
-                    </div>
-                    ${student.fees.paymentMode === 'installment' && student.fees.installments?.length > 0 ? 
-                        `<div class="text-xs text-gray-500">${student.fees.installments.length} installments</div>` : ''}
-                </td>
-                <td class="px-4 lg:px-6 py-4">
-                    <div class="flex items-center space-x-2">
-                        <button onclick="viewStudent(${student.id})" class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors duration-200" title="View">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button onclick="editStudent(${student.id})" class="p-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-lg transition-colors duration-200" title="Edit">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="deleteStudent(${student.id})" class="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors duration-200" title="Delete">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    }
-    
-    updatePagination(filtered.length);
-}
-
-function getFeeStatusBadge(fees) {
-    if (fees.pending === 0) {
-        return '<span class="status-badge status-paid">Paid</span>';
-    } else if (fees.paid === 0) {
-        return '<span class="status-badge status-pending">Pending</span>';
-    } else {
-        return '<span class="status-badge status-partial">Partial</span>';
-    }
-}
-
-function getFilteredStudents() {
-    const searchTerm = document.getElementById('searchStudent')?.value.toLowerCase() || '';
-    const filterClass = document.getElementById('filterClass')?.value || '';
-    const filterFeeStatus = document.getElementById('filterFeeStatus')?.value || '';
-    const filterStudentStatus = document.getElementById('filterStudentStatus')?.value || '';
-    
-    return appState.students.filter(student => {
-        // Search filter
-        const matchesSearch = !searchTerm || 
-            student.fullName.toLowerCase().includes(searchTerm) ||
-            student.studentId.toLowerCase().includes(searchTerm) ||
-            student.fatherName.toLowerCase().includes(searchTerm) ||
-            (student.motherName && student.motherName.toLowerCase().includes(searchTerm));
-        
-        // Class filter
-        const matchesClass = !filterClass || student.class === filterClass;
-        
-        // Fee status filter
-        let matchesFeeStatus = true;
-        if (filterFeeStatus === 'paid') {
-            matchesFeeStatus = student.fees.pending === 0;
-        } else if (filterFeeStatus === 'pending') {
-            matchesFeeStatus = student.fees.pending > 0 && student.fees.paid === 0;
-        } else if (filterFeeStatus === 'partial') {
-            matchesFeeStatus = student.fees.pending > 0 && student.fees.paid > 0;
-        }
-        
-        // Student status filter
-        const matchesStudentStatus = !filterStudentStatus || student.status === filterStudentStatus;
-        
-        return matchesSearch && matchesClass && matchesFeeStatus && matchesStudentStatus;
     });
+    html += '</div>';
+    display.innerHTML = html;
 }
 
-function filterStudents() {
-    appState.currentPage = 1;
-    renderStudentsTable();
-    updateStudentStats();
+// Update other subjects display
+function updateOtherSubjectsDisplay() {
+    const display = document.getElementById('otherSubjectsDisplay');
+    if (otherSubjects.length === 0) {
+        display.classList.add('hidden');
+        return;
+    }
+    
+    let html = '<div class="flex flex-wrap gap-2 mt-2">';
+    otherSubjects.forEach((subject, index) => {
+        html += `
+            <div class="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                <span>${subject}</span>
+                <button type="button" onclick="removeOtherSubject(${index})" class="ml-2 text-red-500 hover:text-red-700">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        `;
+    });
+    html += '</div>';
+    display.innerHTML = html;
 }
 
-function updateStudentStats() {
-    const filtered = getFilteredStudents();
-    
-    const totalCount = document.getElementById('totalStudentsCount');
-    if (totalCount) totalCount.textContent = filtered.length;
-    
-    const activeStudents = filtered.filter(s => s.status === 'Active').length;
-    const activeCount = document.getElementById('activeStudentsCount');
-    if (activeCount) activeCount.textContent = activeStudents;
-    
-    const totalPending = filtered.reduce((sum, student) => sum + (student.fees?.pending || 0), 0);
-    const pendingCount = document.getElementById('pendingFeesCount');
-    if (pendingCount) pendingCount.textContent = `₹${totalPending.toLocaleString()}`;
-    
-    const avgAttendance = document.getElementById('avgAttendance');
-    if (avgAttendance) avgAttendance.textContent = '92%';
+function removeOtherSport(index) {
+    otherSports.splice(index, 1);
+    updateOtherSportsDisplay();
 }
 
-function updatePagination(totalItems) {
-    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
-    const startItem = totalItems > 0 ? (appState.currentPage - 1) * ITEMS_PER_PAGE + 1 : 0;
-    const endItem = Math.min(appState.currentPage * ITEMS_PER_PAGE, totalItems);
+function removeOtherSubject(index) {
+    otherSubjects.splice(index, 1);
+    updateOtherSubjectsDisplay();
+}
+
+// Fee calculation functions
+function updateFeeCalculations() {
+    const admissionFees = parseInt(document.getElementById('admissionFees').value) || 0;
+    const uniformFees = parseInt(document.getElementById('uniformFees').value) || 0;
+    const bookFees = parseInt(document.getElementById('bookFees').value) || 0;
+    const tuitionFees = parseInt(document.getElementById('tuitionFees').value) || 0;
+    const initialPayment = parseInt(document.getElementById('initialPayment').value) || 0;
     
-    document.getElementById('startCount').textContent = startItem;
-    document.getElementById('endCount').textContent = endItem;
-    document.getElementById('totalCount').textContent = totalItems;
+    // Calculate total
+    const totalFees = admissionFees + uniformFees + bookFees + tuitionFees;
+    const balance = totalFees - initialPayment;
     
-    document.getElementById('prevBtn').disabled = appState.currentPage === 1;
-    document.getElementById('nextBtn').disabled = appState.currentPage === totalPages;
+    // Update displays
+    document.getElementById('totalFeesDisplay').textContent = `₹${totalFees.toLocaleString()}`;
+    document.getElementById('balanceAmount').textContent = `₹${balance.toLocaleString()}`;
+    document.getElementById('summaryTotal').textContent = `₹${totalFees.toLocaleString()}`;
+    document.getElementById('summaryGrandTotal').textContent = `₹${totalFees.toLocaleString()}`;
+    document.getElementById('summaryPaid').textContent = `₹${initialPayment.toLocaleString()}`;
+    document.getElementById('summaryPending').textContent = `₹${balance.toLocaleString()}`;
+    document.getElementById('summaryBalance').textContent = `₹${balance.toLocaleString()}`;
     
-    // Update page numbers
-    const pageNumbers = document.getElementById('pageNumbers');
-    pageNumbers.innerHTML = '';
+    // Update QR amount if QR code is visible and generated
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+    if (paymentMethod && paymentMethod.value === 'online' && qrCodeGenerated) {
+        document.getElementById('qrAmount').textContent = `₹${initialPayment.toLocaleString()}`;
+        // Regenerate QR code with new amount
+        generateQRCode();
+    }
     
-    for (let i = 1; i <= totalPages; i++) {
-        const button = document.createElement('button');
-        button.className = `px-3 py-1 border rounded-lg transition-all duration-200 ${i === appState.currentPage ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 hover:bg-gray-100'}`;
-        button.textContent = i;
-        button.onclick = () => goToPage(i);
-        pageNumbers.appendChild(button);
+    // Update installment calculation if installment mode is selected
+    const paymentMode = document.querySelector('input[name="paymentMode"]:checked');
+    if (paymentMode && paymentMode.value === 'installment') {
+        calculateInstallments();
     }
 }
 
-function goToPage(page) {
-    appState.currentPage = page;
-    renderStudentsTable();
+// FIXED: Calculate installments correctly with initial payment deduction
+function calculateInstallments() {
+    const admissionFees = parseInt(document.getElementById('admissionFees').value) || 0;
+    const uniformFees = parseInt(document.getElementById('uniformFees').value) || 0;
+    const bookFees = parseInt(document.getElementById('bookFees').value) || 0;
+    const tuitionFees = parseInt(document.getElementById('tuitionFees').value) || 0;
+    const initialPayment = parseInt(document.getElementById('initialPayment').value) || 0;
+    const installmentCount = parseInt(document.getElementById('installmentCount').value) || 2;
+    const firstInstallmentDate = document.getElementById('firstInstallmentDate').value;
+    
+    if (!firstInstallmentDate) return;
+    
+    // Calculate total fees
+    const totalFees = admissionFees + uniformFees + bookFees + tuitionFees;
+    
+    // Calculate balance after initial payment
+    const balanceAfterInitialPayment = totalFees - initialPayment;
+    
+    // Calculate installment amount (balance divided equally among installments)
+    const installmentAmount = Math.round(balanceAfterInitialPayment / installmentCount);
+    
+    let html = '';
+    
+    // Show initial payment if it exists
+    if (initialPayment > 0) {
+        html += `
+            <div class="flex justify-between items-center border-b pb-2">
+                <div>
+                    <span class="font-medium text-green-600">Initial Payment</span>
+                    <p class="text-xs text-gray-500">Paid at registration</p>
+                </div>
+                <span class="font-semibold text-green-600">₹${initialPayment.toLocaleString()}</span>
+            </div>
+        `;
+    }
+    
+    // Generate installment details
+    for (let i = 0; i < installmentCount; i++) {
+        const date = new Date(firstInstallmentDate);
+        date.setMonth(date.getMonth() + i);
+        const dueDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        
+        html += `
+            <div class="flex justify-between items-center border-b pb-2">
+                <div>
+                    <span class="font-medium">Installment ${i + 1}</span>
+                    <p class="text-xs text-gray-500">Due: ${dueDate}</p>
+                </div>
+                <span class="font-semibold text-blue-600">₹${installmentAmount.toLocaleString()}</span>
+            </div>
+        `;
+    }
+    
+    // Show total summary
+    html += `
+        <div class="flex justify-between items-center pt-2 mt-2 border-t">
+            <div>
+                <span class="font-bold">Total Balance</span>
+                <p class="text-xs text-gray-500">After initial payment</p>
+            </div>
+            <span class="font-bold text-lg">₹${balanceAfterInitialPayment.toLocaleString()}</span>
+        </div>
+    `;
+    
+    document.getElementById('installmentBreakdown').innerHTML = html;
 }
 
-function previousPage() {
-    if (appState.currentPage > 1) {
-        appState.currentPage--;
-        renderStudentsTable();
+// Toggle installment options
+function toggleInstallmentOptions() {
+    const paymentMode = document.querySelector('input[name="paymentMode"]:checked').value;
+    const installmentOptions = document.getElementById('installmentOptions');
+    
+    if (paymentMode === 'installment') {
+        installmentOptions.classList.remove('hidden');
+        calculateInstallments();
+    } else {
+        installmentOptions.classList.add('hidden');
     }
 }
 
-function nextPage() {
-    const totalPages = Math.ceil(getFilteredStudents().length / ITEMS_PER_PAGE);
-    if (appState.currentPage < totalPages) {
-        appState.currentPage++;
-        renderStudentsTable();
+// Add additional fee
+function addAdditionalFee() {
+    const nameInput = document.getElementById('additionalFeeName');
+    const amountInput = document.getElementById('additionalFeeAmount');
+    const name = nameInput.value.trim();
+    const amount = parseFloat(amountInput.value);
+    
+    if (!name || isNaN(amount) || amount <= 0) {
+        Toast.show('Please enter valid fee name and amount', 'error');
+        return;
+    }
+    
+    const list = document.getElementById('additionalFeesList');
+    const id = Date.now();
+    
+    list.innerHTML += `
+        <div id="fee-${id}" class="flex justify-between items-center bg-gray-50 p-2 rounded">
+            <span>${name}</span>
+            <div class="flex items-center">
+                <span class="mr-3 font-semibold">₹${amount.toLocaleString()}</span>
+                    <button onclick="removeAdditionalFee(${id})" class="text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    // Clear inputs
+    nameInput.value = '';
+    amountInput.value = '';
+    
+    // Update summary
+    updateFeeCalculations();
+    Toast.show('Additional fee added', 'success');
+}
+
+function removeAdditionalFee(id) {
+    const element = document.getElementById(`fee-${id}`);
+    if (element) {
+        element.remove();
+        updateFeeCalculations();
+        Toast.show('Additional fee removed', 'info');
     }
 }
 
-// Collect Form Data - UPDATED FOR FIRST/MIDDLE/LAST NAME
-function collectFormData() {
-    const firstName = document.querySelector('input[name="firstName"]')?.value || '';
-    const middleName = document.querySelector('input[name="middleName"]')?.value || '';
-    const lastName = document.querySelector('input[name="lastName"]')?.value || '';
+// Toggle permanent address
+function togglePermanentAddress() {
+    const checkbox = document.getElementById('sameAsLocal');
+    const permanentAddressSection = document.getElementById('permanentAddressSection');
     
-    // Build full name
-    let fullName = firstName;
-    if (middleName) fullName += ` ${middleName}`;
-    fullName += ` ${lastName}`;
+    if (checkbox.checked) {
+        permanentAddressSection.classList.add('hidden');
+    } else {
+        permanentAddressSection.classList.remove('hidden');
+    }
+}
+
+// Switch between tabs
+function switchTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
     
-    return {
-        // Personal Details
-        firstName: firstName,
-        middleName: middleName,
-        lastName: lastName,
-        fullName: fullName,
-        dob: document.querySelector('input[name="dob"]')?.value || '',
-        gender: document.querySelector('select[name="gender"]')?.value || '',
-        bloodGroup: document.querySelector('select[name="bloodGroup"]')?.value || '',
-        casteCategory: document.querySelector('select[name="casteCategory"]')?.value || '',
-        aadharNumber: document.querySelector('input[name="aadharNumber"]')?.value || '',
-        previousSchool: document.querySelector('input[name="previousSchool"]')?.value || '',
-        medicalInfo: document.querySelector('textarea[name="medicalInfo"]')?.value || '',
-        
-        // Address Details
-        localAddressLine1: document.querySelector('input[name="localAddressLine1"]')?.value || '',
-        localAddressLine2: document.querySelector('input[name="localAddressLine2"]')?.value || '',
-        localCity: document.querySelector('input[name="localCity"]')?.value || '',
-        localState: document.querySelector('input[name="localState"]')?.value || '',
-        localPincode: document.querySelector('input[name="localPincode"]')?.value || '',
-        
-        // Permanent Address
-        sameAsLocal: document.getElementById('sameAsLocal')?.checked || false,
-        permanentAddressLine1: document.querySelector('input[name="permanentAddressLine1"]')?.value || '',
-        permanentAddressLine2: document.querySelector('input[name="permanentAddressLine2"]')?.value || '',
-        permanentCity: document.querySelector('input[name="permanentCity"]')?.value || '',
-        permanentState: document.querySelector('input[name="permanentState"]')?.value || '',
-        permanentPincode: document.querySelector('input[name="permanentPincode"]')?.value || '',
-        
-        // Academic Details
-        class: document.querySelector('select[name="class"]')?.value || '',
-        section: document.querySelector('select[name="section"]')?.value || '',
-        rollNumber: document.querySelector('input[name="rollNumber"]')?.value || '',
-        admissionDate: document.querySelector('input[name="admissionDate"]')?.value || '',
-        academicYear: document.querySelector('select[name="academicYear"]')?.value || '',
-        classTeacher: document.querySelector('select[name="classTeacher"]')?.value || '',
-        
-        // Subjects (checkboxes)
-        subjects: Array.from(document.querySelectorAll('input[name="subjects[]"]:checked')).map(cb => cb.value),
-        
-        // Sports (checkboxes)
-        sports: Array.from(document.querySelectorAll('input[name="sports[]"]:checked')).map(cb => cb.value),
-        
-        // Parent Details
-        fatherName: document.querySelector('input[name="fatherName"]')?.value || '',
-        fatherAadhar: document.querySelector('input[name="fatherAadhar"]')?.value || '',
-        fatherContact: document.querySelector('input[name="fatherContact"]')?.value || '',
-        fatherOccupation: document.querySelector('input[name="fatherOccupation"]')?.value || '',
-        
-        motherName: document.querySelector('input[name="motherName"]')?.value || '',
-        motherAadhar: document.querySelector('input[name="motherAadhar"]')?.value || '',
-        motherContact: document.querySelector('input[name="motherContact"]')?.value || '',
-        motherOccupation: document.querySelector('input[name="motherOccupation"]')?.value || '',
-        
-        parentEmail: document.querySelector('input[name="parentEmail"]')?.value || '',
-        relationship: document.querySelector('select[name="relationship"]')?.value || '',
-        
-        emergencyContactName: document.querySelector('input[name="emergencyContactName"]')?.value || '',
-        emergencyContactNumber: document.querySelector('input[name="emergencyContactNumber"]')?.value || '',
-        
-        // Fees
-        admissionFees: parseFloat(document.getElementById('admissionFees')?.value || 0),
-        uniformFees: parseFloat(document.getElementById('uniformFees')?.value || 0),
-        bookFees: parseFloat(document.getElementById('bookFees')?.value || 0),
-        tuitionFees: parseFloat(document.getElementById('tuitionFees')?.value || 0),
-        initialPayment: parseFloat(document.getElementById('initialPayment')?.value || 0),
-        paymentMode: document.querySelector('input[name="paymentMode"]:checked')?.value || 'one-time',
-        paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value || 'cash',
-        installmentCount: parseInt(document.getElementById('installmentCount')?.value || 0),
-        firstInstallmentDate: document.getElementById('firstInstallmentDate')?.value || '',
-        transactionId: document.getElementById('transactionId')?.value || '',
-        
-        // Documents
-        documents: uploadedDocuments,
-        
-        // Other sports
-        otherSports: [...otherSports],
-        
-        // Other subjects
-        otherSubjects: [...otherSubjects]
+    // Remove active class from all tab buttons
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(`${tabName}TabContent`).classList.add('active');
+    document.getElementById(`${tabName}Tab`).classList.add('active');
+}
+
+// Preview document upload
+function previewDocument(input, previewId) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    const previewElement = document.getElementById(previewId);
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        if (file.type.includes('image')) {
+            previewElement.innerHTML = `
+                <img src="${e.target.result}" class="h-full w-full object-cover rounded-lg" alt="${file.name}">
+            `;
+        } else {
+            previewElement.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-file-pdf text-4xl text-red-500 mb-2"></i>
+                    <p class="text-sm font-medium">${file.name}</p>
+                    <p class="text-xs text-gray-500">PDF Document</p>
+                </div>
+            `;
+        }
     };
+    
+    reader.readAsDataURL(file);
+    Toast.show('Document uploaded successfully', 'success');
 }
 
-// Validate Form Data - UPDATED FOR NAME VALIDATION
-function validateFormData(studentData) {
-    const requiredFields = [
-        { field: 'firstName', name: 'First Name' },
-        { field: 'lastName', name: 'Last Name' },
-        { field: 'dob', name: 'Date of Birth' },
-        { field: 'gender', name: 'Gender' },
-        { field: 'casteCategory', name: 'Caste Category' },
-        { field: 'localAddressLine1', name: 'Local Address Line 1' },
-        { field: 'localCity', name: 'Local City' },
-        { field: 'localState', name: 'Local State' },
-        { field: 'localPincode', name: 'Local Pincode' },
-        { field: 'class', name: 'Class' },
-        { field: 'section', name: 'Section' },
-        { field: 'rollNumber', name: 'Roll Number' },
-        { field: 'admissionDate', name: 'Admission Date' },
-        { field: 'academicYear', name: 'Academic Year' },
-        { field: 'fatherName', name: "Father's Name" },
-        { field: 'fatherContact', name: "Father's Contact" },
-        { field: 'motherName', name: "Mother's Name" },
-        { field: 'parentEmail', name: 'Parent Email' },
-        { field: 'relationship', name: 'Relationship' },
-        { field: 'emergencyContactName', name: 'Emergency Contact Name' },
-        { field: 'emergencyContactNumber', name: 'Emergency Contact Number' }
-    ];
-    
-    for (const { field, name } of requiredFields) {
-        if (!studentData[field] || studentData[field].toString().trim() === '') {
-            Toast.show(`${name} is required`, 'error');
-            return false;
-        }
-    }
-    
-    // Validate transaction ID for online payments
-    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-    if (paymentMethod === 'online') {
-        const transactionId = document.getElementById('transactionId').value.trim();
-        if (!transactionId || transactionId.length < 8) {
-            Toast.show('Please enter a valid transaction ID (minimum 8 characters) for online payment', 'error');
-            return false;
-        }
-        
-        if (!transactionVerified) {
-            Toast.show('Please verify the transaction ID before proceeding', 'error');
-            return false;
-        }
-    }
-    
-    // Validate phone numbers
-    const phoneFields = [
-        { field: 'fatherContact', name: "Father's Contact" },
-        { field: 'emergencyContactNumber', name: 'Emergency Contact Number' }
-    ];
-    
-    for (const { field, name } of phoneFields) {
-        if (studentData[field] && !/^\d{10}$/.test(studentData[field])) {
-            Toast.show(`${name} must be 10 digits`, 'error');
-            return false;
-        }
-    }
-    
-    // Validate email
-    if (studentData.parentEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentData.parentEmail)) {
-        Toast.show('Please enter a valid email address', 'error');
-        return false;
-    }
-    
-    // Validate admission date is not in the future
-    const admissionDate = new Date(studentData.admissionDate);
-    const today = new Date();
-    if (admissionDate > today) {
-        Toast.show('Admission date cannot be in the future', 'error');
-        return false;
-    }
-    
-    // Validate date of birth makes sense (not in future and reasonable age)
-    const dob = new Date(studentData.dob);
-    if (dob > today) {
-        Toast.show('Date of birth cannot be in the future', 'error');
-        return false;
-    }
-    
-    const age = today.getFullYear() - dob.getFullYear();
-    if (age < 3 || age > 25) {
-        Toast.show('Student age should be between 3 and 25 years', 'error');
-        return false;
-    }
-    
-    return true;
+function removeDocument(inputId, previewId) {
+    document.getElementById(inputId).value = '';
+    const previewElement = document.getElementById(previewId);
+    previewElement.innerHTML = `
+        <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 mb-2"></i>
+        <p class="text-sm text-gray-500 text-center">Upload document</p>
+        <p class="text-xs text-gray-400">PDF or Image</p>
+    `;
+    Toast.show('Document removed', 'info');
 }
 
-// Add Student Handler - UPDATED FOR NEW FIELDS
+// Update payment details
+function updatePaymentDetails() {
+    // Update fee calculations
+    updateFeeCalculations();
+    
+    // Update QR code if online payment is selected
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+    if (paymentMethod && paymentMethod.value === 'online' && qrCodeGenerated) {
+        generateQRCode();
+    }
+}
+
+// Reset form
+function resetForm() {
+    if (!editingStudentId) {
+        // Only ask for confirmation if not in edit mode
+        if (confirm('Are you sure you want to reset the form? All entered data will be lost.')) {
+            document.getElementById('addStudentForm').reset();
+            otherSports = [];
+            otherSubjects = [];
+            document.getElementById('otherSportsDisplay').innerHTML = '';
+            document.getElementById('otherSportsDisplay').classList.add('hidden');
+            document.getElementById('otherSubjectsDisplay').innerHTML = '';
+            document.getElementById('otherSubjectsDisplay').classList.add('hidden');
+            document.getElementById('otherSportsContainer').classList.add('hidden');
+            document.getElementById('otherSubjectsContainer').classList.add('hidden');
+            document.getElementById('otherSportsCheckbox').checked = false;
+            document.getElementById('otherSubjectsCheckbox').checked = false;
+            document.getElementById('studentPhotoPreview').innerHTML = '<i class="fas fa-user text-4xl lg:text-6xl text-gray-400"></i>';
+            document.getElementById('passwordMismatch').classList.add('hidden');
+            
+            // Reset address checkbox
+            document.getElementById('sameAsLocal').checked = false;
+            togglePermanentAddress();
+            
+            // Reset payment mode
+            document.querySelector('input[name="paymentMode"][value="one-time"]').checked = true;
+            toggleInstallmentOptions();
+            
+            updateFeeCalculations();
+            Toast.show('Form has been reset', 'info');
+            
+            // Reset QR code section
+            closeQRCode();
+            document.getElementById('transactionStatus').innerHTML = '';
+            document.getElementById('transactionId').value = '';
+            transactionVerified = false;
+            qrCodeGenerated = false;
+            
+            // Reset edit mode
+            editingStudentId = null;
+        }
+    } else {
+        // In edit mode, just clear without confirmation
+        Toast.show('Form reset for new entry', 'info');
+        editingStudentId = null;
+        showAddStudentSection();
+    }
+}
+
+// Handle add student
 function handleAddStudent() {
-    console.log('handleAddStudent called');
+    // Validate form
+    const password = document.getElementById('studentPassword').value;
+    const confirmPassword = document.getElementById('confirmStudentPassword').value;
     
-    // Validate online payment transaction
+    if (!editingStudentId && password !== confirmPassword) {
+        Toast.show('Passwords do not match', 'error');
+        document.getElementById('passwordMismatch').classList.remove('hidden');
+        return;
+    }
+    
+    // Validate payment if online method selected
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     if (paymentMethod === 'online' && !transactionVerified) {
         Toast.show('Please verify the transaction ID before proceeding', 'error');
         return;
     }
     
-    // Collect form data
-    const studentData = collectFormData();
-    if (!studentData) return;
-    
-    // Validate required fields
-    if (!validateFormData(studentData)) return;
-    
-    // Build addresses
-    const localAddress = `${studentData.localAddressLine1}${studentData.localAddressLine2 ? ', ' + studentData.localAddressLine2 : ''}, ${studentData.localCity}, ${studentData.localState} - ${studentData.localPincode}`;
-    
-    let permanentAddress = localAddress;
-    if (!studentData.sameAsLocal && 
-        studentData.permanentAddressLine1 && 
-        studentData.permanentCity && 
-        studentData.permanentState && 
-        studentData.permanentPincode) {
-        permanentAddress = `${studentData.permanentAddressLine1}${studentData.permanentAddressLine2 ? ', ' + studentData.permanentAddressLine2 : ''}, ${studentData.permanentCity}, ${studentData.permanentState} - ${studentData.permanentPincode}`;
-    }
-    
-    // Calculate fees
-    const baseTotal = studentData.admissionFees + studentData.uniformFees + studentData.bookFees + studentData.tuitionFees;
-    const additionalTotal = calculateAdditionalFeesTotal();
-    const totalFees = baseTotal + additionalTotal;
-    
-    if (studentData.initialPayment > totalFees) {
-        Toast.show('Initial payment cannot exceed total fees', 'error');
+    // Validate QR code was generated for online payments
+    if (paymentMethod === 'online' && !qrCodeGenerated && !editingStudentId) {
+        Toast.show('Please generate QR code for online payment', 'error');
         return;
     }
     
-    if (studentData.initialPayment < 0) {
-        Toast.show('Initial payment cannot be negative', 'error');
-        return;
+    // Gather form data
+    const formData = gatherFormData();
+    
+    if (editingStudentId) {
+        // Update existing student
+        updateStudent(editingStudentId, formData);
+        Toast.show('Student updated successfully!', 'success');
+    } else {
+        // Add new student
+        addNewStudent(formData);
+        Toast.show('Student registration successful!', 'success');
     }
     
-    // Calculate installments if payment mode is installment
-    let installments = [];
-    if (studentData.paymentMode === 'installment' && studentData.initialPayment < totalFees) {
-        const balanceAmount = totalFees - studentData.initialPayment;
-        const installmentCount = studentData.installmentCount;
-        
-        if (installmentCount > 0 && studentData.firstInstallmentDate) {
-            const baseInstallmentAmount = Math.floor(balanceAmount / installmentCount);
-            const remainder = balanceAmount % installmentCount;
-            
-            for (let i = 1; i <= installmentCount; i++) {
-                const dueDate = calculateDueDate(i);
-                const amount = (i === installmentCount) ? 
-                    baseInstallmentAmount + remainder : 
-                    baseInstallmentAmount;
-                
-                installments.push({
-                    installmentNumber: i,
-                    amount: amount,
-                    dueDate: dueDate,
-                    status: 'pending',
-                    paidAmount: 0,
-                    paymentDate: null
-                });
+    // Redirect back to student list
+    setTimeout(() => {
+        showAllStudentsSection();
+    }, 2000);
+}
+
+// Gather form data
+function gatherFormData() {
+    const form = document.getElementById('addStudentForm');
+    const formData = {};
+    
+    // Collect all form fields
+    const formElements = form.elements;
+    for (let element of formElements) {
+        if (element.name) {
+            if (element.type === 'checkbox') {
+                if (element.name.includes('[]')) {
+                    if (!formData[element.name.replace('[]', '')]) {
+                        formData[element.name.replace('[]', '')] = [];
+                    }
+                    if (element.checked) {
+                        formData[element.name.replace('[]', '')].push(element.value);
+                    }
+                } else {
+                    formData[element.name] = element.checked;
+                }
+            } else if (element.type === 'radio') {
+                if (element.checked) {
+                    formData[element.name] = element.value;
+                }
+            } else {
+                formData[element.name] = element.value;
             }
         }
     }
     
-    // Combine sports from checkboxes and other sports
-    const sportsFromCheckboxes = studentData.sports;
-    const allSports = [...sportsFromCheckboxes, ...otherSports];
-    
-    // Combine subjects from checkboxes and other subjects
-    const subjectsFromCheckboxes = studentData.subjects;
-    const allSubjects = [...subjectsFromCheckboxes, ...otherSubjects];
-    
-    // Generate unique student ID
-    const studentId = document.getElementById('studentId').value || `STU${appState.studentIdCounter++}`;
-    
-    // Generate receipt number
-    const receiptNumber = `REC${Date.now().toString().slice(-8)}`;
-    
-    // Create student object
-    const newStudent = {
-        id: Date.now(),
-        studentId: studentId,
-        firstName: studentData.firstName,
-        middleName: studentData.middleName,
-        lastName: studentData.lastName,
-        fullName: studentData.fullName,
-        dob: studentData.dob,
-        gender: studentData.gender,
-        bloodGroup: studentData.bloodGroup || '',
-        casteCategory: studentData.casteCategory,
-        localAddress: localAddress,
-        permanentAddress: permanentAddress,
-        aadharNumber: studentData.aadharNumber || '',
-        previousSchool: studentData.previousSchool || '',
-        medicalInfo: studentData.medicalInfo || '',
-        sports: allSports,
-        otherSports: otherSports,
-        class: studentData.class,
-        section: studentData.section,
-        rollNumber: studentData.rollNumber,
-        admissionDate: studentData.admissionDate,
-        academicYear: studentData.academicYear,
-        classTeacher: studentData.classTeacher || '',
-        subjects: allSubjects,
-        otherSubjects: otherSubjects,
-        fatherName: studentData.fatherName,
-        fatherContact: studentData.fatherContact,
-        fatherAadhar: studentData.fatherAadhar || '',
-        fatherOccupation: studentData.fatherOccupation || '',
-        motherName: studentData.motherName,
-        motherContact: studentData.motherContact || '',
-        motherAadhar: studentData.motherAadhar || '',
-        motherOccupation: studentData.motherOccupation || '',
-        parentEmail: studentData.parentEmail,
-        relationship: studentData.relationship,
-        emergencyContactName: studentData.emergencyContactName,
-        emergencyContactNumber: studentData.emergencyContactNumber,
-        fees: {
-            total: totalFees,
-            admission: studentData.admissionFees,
-            uniform: studentData.uniformFees,
-            books: studentData.bookFees,
-            tuition: studentData.tuitionFees,
-            additional: additionalTotal,
-            paid: studentData.initialPayment,
-            pending: totalFees - studentData.initialPayment,
-            paymentMode: studentData.paymentMode,
-            paymentMethod: studentData.paymentMethod,
-            transactionId: studentData.transactionId || '',
-            installments: installments,
-            receiptNumber: receiptNumber,
-            initialPaymentDate: new Date().toISOString().split('T')[0]
-        },
-        status: 'Active',
-        createdAt: new Date().toISOString(),
-        photo: null,
-        documents: uploadedDocuments
-    };
-    
-    console.log('New student object created:', newStudent);
-    
-    // Add to database
-    appState.students.push(newStudent);
-    
-    // Save data to localStorage
-    const saved = saveData();
-    
-    if (saved) {
-        // Generate receipt
-        generateReceipt(newStudent, studentData.initialPayment);
-        
-        // Reset and show success
-        resetForm();
-        Toast.show(`Student ${newStudent.fullName} registered successfully! Student ID: ${newStudent.studentId}`, 'success');
-        
-        // Redirect after delay
-        setTimeout(() => {
-            window.location.href = 'student-management.html';
-        }, 2000);
-    } else {
-        Toast.show('Failed to save student data. Please try again.', 'error');
+    // Add additional sports and subjects
+    if (otherSports.length > 0) {
+        if (!formData.sports) formData.sports = [];
+        formData.sports = formData.sports.concat(otherSports);
     }
+    
+    if (otherSubjects.length > 0) {
+        if (!formData.subjects) formData.subjects = [];
+        formData.subjects = formData.subjects.concat(otherSubjects);
+    }
+    
+    // Calculate fees
+    formData.admissionFees = parseInt(document.getElementById('admissionFees').value) || 0;
+    formData.uniformFees = parseInt(document.getElementById('uniformFees').value) || 0;
+    formData.bookFees = parseInt(document.getElementById('bookFees').value) || 0;
+    formData.tuitionFees = parseInt(document.getElementById('tuitionFees').value) || 0;
+    formData.initialPayment = parseInt(document.getElementById('initialPayment').value) || 0;
+    formData.totalFees = formData.admissionFees + formData.uniformFees + formData.bookFees + formData.tuitionFees;
+    formData.pendingFees = formData.totalFees - formData.initialPayment;
+    formData.paidFees = formData.initialPayment;
+    formData.feesStatus = formData.pendingFees === 0 ? 'paid' : (formData.initialPayment > 0 ? 'partial' : 'pending');
+    
+    // Add other fields
+    formData.studentStatus = 'active';
+    formData.attendance = '95%';
+    formData.academicYear = formData.academicYear || '2024-2025';
+    formData.receiptNumber = `REC${new Date().getFullYear()}${Math.floor(1000 + Math.random() * 9000)}`;
+    formData.transactionId = document.getElementById('transactionId').value || '';
+    formData.paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    formData.paymentMode = document.querySelector('input[name="paymentMode"]:checked').value;
+    formData.sameAsLocal = document.getElementById('sameAsLocal').checked;
+    
+    return formData;
 }
 
-// EDIT STUDENT FUNCTIONALITY - UPDATED FOR FIRST/MIDDLE/LAST NAME
-function editStudent(id) {
-    editingStudentId = id;
-    const student = appState.students.find(s => s.id === id);
+// Add new student
+function addNewStudent(formData) {
+    const newId = `STU${new Date().getFullYear().toString().slice(-2)}${Math.floor(1000 + Math.random() * 9000)}`;
     
+    const newStudent = {
+        id: newId,
+        ...formData,
+        fullName: `${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`,
+        contact: formData.fatherContact,
+        email: `${formData.firstName.toLowerCase()}.${formData.lastName.toLowerCase().charAt(0)}@example.com`,
+        localAddress: `${formData.localAddressLine1}, ${formData.localAddressLine2 ? formData.localAddressLine2 + ', ' : ''}${formData.localCity}, ${formData.localState} - ${formData.localPincode}`,
+        permanentAddress: formData.sameAsLocal ? 
+            `${formData.localAddressLine1}, ${formData.localAddressLine2 ? formData.localAddressLine2 + ', ' : ''}${formData.localCity}, ${formData.localState} - ${formData.localPincode}` :
+            `${formData.permanentAddressLine1}, ${formData.permanentAddressLine2 ? formData.permanentAddressLine2 + ', ' : ''}${formData.permanentCity}, ${formData.permanentState} - ${formData.permanentPincode}`,
+        studentId: formData.studentId || newId,
+        otherSports: otherSports,
+        otherSubjects: otherSubjects,
+        createdAt: new Date().toISOString().split('T')[0],
+        updatedAt: new Date().toISOString().split('T')[0]
+    };
+    
+    dummyStudents.push(newStudent);
+    
+    // Reset form for next entry
+    resetForm();
+}
+
+// Update existing student
+function updateStudent(studentId, formData) {
+    const index = dummyStudents.findIndex(s => s.id === studentId);
+    
+    if (index !== -1) {
+        dummyStudents[index] = {
+            ...dummyStudents[index],
+            ...formData,
+            fullName: `${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`,
+            contact: formData.fatherContact,
+            localAddress: `${formData.localAddressLine1}, ${formData.localAddressLine2 ? formData.localAddressLine2 + ', ' : ''}${formData.localCity}, ${formData.localState} - ${formData.localPincode}`,
+            permanentAddress: formData.sameAsLocal ? 
+                `${formData.localAddressLine1}, ${formData.localAddressLine2 ? formData.localAddressLine2 + ', ' : ''}${formData.localCity}, ${formData.localState} - ${formData.localPincode}` :
+                `${formData.permanentAddressLine1}, ${formData.permanentAddressLine2 ? formData.permanentAddressLine2 + ', ' : ''}${formData.permanentCity}, ${formData.permanentState} - ${formData.permanentPincode}`,
+            otherSports: otherSports,
+            otherSubjects: otherSubjects,
+            updatedAt: new Date().toISOString().split('T')[0]
+        };
+    }
+    
+    // Reset edit mode
+    editingStudentId = null;
+}
+
+// Load and display dummy students data
+function loadStudentTable() {
+    const tbody = document.getElementById('studentTableBody');
+    tbody.innerHTML = '';
+    
+    dummyStudents.forEach(student => {
+        const row = document.createElement('tr');
+        
+        // Determine fee status badge
+        let feeBadge = '';
+        if (student.feesStatus === 'paid') {
+            feeBadge = '<span class="status-badge status-paid">Fully Paid</span>';
+        } else if (student.feesStatus === 'partial') {
+            feeBadge = `<span class="status-badge status-partial">Partially Paid (₹${student.paidFees.toLocaleString()}/₹${student.totalFees.toLocaleString()})</span>`;
+        } else {
+            feeBadge = `<span class="status-badge status-pending">Pending (₹${student.pendingFees.toLocaleString()})</span>`;
+        }
+        
+        // Determine student status
+        const statusIcon = student.studentStatus === 'active' ? 
+            '<i class="fas fa-circle text-green-500 mr-1"></i>' : 
+            '<i class="fas fa-circle text-red-500 mr-1"></i>';
+        
+        row.innerHTML = `
+            <td class="px-4 lg:px-6 py-4">
+                <input type="checkbox" class="student-checkbox rounded border-gray-300">
+            </td>
+            <td class="px-4 lg:px-6 py-4">
+                <div class="flex items-center">
+                    <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                        <i class="fas fa-user-graduate text-blue-600"></i>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-gray-800">${student.firstName} ${student.lastName}</p>
+                        <p class="text-sm text-gray-600">ID: ${student.studentId}</p>
+                        <div class="flex items-center mt-1">
+                            ${statusIcon}
+                            <span class="text-xs ${student.studentStatus === 'active' ? 'text-green-600' : 'text-red-600'}">
+                                ${student.studentStatus === 'active' ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-4 lg:px-6 py-4">
+                <p class="font-medium text-gray-800">Class ${student.class} ${student.section}</p>
+                <p class="text-sm text-gray-600">Roll No: ${student.rollNumber}</p>
+            </td>
+            <td class="px-4 lg:px-6 py-4">
+                <p class="text-sm text-gray-800">${student.fatherName}</p>
+                <p class="text-sm text-gray-600">${student.contact}</p>
+                <p class="text-sm text-gray-600">${student.email}</p>
+            </td>
+            <td class="px-4 lg:px-6 py-4">
+                ${feeBadge}
+                <p class="text-xs text-gray-500 mt-1">Attendance: ${student.attendance}</p>
+            </td>
+            <td class="px-4 lg:px-6 py-4">
+                <div class="flex space-x-2">
+                    <button onclick="viewStudent('${student.id}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200" title="View">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button onclick="editStudent('${student.id}')" class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteStudent('${student.id}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        
+        tbody.appendChild(row);
+    });
+    
+    // Update stats
+    updateStats();
+}
+
+// Update stats
+function updateStats() {
+    const totalStudents = dummyStudents.length;
+    const activeStudents = dummyStudents.filter(s => s.studentStatus === 'active').length;
+    const pendingFeesCount = dummyStudents.filter(s => s.feesStatus === 'pending' || s.feesStatus === 'partial').length;
+    
+    document.getElementById('totalStudentsCount').textContent = totalStudents;
+    document.getElementById('activeStudentsCount').textContent = activeStudents;
+    document.getElementById('pendingFeesCount').textContent = pendingFeesCount;
+}
+
+// Helper function to format date
+function formatDate(dateString) {
+    if (!dateString) return 'Not specified';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+}
+
+// Helper function to calculate age
+function calculateAge(dateString) {
+    if (!dateString) return 0;
+    const birthDate = new Date(dateString);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    
+    return age;
+}
+
+// COMPREHENSIVE Student Details Modal
+function viewStudent(studentId) {
+    const student = dummyStudents.find(s => s.id === studentId);
     if (!student) {
         Toast.show('Student not found', 'error');
         return;
     }
-    
-    // Show the add student section but in edit mode
-    showAddStudentSection();
-    
-    // Change the form title and button
-    document.getElementById('formTitle').textContent = 'Edit Student';
-    
-    const submitButton = document.getElementById('submitButton');
-    if (submitButton) {
-        submitButton.innerHTML = '<i class="fas fa-save mr-2"></i>Update Student';
-        submitButton.onclick = handleUpdateStudent;
-    }
-    
-    // Split full name into first, middle, last
-    const nameParts = student.fullName.split(' ');
-    let firstName = '', middleName = '', lastName = '';
-    
-    if (nameParts.length === 1) {
-        firstName = nameParts[0];
-    } else if (nameParts.length === 2) {
-        firstName = nameParts[0];
-        lastName = nameParts[1];
-    } else if (nameParts.length >= 3) {
-        firstName = nameParts[0];
-        lastName = nameParts[nameParts.length - 1];
-        middleName = nameParts.slice(1, nameParts.length - 1).join(' ');
-    }
-    
-    // Parse addresses
-    const localAddressParts = parseAddress(student.localAddress);
-    const permanentAddressParts = parseAddress(student.permanentAddress || student.localAddress);
-    
-    // Fill Personal Details Tab
-    document.querySelector('input[name="firstName"]').value = firstName;
-    document.querySelector('input[name="middleName"]').value = middleName;
-    document.querySelector('input[name="lastName"]').value = lastName;
-    document.querySelector('input[name="dob"]').value = student.dob;
-    document.querySelector('select[name="gender"]').value = student.gender;
-    document.querySelector('select[name="bloodGroup"]').value = student.bloodGroup || '';
-    document.querySelector('select[name="casteCategory"]').value = student.casteCategory;
-    document.querySelector('input[name="aadharNumber"]').value = student.aadharNumber || '';
-    document.querySelector('input[name="previousSchool"]').value = student.previousSchool || '';
-    document.querySelector('textarea[name="medicalInfo"]').value = student.medicalInfo || '';
-    
-    // Fill Local Address
-    document.querySelector('input[name="localAddressLine1"]').value = localAddressParts.line1;
-    document.querySelector('input[name="localAddressLine2"]').value = localAddressParts.line2 || '';
-    document.querySelector('input[name="localCity"]').value = localAddressParts.city;
-    document.querySelector('input[name="localState"]').value = localAddressParts.state;
-    document.querySelector('input[name="localPincode"]').value = localAddressParts.pincode;
-    
-    // Fill Permanent Address
-    const sameAsLocal = student.permanentAddress === student.localAddress || !student.permanentAddress;
-    document.getElementById('sameAsLocal').checked = sameAsLocal;
-    
-    if (!sameAsLocal && student.permanentAddress) {
-        document.querySelector('input[name="permanentAddressLine1"]').value = permanentAddressParts.line1;
-        document.querySelector('input[name="permanentAddressLine2"]').value = permanentAddressParts.line2 || '';
-        document.querySelector('input[name="permanentCity"]').value = permanentAddressParts.city;
-        document.querySelector('input[name="permanentState"]').value = permanentAddressParts.state;
-        document.querySelector('input[name="permanentPincode"]').value = permanentAddressParts.pincode;
-    }
-    
-    togglePermanentAddress();
-    
-    // Fill Sports checkboxes
-    if (Array.isArray(student.sports)) {
-        student.sports.forEach(sport => {
-            const checkbox = document.querySelector(`input[name="sports[]"][value="${sport.toLowerCase()}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-    }
-    
-    // Fill other sports if any
-    otherSports = student.otherSports || [];
-    updateOtherSportsDisplay();
-    
-    // Fill Academic Details Tab
-    document.querySelector('select[name="class"]').value = student.class;
-    document.querySelector('select[name="section"]').value = student.section;
-    document.querySelector('input[name="rollNumber"]').value = student.rollNumber;
-    document.querySelector('input[name="admissionDate"]').value = student.admissionDate;
-    document.querySelector('select[name="academicYear"]').value = student.academicYear;
-    document.querySelector('select[name="classTeacher"]').value = student.classTeacher || '';
-    
-    // Fill Subjects checkboxes
-    if (Array.isArray(student.subjects)) {
-        student.subjects.forEach(subject => {
-            const checkbox = document.querySelector(`input[name="subjects[]"][value="${subject.toLowerCase()}"]`);
-            if (checkbox) checkbox.checked = true;
-        });
-    }
-    
-    // Fill other subjects if any
-    otherSubjects = student.otherSubjects || [];
-    updateOtherSubjectsDisplay();
-    
-    // Fill Parent Details Tab
-    document.querySelector('input[name="fatherName"]').value = student.fatherName;
-    document.querySelector('input[name="fatherAadhar"]').value = student.fatherAadhar || '';
-    document.querySelector('input[name="fatherContact"]').value = student.fatherContact;
-    document.querySelector('input[name="fatherOccupation"]').value = student.fatherOccupation || '';
-    
-    document.querySelector('input[name="motherName"]').value = student.motherName;
-    document.querySelector('input[name="motherAadhar"]').value = student.motherAadhar || '';
-    document.querySelector('input[name="motherContact"]').value = student.motherContact || '';
-    document.querySelector('input[name="motherOccupation"]').value = student.motherOccupation || '';
-    
-    document.querySelector('input[name="parentEmail"]').value = student.parentEmail;
-    document.querySelector('select[name="relationship"]').value = student.relationship;
-    
-    document.querySelector('input[name="emergencyContactName"]').value = student.emergencyContactName;
-    document.querySelector('input[name="emergencyContactNumber"]').value = student.emergencyContactNumber;
-    
-    // Fill Fees Details Tab
-    document.getElementById('admissionFees').value = student.fees.admission;
-    document.getElementById('uniformFees').value = student.fees.uniform;
-    document.getElementById('bookFees').value = student.fees.books;
-    document.getElementById('tuitionFees').value = student.fees.tuition;
-    document.getElementById('initialPayment').value = student.fees.paid;
-    
-    // Set payment mode
-    const paymentMode = student.fees.paymentMode || 'one-time';
-    document.querySelector(`input[name="paymentMode"][value="${paymentMode}"]`).checked = true;
-    toggleInstallmentOptions();
-    
-    // Set payment method
-    const paymentMethod = student.fees.paymentMethod || 'cash';
-    document.querySelector(`input[name="paymentMethod"][value="${paymentMethod}"]`).checked = true;
-    
-    // Set transaction ID if exists
-    if (student.fees.transactionId) {
-        document.getElementById('transactionId').value = student.fees.transactionId;
-        transactionVerified = true;
-    }
-    
-    // Set installment count if applicable
-    if (student.fees.paymentMode === 'installment' && student.fees.installments?.length > 0) {
-        document.getElementById('installmentCount').value = student.fees.installments.length;
-        if (student.fees.installments[0]?.dueDate) {
-            document.getElementById('firstInstallmentDate').value = student.fees.installments[0].dueDate;
-        }
-    }
-    
-    // Handle additional fees
-    additionalFees = [];
-    if (student.fees.additional > 0) {
-        additionalFees.push({
-            id: Date.now(),
-            name: 'Additional Fees',
-            amount: student.fees.additional
-        });
-    }
-    originalAdditionalFees = [...additionalFees];
-    renderAdditionalFeesList();
-    
-    updateFeeCalculations();
-    
-    Toast.show('Student data loaded for editing', 'info');
-}
-
-// Handle Update Student - UPDATED FOR NEW FIELDS
-function handleUpdateStudent() {
-    if (!editingStudentId) {
-        Toast.show('No student selected for editing', 'error');
-        return;
-    }
-    
-    const studentIndex = appState.students.findIndex(s => s.id === editingStudentId);
-    if (studentIndex === -1) {
-        Toast.show('Student not found', 'error');
-        return;
-    }
-    
-    // Validate online payment transaction
-    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-    if (paymentMethod === 'online' && !transactionVerified) {
-        Toast.show('Please verify the transaction ID before proceeding', 'error');
-        return;
-    }
-    
-    // Collect form data
-    const studentData = collectFormData();
-    if (!studentData) return;
-    
-    // Validate required fields
-    if (!validateFormData(studentData)) return;
-    
-    // Build addresses
-    const localAddress = `${studentData.localAddressLine1}${studentData.localAddressLine2 ? ', ' + studentData.localAddressLine2 : ''}, ${studentData.localCity}, ${studentData.localState} - ${studentData.localPincode}`;
-    
-    let permanentAddress = localAddress;
-    if (!studentData.sameAsLocal && 
-        studentData.permanentAddressLine1 && 
-        studentData.permanentCity && 
-        studentData.permanentState && 
-        studentData.permanentPincode) {
-        permanentAddress = `${studentData.permanentAddressLine1}${studentData.permanentAddressLine2 ? ', ' + studentData.permanentAddressLine2 : ''}, ${studentData.permanentCity}, ${studentData.permanentState} - ${studentData.permanentPincode}`;
-    }
-    
-    // Calculate fees
-    const baseTotal = studentData.admissionFees + studentData.uniformFees + studentData.bookFees + studentData.tuitionFees;
-    const additionalTotal = calculateAdditionalFeesTotal();
-    const totalFees = baseTotal + additionalTotal;
-    
-    if (studentData.initialPayment > totalFees) {
-        Toast.show('Initial payment cannot exceed total fees', 'error');
-        return;
-    }
-    
-    if (studentData.initialPayment < 0) {
-        Toast.show('Initial payment cannot be negative', 'error');
-        return;
-    }
-    
-    // Calculate installments if payment mode is installment
-    let installments = [];
-    if (studentData.paymentMode === 'installment' && studentData.initialPayment < totalFees) {
-        const balanceAmount = totalFees - studentData.initialPayment;
-        const installmentCount = studentData.installmentCount;
-        
-        if (installmentCount > 0 && studentData.firstInstallmentDate) {
-            const baseInstallmentAmount = Math.floor(balanceAmount / installmentCount);
-            const remainder = balanceAmount % installmentCount;
-            
-            for (let i = 1; i <= installmentCount; i++) {
-                const dueDate = calculateDueDateForEdit(i, studentData.firstInstallmentDate);
-                const amount = (i === installmentCount) ? 
-                    baseInstallmentAmount + remainder : 
-                    baseInstallmentAmount;
-                
-                installments.push({
-                    installmentNumber: i,
-                    amount: amount,
-                    dueDate: dueDate,
-                    status: 'pending',
-                    paidAmount: 0,
-                    paymentDate: null
-                });
-            }
-        }
-    }
-    
-    // Combine sports from checkboxes and other sports
-    const sportsFromCheckboxes = studentData.sports;
-    const allSports = [...sportsFromCheckboxes, ...otherSports];
-    
-    // Combine subjects from checkboxes and other subjects
-    const subjectsFromCheckboxes = studentData.subjects;
-    const allSubjects = [...subjectsFromCheckboxes, ...otherSubjects];
-    
-    // Update student object
-    const updatedStudent = {
-        ...appState.students[studentIndex],
-        firstName: studentData.firstName,
-        middleName: studentData.middleName,
-        lastName: studentData.lastName,
-        fullName: studentData.fullName,
-        dob: studentData.dob,
-        gender: studentData.gender,
-        bloodGroup: studentData.bloodGroup || '',
-        casteCategory: studentData.casteCategory,
-        localAddress: localAddress,
-        permanentAddress: permanentAddress,
-        aadharNumber: studentData.aadharNumber || '',
-        previousSchool: studentData.previousSchool || '',
-        medicalInfo: studentData.medicalInfo || '',
-        sports: allSports,
-        otherSports: otherSports,
-        class: studentData.class,
-        section: studentData.section,
-        rollNumber: studentData.rollNumber,
-        admissionDate: studentData.admissionDate,
-        academicYear: studentData.academicYear,
-        classTeacher: studentData.classTeacher || '',
-        subjects: allSubjects,
-        otherSubjects: otherSubjects,
-        fatherName: studentData.fatherName,
-        fatherContact: studentData.fatherContact,
-        fatherAadhar: studentData.fatherAadhar || '',
-        fatherOccupation: studentData.fatherOccupation || '',
-        motherName: studentData.motherName,
-        motherContact: studentData.motherContact || '',
-        motherAadhar: studentData.motherAadhar || '',
-        motherOccupation: studentData.motherOccupation || '',
-        parentEmail: studentData.parentEmail,
-        relationship: studentData.relationship,
-        emergencyContactName: studentData.emergencyContactName,
-        emergencyContactNumber: studentData.emergencyContactNumber,
-        fees: {
-            ...appState.students[studentIndex].fees,
-            total: totalFees,
-            admission: studentData.admissionFees,
-            uniform: studentData.uniformFees,
-            books: studentData.bookFees,
-            tuition: studentData.tuitionFees,
-            additional: additionalTotal,
-            paid: studentData.initialPayment,
-            pending: totalFees - studentData.initialPayment,
-            paymentMode: studentData.paymentMode,
-            paymentMethod: studentData.paymentMethod,
-            transactionId: studentData.transactionId || '',
-            installments: installments
-        },
-        updatedAt: new Date().toISOString(),
-        documents: uploadedDocuments
-    };
-    
-    // Update in array
-    appState.students[studentIndex] = updatedStudent;
-    
-    // Save data
-    const saved = saveData();
-    
-    if (saved) {
-        Toast.show(`Student ${updatedStudent.fullName} updated successfully!`, 'success');
-        
-        // Redirect after delay
-        setTimeout(() => {
-            window.location.href = 'student-management.html';
-        }, 1500);
-    } else {
-        Toast.show('Failed to update student data. Please try again.', 'error');
-    }
-}
-
-// Reset Form - UPDATED FOR NEW FIELDS
-function resetForm() {
-    const form = document.getElementById('addStudentForm');
-    if (form) form.reset();
-    
-    // Reset address checkbox
-    document.getElementById('sameAsLocal').checked = false;
-    togglePermanentAddress();
-    
-    // Reset fee inputs to defaults
-    document.getElementById('admissionFees').value = '5000';
-    document.getElementById('uniformFees').value = '2000';
-    document.getElementById('bookFees').value = '3000';
-    document.getElementById('tuitionFees').value = '40000';
-    document.getElementById('initialPayment').value = '10000';
-    
-    // Clear additional fees
-    additionalFees = [];
-    renderAdditionalFeesList();
-    
-    // Reset payment mode
-    document.querySelector('input[name="paymentMode"][value="one-time"]').checked = true;
-    toggleInstallmentOptions();
-    
-    // Reset payment method
-    document.querySelector('input[name="paymentMethod"][value="cash"]').checked = true;
-    
-    // Clear uploaded documents
-    uploadedDocuments = {};
-    updateDocumentStatus();
-    
-    // Clear other sports and subjects
-    otherSports = [];
-    otherSubjects = [];
-    updateOtherSportsDisplay();
-    updateOtherSubjectsDisplay();
-    
-    // Reset other checkboxes
-    document.getElementById('otherSportsCheckbox').checked = false;
-    document.getElementById('otherSubjectsCheckbox').checked = false;
-    toggleOtherSports();
-    toggleOtherSubjects();
-    
-    // Reset transaction verification
-    transactionVerified = false;
-    document.getElementById('transactionStatus').innerHTML = '';
-    document.getElementById('transactionId').value = '';
-    document.getElementById('qrCodeSection').classList.add('hidden');
-    
-    // Set default date for first installment
-    const today = new Date();
-    const firstInstallmentDate = document.getElementById('firstInstallmentDate');
-    if (firstInstallmentDate) {
-        today.setMonth(today.getMonth() + 1);
-        const nextMonth = today.toISOString().split('T')[0];
-        firstInstallmentDate.value = nextMonth;
-    }
-    
-    updateFeeCalculations();
-    switchTab('personal');
-    
-    // Reset form title and button if in edit mode
-    if (editingStudentId) {
-        document.getElementById('formTitle').textContent = 'Add New Student';
-        editingStudentId = null;
-    }
-}
-
-// Utility Functions
-function parseAddress(address) {
-    if (!address) return { line1: '', line2: '', city: '', state: '', pincode: '' };
-    
-    // Try to parse the address format: "line1, line2, city, state - pincode"
-    const parts = address.split(', ');
-    let line1 = parts[0] || '';
-    let line2 = '';
-    let city = '';
-    let state = '';
-    let pincode = '';
-    
-    if (parts.length > 1) {
-        // Check if last part has " - " for state-pincode
-        const lastPart = parts[parts.length - 1];
-        const statePincodeMatch = lastPart.match(/(.+)\s+-\s+(\d+)/);
-        
-        if (statePincodeMatch) {
-            state = statePincodeMatch[1];
-            pincode = statePincodeMatch[2];
-            // City is the part before state
-            if (parts.length > 2) {
-                city = parts[parts.length - 2];
-                // Line2 is everything between line1 and city
-                if (parts.length > 3) {
-                    line2 = parts.slice(1, parts.length - 2).join(', ');
-                }
-            }
-        } else {
-            // Simple format
-            if (parts.length === 2) {
-                city = parts[1];
-            } else if (parts.length === 3) {
-                line2 = parts[1];
-                city = parts[2];
-            }
-        }
-    }
-    
-    return { line1, line2, city, state, pincode };
-}
-
-function calculateDueDateForEdit(installmentNumber, firstInstallmentDate) {
-    const date = new Date(firstInstallmentDate);
-    date.setMonth(date.getMonth() + (installmentNumber - 1));
-    return date.toISOString().split('T')[0];
-}
-
-// The rest of the functions (deleteStudent, viewStudent, generateReceipt, etc.) remain the same
-// but need to be updated to use student.fullName instead of student.name
-
-// Update viewStudent function to show first/middle/last name
-function viewStudent(id) {
-    const student = appState.students.find(s => s.id === id);
-    if (!student) return;
     
     const modal = document.getElementById('viewModalOverlay');
     modal.classList.add('show');
@@ -2128,10 +1527,7 @@ function viewStudent(id) {
                 <div class="lg:col-span-1">
                     <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 text-center">
                         <div class="h-32 w-32 bg-white rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
-                            ${student.photo ? 
-                                `<img src="${student.photo}" class="h-full w-full object-cover" alt="${student.fullName}">` :
-                                `<i class="fas fa-user-graduate text-6xl text-blue-600"></i>`
-                            }
+                            <i class="fas fa-user-graduate text-6xl text-blue-600"></i>
                         </div>
                         <h4 class="text-xl font-bold text-gray-800">${nameDisplay}</h4>
                         <p class="text-gray-600">${student.studentId}</p>
@@ -2142,6 +1538,16 @@ function viewStudent(id) {
                             </div>
                             <div class="text-sm text-gray-500">Roll No: ${student.rollNumber}</div>
                         </div>
+                        <div class="mt-4 pt-4 border-t border-blue-200">
+                            <div class="flex justify-center space-x-2">
+                                <span class="px-3 py-1 rounded-full text-xs font-medium ${student.studentStatus === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                                    ${student.studentStatus === 'active' ? 'Active' : 'Inactive'}
+                                </span>
+                                <span class="px-3 py-1 rounded-full text-xs font-medium ${student.feesStatus === 'paid' ? 'bg-green-100 text-green-800' : student.feesStatus === 'partial' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}">
+                                    ${student.feesStatus === 'paid' ? 'Fees Paid' : student.feesStatus === 'partial' ? 'Partial Payment' : 'Fees Pending'}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                     
                     <!-- Fee Status -->
@@ -2150,49 +1556,71 @@ function viewStudent(id) {
                         <div class="space-y-2">
                             <div class="flex justify-between">
                                 <span class="text-gray-600">Total Fees:</span>
-                                <span class="font-medium">₹${student.fees.total.toLocaleString()}</span>
+                                <span class="font-medium">₹${student.totalFees.toLocaleString()}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-600">Paid Amount:</span>
-                                <span class="font-medium text-green-600">₹${student.fees.paid.toLocaleString()}</span>
+                                <span class="text-gray-600">Admission Fees:</span>
+                                <span class="font-medium">₹${student.admissionFees.toLocaleString()}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-600">Pending Amount:</span>
-                                <span class="font-medium text-red-600">₹${student.fees.pending.toLocaleString()}</span>
+                                <span class="text-gray-600">Uniform Fees:</span>
+                                <span class="font-medium">₹${student.uniformFees.toLocaleString()}</span>
                             </div>
                             <div class="flex justify-between">
-                                <span class="text-gray-600">Payment Method:</span>
-                                <span class="font-medium capitalize">${student.fees.paymentMethod}</span>
+                                <span class="text-gray-600">Book & Stationery:</span>
+                                <span class="font-medium">₹${student.bookFees.toLocaleString()}</span>
                             </div>
-                            ${student.fees.transactionId ? `
                             <div class="flex justify-between">
-                                <span class="text-gray-600">Transaction ID:</span>
-                                <span class="font-medium">${student.fees.transactionId}</span>
+                                <span class="text-gray-600">Tuition Fees:</span>
+                                <span class="font-medium">₹${student.tuitionFees.toLocaleString()}</span>
                             </div>
-                            ` : ''}
+                            <div class="pt-2 border-t">
+                                <div class="flex justify-between font-semibold">
+                                    <span>Paid Amount:</span>
+                                    <span class="text-green-600">₹${student.paidFees.toLocaleString()}</span>
+                                </div>
+                                <div class="flex justify-between font-semibold">
+                                    <span>Pending Amount:</span>
+                                    <span class="text-red-600">₹${student.pendingFees.toLocaleString()}</span>
+                                </div>
+                            </div>
                             <div class="pt-2 border-t">
                                 <div class="flex justify-between font-bold">
                                     <span>Balance:</span>
-                                    <span>₹${student.fees.pending.toLocaleString()}</span>
+                                    <span class="text-lg">₹${student.pendingFees.toLocaleString()}</span>
                                 </div>
                             </div>
-                            ${student.fees.receiptNumber ? `
                             <div class="pt-2 border-t">
                                 <div class="flex justify-between text-sm">
-                                    <span class="text-gray-600">Receipt No:</span>
-                                    <span class="font-medium">${student.fees.receiptNumber}</span>
+                                    <span class="text-gray-600">Payment Method:</span>
+                                    <span class="font-medium capitalize">${student.paymentMethod}</span>
                                 </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Payment Mode:</span>
+                                    <span class="font-medium">${student.paymentMode === 'one-time' ? 'One-Time' : 'Installment'}</span>
+                                </div>
+                                ${student.transactionId ? `
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Transaction ID:</span>
+                                    <span class="font-medium">${student.transactionId}</span>
+                                </div>
+                                ` : ''}
+                                ${student.receiptNumber ? `
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Receipt No:</span>
+                                    <span class="font-medium">${student.receiptNumber}</span>
+                                </div>
+                                ` : ''}
                             </div>
-                            ` : ''}
                         </div>
                     </div>
                     
-                    ${student.fees.installments && student.fees.installments.length > 0 ? `
+                    ${student.installments && student.installments.length > 0 ? `
                     <!-- Installment Details -->
                     <div class="mt-6 bg-white rounded-xl border border-gray-200 p-4">
                         <h5 class="font-semibold text-gray-700 mb-3">Installment Schedule</h5>
                         <div class="space-y-2">
-                            ${student.fees.installments.map(installment => {
+                            ${student.installments.map(installment => {
                                 const statusClass = installment.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
                                 const paidText = installment.paidAmount > 0 ? ` (Paid: ₹${installment.paidAmount.toLocaleString()})` : '';
                                 return `
@@ -2203,7 +1631,7 @@ function viewStudent(id) {
                                         </div>
                                         <div class="text-right">
                                             <div class="font-semibold">₹${installment.amount.toLocaleString()}${paidText}</div>
-                                            <div class="text-xs text-gray-500">Due: ${new Date(installment.dueDate).toLocaleDateString('en-IN')}</div>
+                                            <div class="text-xs text-gray-500">Due: ${formatDate(installment.dueDate)}</div>
                                         </div>
                                     </div>
                                 `;
@@ -2221,38 +1649,42 @@ function viewStudent(id) {
                             <h5 class="font-semibold text-gray-700 mb-3">Personal Details</h5>
                             <div class="space-y-2 text-sm">
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">First Name:</span>
-                                    <span>${student.firstName}</span>
+                                    <span class="w-40 text-gray-600">First Name:</span>
+                                    <span class="font-medium">${student.firstName}</span>
                                 </div>
                                 ${student.middleName ? `
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Middle Name:</span>
-                                    <span>${student.middleName}</span>
+                                    <span class="w-40 text-gray-600">Middle Name:</span>
+                                    <span class="font-medium">${student.middleName}</span>
                                 </div>
                                 ` : ''}
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Last Name:</span>
-                                    <span>${student.lastName}</span>
+                                    <span class="w-40 text-gray-600">Last Name:</span>
+                                    <span class="font-medium">${student.lastName}</span>
                                 </div>
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Date of Birth:</span>
-                                    <span>${formatDate(student.dob)} (${calculateAge(student.dob)} years)</span>
+                                    <span class="w-40 text-gray-600">Date of Birth:</span>
+                                    <span class="font-medium">${formatDate(student.dob)} (${calculateAge(student.dob)} years)</span>
                                 </div>
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Gender:</span>
-                                    <span>${student.gender}</span>
+                                    <span class="w-40 text-gray-600">Gender:</span>
+                                    <span class="font-medium">${student.gender}</span>
                                 </div>
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Blood Group:</span>
-                                    <span>${student.bloodGroup || 'N/A'}</span>
+                                    <span class="w-40 text-gray-600">Blood Group:</span>
+                                    <span class="font-medium">${student.bloodGroup || 'Not specified'}</span>
                                 </div>
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Caste Category:</span>
-                                    <span>${student.casteCategory || 'N/A'}</span>
+                                    <span class="w-40 text-gray-600">Caste Category:</span>
+                                    <span class="font-medium">${student.casteCategory || 'Not specified'}</span>
                                 </div>
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Aadhar Number:</span>
-                                    <span>${student.aadharNumber || 'N/A'}</span>
+                                    <span class="w-40 text-gray-600">Aadhar Number:</span>
+                                    <span class="font-medium">${student.aadharNumber || 'Not available'}</span>
+                                </div>
+                                <div class="flex">
+                                    <span class="w-40 text-gray-600">Medical Information:</span>
+                                    <span class="font-medium">${student.medicalInfo || 'No medical conditions'}</span>
                                 </div>
                             </div>
                         </div>
@@ -2262,24 +1694,64 @@ function viewStudent(id) {
                             <h5 class="font-semibold text-gray-700 mb-3">Academic Details</h5>
                             <div class="space-y-2 text-sm">
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Admission Date:</span>
-                                    <span>${formatDate(student.admissionDate)}</span>
+                                    <span class="w-40 text-gray-600">Admission Date:</span>
+                                    <span class="font-medium">${formatDate(student.admissionDate)}</span>
                                 </div>
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Academic Year:</span>
-                                    <span>${student.academicYear}</span>
+                                    <span class="w-40 text-gray-600">Academic Year:</span>
+                                    <span class="font-medium">${student.academicYear}</span>
                                 </div>
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Class Teacher:</span>
-                                    <span>${student.classTeacher || 'N/A'}</span>
+                                    <span class="w-40 text-gray-600">Class Teacher:</span>
+                                    <span class="font-medium">${student.classTeacher || 'Not assigned'}</span>
                                 </div>
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Subjects:</span>
-                                    <span>${Array.isArray(student.subjects) ? student.subjects.join(', ') : student.subjects || 'N/A'}</span>
+                                    <span class="w-40 text-gray-600">Previous School:</span>
+                                    <span class="font-medium">${student.previousSchool || 'Not applicable'}</span>
                                 </div>
                                 <div class="flex">
-                                    <span class="w-32 text-gray-600">Sports:</span>
-                                    <span>${Array.isArray(student.sports) ? student.sports.join(', ') : student.sports || 'N/A'}</span>
+                                    <span class="w-40 text-gray-600">Attendance:</span>
+                                    <span class="font-medium">${student.attendance}</span>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="w-40 text-gray-600 mt-1">Subjects:</span>
+                                    <div class="flex-1">
+                                        <div class="flex flex-wrap gap-1">
+                                            ${Array.isArray(student.subjects) ? student.subjects.map(subject => `
+                                                <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">${subject}</span>
+                                            `).join('') : student.subjects || 'Not specified'}
+                                        </div>
+                                        ${student.otherSubjects && student.otherSubjects.length > 0 ? `
+                                        <div class="mt-2">
+                                            <span class="text-xs text-gray-500 block mb-1">Additional Subjects:</span>
+                                            <div class="flex flex-wrap gap-1">
+                                                ${student.otherSubjects.map(subject => `
+                                                    <span class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs">${subject}</span>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <span class="w-40 text-gray-600 mt-1">Sports:</span>
+                                    <div class="flex-1">
+                                        <div class="flex flex-wrap gap-1">
+                                            ${Array.isArray(student.sports) ? student.sports.map(sport => `
+                                                <span class="px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs">${sport}</span>
+                                            `).join('') : student.sports || 'Not specified'}
+                                        </div>
+                                        ${student.otherSports && student.otherSports.length > 0 ? `
+                                        <div class="mt-2">
+                                            <span class="text-xs text-gray-500 block mb-1">Additional Sports:</span>
+                                            <div class="flex flex-wrap gap-1">
+                                                ${student.otherSports.map(sport => `
+                                                    <span class="px-2 py-1 bg-yellow-50 text-yellow-700 rounded text-xs">${sport}</span>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                        ` : ''}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -2289,57 +1761,60 @@ function viewStudent(id) {
                             <h5 class="font-semibold text-gray-700 mb-3">Parent/Guardian Details</h5>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div class="space-y-2 text-sm">
-                                    <h6 class="font-medium text-blue-600">Father's Details</h6>
+                                    <h6 class="font-medium text-blue-600 mb-2">Father's Details</h6>
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Name:</span>
-                                        <span>${student.fatherName}</span>
+                                        <span class="w-40 text-gray-600">Name:</span>
+                                        <span class="font-medium">${student.fatherName}</span>
                                     </div>
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Contact:</span>
-                                        <span>${student.fatherContact}</span>
+                                        <span class="w-40 text-gray-600">Contact:</span>
+                                        <span class="font-medium">${student.fatherContact}</span>
                                     </div>
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Aadhar:</span>
-                                        <span>${student.fatherAadhar || 'N/A'}</span>
+                                        <span class="w-40 text-gray-600">Aadhar:</span>
+                                        <span class="font-medium">${student.fatherAadhar || 'Not available'}</span>
                                     </div>
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Occupation:</span>
-                                        <span>${student.fatherOccupation || 'N/A'}</span>
+                                        <span class="w-40 text-gray-600">Occupation:</span>
+                                        <span class="font-medium">${student.fatherOccupation || 'Not specified'}</span>
                                     </div>
                                 </div>
                                 <div class="space-y-2 text-sm">
-                                    <h6 class="font-medium text-pink-600">Mother's Details</h6>
+                                    <h6 class="font-medium text-pink-600 mb-2">Mother's Details</h6>
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Name:</span>
-                                        <span>${student.motherName}</span>
+                                        <span class="w-40 text-gray-600">Name:</span>
+                                        <span class="font-medium">${student.motherName}</span>
                                     </div>
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Contact:</span>
-                                        <span>${student.motherContact || 'N/A'}</span>
+                                        <span class="w-40 text-gray-600">Contact:</span>
+                                        <span class="font-medium">${student.motherContact || 'Not available'}</span>
                                     </div>
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Aadhar:</span>
-                                        <span>${student.motherAadhar || 'N/A'}</span>
+                                        <span class="w-40 text-gray-600">Aadhar:</span>
+                                        <span class="font-medium">${student.motherAadhar || 'Not available'}</span>
                                     </div>
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Occupation:</span>
-                                        <span>${student.motherOccupation || 'N/A'}</span>
+                                        <span class="w-40 text-gray-600">Occupation:</span>
+                                        <span class="font-medium">${student.motherOccupation || 'Not specified'}</span>
                                     </div>
                                 </div>
                             </div>
                             <div class="mt-4 pt-4 border-t">
                                 <div class="space-y-2 text-sm">
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Primary Email:</span>
-                                        <span>${student.parentEmail}</span>
+                                        <span class="w-40 text-gray-600">Primary Email:</span>
+                                        <span class="font-medium">${student.parentEmail}</span>
                                     </div>
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Relationship:</span>
-                                        <span>${student.relationship}</span>
+                                        <span class="w-40 text-gray-600">Relationship:</span>
+                                        <span class="font-medium">${student.relationship}</span>
                                     </div>
                                     <div class="flex">
-                                        <span class="w-32 text-gray-600">Emergency Contact:</span>
-                                        <span>${student.emergencyContactName} - ${student.emergencyContactNumber}</span>
+                                        <span class="w-40 text-gray-600">Emergency Contact:</span>
+                                        <div>
+                                            <div class="font-medium">${student.emergencyContactName}</div>
+                                            <div class="text-gray-600">${student.emergencyContactNumber}</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2351,360 +1826,383 @@ function viewStudent(id) {
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <h6 class="font-medium text-blue-600 mb-2">Local Address</h6>
-                                    <p class="text-sm">${student.localAddress || 'N/A'}</p>
+                                    <p class="text-sm font-medium">${student.localAddress || 'Not specified'}</p>
                                 </div>
                                 <div>
                                     <h6 class="font-medium text-green-600 mb-2">Permanent Address</h6>
-                                    <p class="text-sm">${student.permanentAddress || student.localAddress || 'N/A'}</p>
+                                    <p class="text-sm font-medium">${student.permanentAddress || student.localAddress || 'Not specified'}</p>
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Medical Information -->
-                        <div class="md:col-span-2 bg-white rounded-xl border border-gray-200 p-4">
-                            <h5 class="font-semibold text-gray-700 mb-3">Medical Information</h5>
-                            <p class="text-sm">${student.medicalInfo || 'No medical conditions reported'}</p>
+                    </div>
+                    
+                    <!-- Student Login Details -->
+                    <div class="mt-6 bg-white rounded-xl border border-gray-200 p-4">
+                        <h5 class="font-semibold text-gray-700 mb-3">Student Login Portal</h5>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="space-y-2 text-sm">
+                                <div class="flex">
+                                    <span class="w-40 text-gray-600">Student ID:</span>
+                                    <span class="font-medium">${student.studentId}</span>
+                                </div>
+                                <div class="flex">
+                                    <span class="w-40 text-gray-600">Email:</span>
+                                    <span class="font-medium">${student.email}</span>
+                                </div>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex">
+                                    <span class="w-40 text-gray-600">Student Password:</span>
+                                    <span class="font-medium">●●●●●●●●</span>
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    Password is encrypted for security
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
             
             <div class="flex flex-col lg:flex-row justify-end space-y-4 lg:space-y-0 lg:space-x-4 mt-8 pt-6 border-t border-gray-200">
-                <button onclick="editStudent(${student.id})" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium">
-                    <i class="fas fa-edit mr-2"></i>Edit Student
-                </button>
-                <button onclick="printStudentDetails(${student.id})" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
-                    <i class="fas fa-print mr-2"></i>Print Details
-                </button>
-                <button onclick="viewReceipt(${student.id})" class="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 font-medium">
-                    <i class="fas fa-receipt mr-2"></i>View Receipt
+                
+                <button onclick="closeModal('viewModalOverlay')" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium">
+                    <i class="fas fa-times mr-2"></i>Close
                 </button>
             </div>
         </div>
     `;
 }
 
-// Delete Student function (unchanged except using fullName)
-function deleteStudent(id) {
-    const student = appState.students.find(s => s.id === id);
+// EDIT STUDENT FUNCTIONALITY
+function editStudent(studentId) {
+    const student = dummyStudents.find(s => s.id === studentId);
     if (!student) {
         Toast.show('Student not found', 'error');
         return;
     }
     
-    const confirmationHtml = `
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-                <div class="flex items-center mb-4">
-                    <div class="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
-                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-bold text-gray-800">Confirm Deletion</h3>
-                        <p class="text-sm text-gray-600">Are you sure you want to delete this student?</p>
-                    </div>
-                </div>
-                
-                <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                    <div class="flex items-center">
-                        <div class="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                            <i class="fas fa-user-graduate text-red-600"></i>
-                        </div>
-                        <div>
-                            <p class="font-medium text-gray-800">${student.fullName}</p>
-                            <p class="text-sm text-gray-600">${student.studentId} • Class ${student.class}${student.section}</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <p class="text-sm text-gray-600 mb-6">This action cannot be undone. All student data including fees and academic records will be permanently deleted.</p>
-                
-                <div class="flex justify-end space-x-3">
-                    <button onclick="closeDeleteConfirmation()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
-                        Cancel
-                    </button>
-                    <button onclick="confirmDelete(${id})" class="px-4 py-2 bg-gradient-to-r from-red-600 to-pink-600 text-white rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-200 font-medium">
-                        <i class="fas fa-trash mr-2"></i>Delete Student
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
+    editingStudentId = studentId;
     
-    const modal = document.createElement('div');
-    modal.innerHTML = confirmationHtml;
-    modal.id = 'deleteConfirmationModal';
-    document.body.appendChild(modal);
+    // Show edit form
+    document.getElementById('allStudentsSection').classList.add('hidden');
+    document.getElementById('addStudentSection').classList.remove('hidden');
+    
+    // Update form title
+    document.getElementById('formTitle').textContent = `Edit Student - ${student.firstName} ${student.lastName}`;
+    
+    // Switch to first tab
+    switchTab('personal');
+    
+    // Scroll to top
+    window.scrollTo(0, 0);
+    
+    // Populate form with student data
+    populateEditForm(student);
+    
+    Toast.show('Editing student: ' + student.firstName + ' ' + student.lastName, 'info');
 }
 
-function closeDeleteConfirmation() {
-    const modal = document.getElementById('deleteConfirmationModal');
-    if (modal) {
-        modal.remove();
+// Populate form with student data for editing
+function populateEditForm(student) {
+    // Reset form first
+    document.getElementById('addStudentForm').reset();
+    
+    // Personal Details
+    document.querySelector('input[name="firstName"]').value = student.firstName || '';
+    document.querySelector('input[name="middleName"]').value = student.middleName || '';
+    document.querySelector('input[name="lastName"]').value = student.lastName || '';
+    document.querySelector('input[name="dob"]').value = student.dob || '';
+    document.querySelector('select[name="gender"]').value = student.gender || '';
+    document.querySelector('select[name="bloodGroup"]').value = student.bloodGroup || '';
+    document.querySelector('select[name="casteCategory"]').value = student.casteCategory || '';
+    document.querySelector('input[name="previousSchool"]').value = student.previousSchool || '';
+    document.querySelector('input[name="aadharNumber"]').value = student.aadharNumber || '';
+    document.querySelector('textarea[name="medicalInfo"]').value = student.medicalInfo || '';
+    
+    // Student ID and Password (disabled for editing)
+    document.getElementById('studentId').value = student.studentId || '';
+    document.getElementById('studentId').readOnly = true;
+    document.getElementById('studentPassword').value = '********';
+    document.getElementById('studentPassword').readOnly = true;
+    document.getElementById('confirmStudentPassword').value = '********';
+    document.getElementById('confirmStudentPassword').readOnly = true;
+    document.getElementById('autoGeneratedId').textContent = student.studentId || '';
+    
+    // Address
+    document.querySelector('input[name="localAddressLine1"]').value = student.localAddressLine1 || '';
+    document.querySelector('input[name="localAddressLine2"]').value = student.localAddressLine2 || '';
+    document.querySelector('input[name="localCity"]').value = student.localCity || '';
+    document.querySelector('input[name="localState"]').value = student.localState || '';
+    document.querySelector('input[name="localPincode"]').value = student.localPincode || '';
+    
+    document.getElementById('sameAsLocal').checked = student.sameAsLocal || false;
+    togglePermanentAddress();
+    
+    if (!student.sameAsLocal) {
+        document.querySelector('input[name="permanentAddressLine1"]').value = student.permanentAddressLine1 || '';
+        document.querySelector('input[name="permanentAddressLine2"]').value = student.permanentAddressLine2 || '';
+        document.querySelector('input[name="permanentCity"]').value = student.permanentCity || '';
+        document.querySelector('input[name="permanentState"]').value = student.permanentState || '';
+        document.querySelector('input[name="permanentPincode"]').value = student.permanentPincode || '';
     }
+    
+    // Sports
+    otherSports = student.otherSports || [];
+    updateOtherSportsDisplay();
+    
+    // Check sports checkboxes
+    if (student.sports && Array.isArray(student.sports)) {
+        student.sports.forEach(sport => {
+            const checkbox = document.querySelector(`input[name="sports[]"][value="${sport}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+    
+    // Academic Details
+    document.querySelector('select[name="class"]').value = student.class || '';
+    document.querySelector('select[name="section"]').value = student.section || '';
+    document.querySelector('input[name="rollNumber"]').value = student.rollNumber || '';
+    document.querySelector('input[name="admissionDate"]').value = student.admissionDate || '';
+    document.querySelector('select[name="academicYear"]').value = student.academicYear || '';
+    document.querySelector('select[name="classTeacher"]').value = student.classTeacher || '';
+    
+    // Subjects
+    otherSubjects = student.otherSubjects || [];
+    updateOtherSubjectsDisplay();
+    
+    // Check subjects checkboxes
+    if (student.subjects && Array.isArray(student.subjects)) {
+        student.subjects.forEach(subject => {
+            const checkbox = document.querySelector(`input[name="subjects[]"][value="${subject}"]`);
+            if (checkbox) checkbox.checked = true;
+        });
+    }
+    
+    // Parent Details
+    document.querySelector('input[name="fatherName"]').value = student.fatherName || '';
+    document.querySelector('input[name="fatherAadhar"]').value = student.fatherAadhar || '';
+    document.querySelector('input[name="fatherContact"]').value = student.fatherContact || '';
+    document.querySelector('input[name="fatherOccupation"]').value = student.fatherOccupation || '';
+    
+    document.querySelector('input[name="motherName"]').value = student.motherName || '';
+    document.querySelector('input[name="motherAadhar"]').value = student.motherAadhar || '';
+    document.querySelector('input[name="motherContact"]').value = student.motherContact || '';
+    document.querySelector('input[name="motherOccupation"]').value = student.motherOccupation || '';
+    
+    document.querySelector('input[name="parentEmail"]').value = student.parentEmail || '';
+    document.querySelector('select[name="relationship"]').value = student.relationship || '';
+    
+    document.querySelector('input[name="emergencyContactName"]').value = student.emergencyContactName || '';
+    document.querySelector('input[name="emergencyContactNumber"]').value = student.emergencyContactNumber || '';
+    
+    // Fees Details
+    document.getElementById('admissionFees').value = student.admissionFees || 0;
+    document.getElementById('uniformFees').value = student.uniformFees || 0;
+    document.getElementById('bookFees').value = student.bookFees || 0;
+    document.getElementById('tuitionFees').value = student.tuitionFees || 0;
+    document.getElementById('initialPayment').value = student.initialPayment || 0;
+    
+    // Payment Mode
+    const paymentModeRadio = document.querySelector(`input[name="paymentMode"][value="${student.paymentMode || 'one-time'}"]`);
+    if (paymentModeRadio) {
+        paymentModeRadio.checked = true;
+        toggleInstallmentOptions();
+    }
+    
+    // Payment Method
+    const paymentMethodRadio = document.querySelector(`input[name="paymentMethod"][value="${student.paymentMethod || 'cash'}"]`);
+    if (paymentMethodRadio) {
+        paymentMethodRadio.checked = true;
+        handlePaymentMethodChange();
+    }
+    
+    // Transaction ID
+    document.getElementById('transactionId').value = student.transactionId || '';
+    
+    // Update fee calculations
+    updateFeeCalculations();
+    
+    // Update submit button text
+    document.getElementById('submitButton').innerHTML = '<i class="fas fa-save mr-2"></i>Update Student';
 }
 
-function confirmDelete(id) {
-    const student = appState.students.find(s => s.id === id);
-    if (student) {
-        appState.students = appState.students.filter(s => s.id !== id);
-        const saved = saveData();
-        if (saved) {
-            renderStudentsTable();
-            updateStudentStats();
-            closeDeleteConfirmation();
-            Toast.show(`Student ${student.fullName} deleted successfully`, 'success');
+// Delete student
+function deleteStudent(studentId) {
+    if (confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
+        const index = dummyStudents.findIndex(s => s.id === studentId);
+        if (index !== -1) {
+            const studentName = dummyStudents[index].firstName + ' ' + dummyStudents[index].lastName;
+            dummyStudents.splice(index, 1);
+            loadStudentTable();
+            Toast.show(`Student "${studentName}" deleted successfully`, 'success');
         }
     }
 }
 
-// Receipt Generation (updated for new fields)
-function generateReceipt(student, amountPaid) {
-    // Create receipt HTML
-    const receiptHTML = `
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div class="p-6 lg:p-8">
-                    <div class="flex justify-between items-center mb-6 border-b pb-4">
-                        <div>
-                            <h3 class="text-xl lg:text-2xl font-bold text-gray-800">Payment Receipt</h3>
-                            <p class="text-sm text-gray-600">Receipt No: ${student.fees.receiptNumber}</p>
-                        </div>
-                        <button onclick="closeReceipt()" class="text-gray-500 hover:text-gray-700">
-                            <i class="fas fa-times text-2xl"></i>
-                        </button>
-                    </div>
-                    
-                    <!-- School Header -->
-                    <div class="text-center mb-6">
-                        <h2 class="text-2xl font-bold text-blue-800">Kunash School</h2>
-                        <p class="text-gray-600">123 School Street, Pune, Maharashtra - 411001</p>
-                        <p class="text-gray-600">Phone: 020-12345678 | Email: info@kunashschool.edu</p>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        <!-- Student Details -->
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3 border-b pb-2">Student Details</h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex">
-                                    <span class="w-32 text-gray-600">Name:</span>
-                                    <span class="font-medium">${student.fullName}</span>
-                                </div>
-                                <div class="flex">
-                                    <span class="w-32 text-gray-600">Student ID:</span>
-                                    <span>${student.studentId}</span>
-                                </div>
-                                <div class="flex">
-                                    <span class="w-32 text-gray-600">Class:</span>
-                                    <span>${student.class} - ${student.section}</span>
-                                </div>
-                                <div class="flex">
-                                    <span class="w-32 text-gray-600">Roll No:</span>
-                                    <span>${student.rollNumber}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Payment Details -->
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-semibold text-gray-700 mb-3 border-b pb-2">Payment Details</h4>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex">
-                                    <span class="w-32 text-gray-600">Receipt No:</span>
-                                    <span class="font-medium">${student.fees.receiptNumber}</span>
-                                </div>
-                                <div class="flex">
-                                    <span class="w-32 text-gray-600">Date:</span>
-                                    <span>${new Date().toLocaleDateString('en-IN')}</span>
-                                </div>
-                                <div class="flex">
-                                    <span class="w-32 text-gray-600">Payment Mode:</span>
-                                    <span class="capitalize">${student.fees.paymentMode}</span>
-                                </div>
-                                <div class="flex">
-                                    <span class="w-32 text-gray-600">Method:</span>
-                                    <span class="capitalize">${student.fees.paymentMethod}</span>
-                                </div>
-                                ${student.fees.transactionId ? `
-                                <div class="flex">
-                                    <span class="w-32 text-gray-600">Transaction ID:</span>
-                                    <span class="font-medium">${student.fees.transactionId}</span>
-                                </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Fee Breakdown -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-                        <h4 class="font-semibold text-gray-700 mb-3">Fee Breakdown</h4>
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Admission Fees:</span>
-                                <span>₹${student.fees.admission.toLocaleString()}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Uniform Fees:</span>
-                                <span>₹${student.fees.uniform.toLocaleString()}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Book & Stationery:</span>
-                                <span>₹${student.fees.books.toLocaleString()}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Tuition Fees:</span>
-                                <span>₹${student.fees.tuition.toLocaleString()}</span>
-                            </div>
-                            ${student.fees.additional > 0 ? `
-                            <div class="flex justify-between">
-                                <span class="text-gray-600">Additional Fees:</span>
-                                <span>₹${student.fees.additional.toLocaleString()}</span>
-                            </div>
-                            ` : ''}
-                            <div class="flex justify-between pt-2 border-t border-gray-200 font-bold">
-                                <span>Total Annual Fees:</span>
-                                <span>₹${student.fees.total.toLocaleString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Payment Summary -->
-                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-6">
-                        <h4 class="font-semibold text-blue-800 mb-4">Payment Summary</h4>
-                        <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-gray-700">Total Fees:</span>
-                                <span class="font-medium">₹${student.fees.total.toLocaleString()}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-700">Amount Paid:</span>
-                                <span class="font-medium text-green-600">₹${amountPaid.toLocaleString()}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-gray-700">Balance Amount:</span>
-                                <span class="font-medium text-red-600">₹${student.fees.pending.toLocaleString()}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    ${student.fees.paymentMode === 'installment' && student.fees.installments.length > 0 ? `
-                    <!-- Installment Schedule -->
-                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
-                        <h4 class="font-semibold text-yellow-800 mb-4">Installment Schedule</h4>
-                        <div class="space-y-2">
-                            ${student.fees.installments.map(installment => `
-                                <div class="flex justify-between items-center p-2 bg-white rounded border border-yellow-100">
-                                    <div>
-                                        <span class="font-medium">Installment ${installment.installmentNumber}</span>
-                                        <span class="text-sm text-gray-500 ml-2">Due: ${new Date(installment.dueDate).toLocaleDateString('en-IN')}</span>
-                                    </div>
-                                    <span class="font-semibold">₹${installment.amount.toLocaleString()}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    <!-- Authorization -->
-                    <div class="text-center mt-8 pt-6 border-t border-gray-200">
-                        <div class="mb-4">
-                            <p class="text-sm text-gray-600">Authorized Signature</p>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <div class="text-left">
-                                <p class="text-sm font-medium text-gray-700">School Stamp</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-sm font-medium text-gray-700">Accounts Department</p>
-                                <p class="text-xs text-gray-500">Kunash School</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <div class="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4 mt-8 pt-6 border-t border-gray-200">
-                        <button onclick="printReceipt()" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium">
-                            <i class="fas fa-print mr-2"></i>Print Receipt
-                        </button>
-                        <button onclick="closeReceipt()" class="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
-                            <i class="fas fa-check mr-2"></i>Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    // Add receipt to DOM
-    const receiptDiv = document.createElement('div');
-    receiptDiv.id = 'paymentReceipt';
-    receiptDiv.innerHTML = receiptHTML;
-    document.body.appendChild(receiptDiv);
-}
-
-function closeReceipt() {
-    const receipt = document.getElementById('paymentReceipt');
-    if (receipt) {
-        receipt.remove();
-    }
-}
-
-function printReceipt() {
-    const receipt = document.getElementById('paymentReceipt');
-    if (receipt) {
-        const printContent = receipt.querySelector('div.bg-white').outerHTML;
-        const originalContent = document.body.innerHTML;
-        
-        document.body.innerHTML = printContent;
-        window.print();
-        document.body.innerHTML = originalContent;
-        
-        // Re-add the receipt to DOM
-        const receiptDiv = document.createElement('div');
-        receiptDiv.id = 'paymentReceipt';
-        receiptDiv.innerHTML = receipt;
-        document.body.appendChild(receiptDiv);
-    }
-}
-
-// Utility Functions
-function calculateAge(dob) {
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-    }
-    return age;
-}
-
-function formatDate(dateString) {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-}
-
+// Close modal
 function closeModal(modalId) {
     document.getElementById(modalId).classList.remove('show');
 }
 
+// Initialize application
+document.addEventListener('DOMContentLoaded', function() {
+    // Load student table
+    loadStudentTable();
+    
+    // Auto-generate student ID when page loads
+    const autoGeneratedId = generateStudentId();
+    document.getElementById('autoGeneratedId').textContent = autoGeneratedId;
+    document.getElementById('studentId').value = autoGeneratedId;
+    
+    // Validate password match
+    const password = document.getElementById('studentPassword');
+    const confirmPassword = document.getElementById('confirmStudentPassword');
+    const mismatchMessage = document.getElementById('passwordMismatch');
+    
+    function checkPasswordMatch() {
+        if (!editingStudentId && password.value && confirmPassword.value && password.value !== confirmPassword.value) {
+            mismatchMessage.classList.remove('hidden');
+        } else {
+            mismatchMessage.classList.add('hidden');
+        }
+    }
+    
+    password.addEventListener('input', checkPasswordMatch);
+    confirmPassword.addEventListener('input', checkPasswordMatch);
+
+    // Set default date for first installment
+    const today = new Date();
+    const firstInstallmentDate = document.getElementById('firstInstallmentDate');
+    if (firstInstallmentDate) {
+        today.setMonth(today.getMonth() + 1);
+        const nextMonth = today.toISOString().split('T')[0];
+        firstInstallmentDate.value = nextMonth;
+    }
+
+    // Initialize fee calculations
+    updateFeeCalculations();
+    
+    // Add event listeners to fee inputs
+    const feeInputs = ['admissionFees', 'uniformFees', 'bookFees', 'tuitionFees', 'initialPayment'];
+    feeInputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', updateFeeCalculations);
+        }
+    });
+    
+    // Add event listener to installment count
+    const installmentCount = document.getElementById('installmentCount');
+    if (installmentCount) {
+        installmentCount.addEventListener('change', calculateInstallments);
+    }
+    
+    // Check URL parameters to show appropriate section
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    
+    if (action === 'add') {
+        showAddStudentSection();
+    } else {
+        showAllStudentsSection();
+    }
+    
+    // Initialize document upload status
+    updateDocumentStatus();
+    
+    // Initialize sports and subjects
+    updateOtherSportsDisplay();
+    updateOtherSubjectsDisplay();
+    
+    // Initialize sidebar toggle
+    document.getElementById('sidebarToggle').addEventListener('click', function() {
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const icon = document.getElementById('sidebarToggleIcon');
+        
+        if (window.innerWidth < 1024) {
+            sidebar.classList.toggle('mobile-open');
+            document.getElementById('sidebarOverlay').classList.toggle('active');
+        } else {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('sidebar-collapsed');
+            icon.classList.toggle('fa-bars');
+            icon.classList.toggle('fa-times');
+        }
+    });
+    
+    // Close sidebar on mobile when clicking overlay
+    document.getElementById('sidebarOverlay').addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('mobile-open');
+        this.classList.remove('active');
+    });
+    
+    // Initialize notifications dropdown
+    document.getElementById('notificationsBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.getElementById('notificationsDropdown').classList.toggle('hidden');
+    });
+    
+    // Initialize user menu dropdown
+    document.getElementById('userMenuBtn').addEventListener('click', function(e) {
+        e.stopPropagation();
+        document.getElementById('userMenuDropdown').classList.toggle('hidden');
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function() {
+        document.getElementById('notificationsDropdown').classList.add('hidden');
+        document.getElementById('userMenuDropdown').classList.add('hidden');
+    });
+    
+    // Prevent dropdowns from closing when clicking inside them
+    document.querySelectorAll('#notificationsDropdown, #userMenuDropdown').forEach(dropdown => {
+        dropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+    
+    Toast.show('Student management system loaded successfully', 'success');
+});
+
+// Helper function for document status
+function updateDocumentStatus() {
+    const statusElement = document.getElementById('documentStatus');
+    const fileInputs = [
+        'studentAadharImage',
+        'birthCertificateImage',
+        'fatherAadharImage',
+        'motherAadharImage',
+        'transferCertificateImage',
+        'fatherIncomeCertificateImage',
+        'castCertificateImage'
+    ];
+    
+    let uploadedCount = 0;
+    fileInputs.forEach(id => {
+        if (document.getElementById(id)?.files?.length > 0) {
+            uploadedCount++;
+        }
+    });
+    
+    if (uploadedCount === 0) {
+        statusElement.innerHTML = 'No documents uploaded yet';
+    } else {
+        statusElement.innerHTML = `<span class="text-green-600"><i class="fas fa-check-circle mr-2"></i>${uploadedCount} document(s) uploaded</span>`;
+    }
+}
+
+// Export students function
 function exportStudents() {
     Toast.show('Export functionality will be implemented here', 'info');
 }
 
-function printStudentDetails(id) {
-    Toast.show('Print functionality will be implemented here', 'info');
+// Page navigation functions
+function previousPage() {
+    Toast.show('Previous page functionality will be implemented here', 'info');
 }
 
-function viewReceipt(id) {
-    const student = appState.students.find(s => s.id === id);
-    if (!student) return;
-    
-    generateReceipt(student, student.fees.paid);
+function nextPage() {
+    Toast.show('Next page functionality will be implemented here', 'info');
 }

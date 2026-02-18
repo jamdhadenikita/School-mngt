@@ -6,11 +6,12 @@
     <title>Student Management - School Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Load QRCode library from a reliable CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         /* ============================================================================
            MODERN MINIMAL ADMIN DASHBOARD STYLES - 2025/2026 STYLE
            ========================================================================== */
-           
 
         :root {
             --primary: #4376ed;
@@ -353,9 +354,14 @@
         }
 
         /* QR Code Container */
-        .qrcode-canvas {
+        #qrCodeCanvas canvas,
+        #qrCodeCanvas img {
             width: 200px !important;
             height: 200px !important;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px;
+            background: white;
         }
 
         /* Payment status indicator */
@@ -491,22 +497,25 @@
         <aside id="sidebar" class="sidebar shadow-lg">
             <div class="sidebar-scroll">
                 <div class="space-y-1 p-4">
-                    <a data-tooltip="Dashboard" href="/index.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                    <a data-tooltip="Dashboard" href="/index.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
                         <i class="fas fa-home text-black nav-icon"></i>
-                        <span class="nav-text text-black">Dashboard</span>  
+                        <span class="nav-text text-black">Dashboard</span>
                     </a>
-                    
+
                     <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Student Management</p>
                     </div>
-                    
-                    <a data-tooltip="All Students" href="/student-management/student-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+
+                    <a data-tooltip="All Students" href="/student-management/student-management.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
                         <i class="fas fa-user-graduate text-black nav-icon"></i>
                         <span class="nav-text text-black">All Students</span>
-                        <!-- <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">245</span> -->
+                       
                     </a>
-                    
-                    <a data-tooltip="Add Student" href="/student-management/student-management.html?action=add" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+
+                    <a data-tooltip="Add Student" href="/student-management/student-management.html?action=add"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-user-plus text-black nav-icon"></i>
                         <span class="nav-text text-black">Add Student</span>
                     </a>
@@ -515,17 +524,15 @@
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Teacher Management</p>
                     </div>
 
-                    <a data-tooltip="Teachers Attendance" href="/teachers-management/teacher-attendance.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
-                             <i class="fas fa-calendar-check text-black nav-icon"></i>
-                            <span class="nav-text text-black">Teachers Attendance</span>
-                    </a>
-                    
-                    <a data-tooltip="All Teachers" href="/teachers-management/teachers-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
+                    <a data-tooltip="All Teachers" href="/teachers-management/teachers-management.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-100 transition-all duration-200 group">
                         <i class="fas fa-chalkboard-teacher text-black nav-icon"></i>
                         <span class="nav-text text-black">All Teachers</span>
+                        
                     </a>
-                    
-                    <a data-tooltip="Add Teacher" href="/teachers-management/teachers-management.html?action=add" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+
+                    <a data-tooltip="Add Teacher" href="/teachers-management/teachers-management.html?action=add"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-user-tie text-black nav-icon"></i>
                         <span class="nav-text text-black">Add Teacher</span>
                     </a>
@@ -533,39 +540,70 @@
                     <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Academic</p>
                     </div>
-                    
-                    <a data-tooltip="Attendance" href="/Academic/attendance.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
-                        <i class="fas fa-calendar-check text-black nav-icon"></i>
-                        <span class="nav-text text-black">Student Attendance</span>
+
+                    <a data-tooltip="AssignmentManagement" href="/Academic/assignment.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-tasks text-black nav-icon"></i>
+                        <span class="nav-text text-black">Assignment</span>
                     </a>
-                    
-                    <a data-tooltip="Marks & Reports" href="/Academic/marks-reports.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+
+                    <a data-tooltip="Attendance" href="/Academic/attendance.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-calendar-check text-black nav-icon"></i>
+                        <span class="nav-text text-black">Attendance</span>
+                    </a>
+
+                    <a data-tooltip="Marks & Reports" href="/Academic/marks&reports.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-chart-line text-black nav-icon"></i>
                         <span class="nav-text text-black">Marks & Reports</span>
                     </a>
 
-                     <a data-tooltip="CreateClass" href="/Academic/create-class.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                    <a data-tooltip="CreateClass" href="/Academic/create-class.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-chart-line text-black nav-icon"></i>
                         <span class="nav-text text-black">Create Class</span>
                     </a>
+
                     
+
+
                     <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Financial</p>
                     </div>
-                    
-                    <a data-tooltip="Fees Management" href="/fees-management/fees-management.html" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+
+                    <a data-tooltip="Fees Management" href="/fees-management/fee-management.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-money-bill-wave text-black nav-icon"></i>
                         <span class="nav-text text-black">Fees Management</span>
-                        <!-- <span class="ml-auto bg-red-500 text-black text-xs px-2 py-1 rounded-full nav-text">₹45k</span> -->
+                       
                     </a>
-                    
+
                     <div class="pt-4 pb-2">
                         <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">Calendar</p>
                     </div>
-                    
-                    <a data-tooltip="School Calendar" href="#" class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+
+                    <a data-tooltip="School Calendar" href="/School-Calender/calender.html"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
                         <i class="fas fa-calendar text-black nav-icon"></i>
                         <span class="nav-text text-black">School Calendar</span>
+                    </a>
+
+                    <div class="pt-4 pb-2">
+                        <p class="text-xs text-black uppercase tracking-wider px-4 nav-text">System</p>
+                    </div>
+
+                    <a data-tooltip="Notifications" href="#"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-bell text-black nav-icon"></i>
+                        <span class="nav-text text-black">Notifications</span>
+                        <span class="ml-auto bg-blue-500 text-black text-xs px-2 py-1 rounded-full nav-text">3</span>
+                    </a>
+
+                    <a data-tooltip="Analytics & Reports" href="#"
+                        class="nav-item flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 group">
+                        <i class="fas fa-chart-pie text-black nav-icon"></i>
+                        <span class="nav-text text-black">Analytics & Reports</span>
                     </a>
                 </div>
             </div>
@@ -585,7 +623,7 @@
                             <button onclick="exportStudents()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium">
                                 <i class="fas fa-download mr-2"></i>Export
                             </button>
-                            <button onclick="window.location.href='?action=add'" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-sm font-medium">
+                            <button onclick="showAddStudentSection()" class="px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 text-sm font-medium">
                                 <i class="fas fa-plus mr-2"></i>Add New Student
                             </button>
                         </div>
@@ -600,7 +638,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Total Students</p>
-                                    <p class="text-2xl font-bold text-gray-800" id="totalStudentsCount">0</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="totalStudentsCount">245</p>
                                 </div>
                             </div>
                         </div>
@@ -612,7 +650,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Active Students</p>
-                                    <p class="text-2xl font-bold text-gray-800" id="activeStudentsCount">0</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="activeStudentsCount">235</p>
                                 </div>
                             </div>
                         </div>
@@ -624,7 +662,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Pending Fees</p>
-                                    <p class="text-2xl font-bold text-gray-800" id="pendingFeesCount">0</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="pendingFeesCount">42</p>
                                 </div>
                             </div>
                         </div>
@@ -636,7 +674,7 @@
                                 </div>
                                 <div>
                                     <p class="text-sm text-gray-600">Average Attendance</p>
-                                    <p class="text-2xl font-bold text-gray-800" id="avgAttendance">0%</p>
+                                    <p class="text-2xl font-bold text-gray-800" id="avgAttendance">94%</p>
                                 </div>
                             </div>
                         </div>
@@ -656,10 +694,21 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Class</label>
                                 <select id="filterClass" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
-                                    <option value="">Play Group </option>
-                                    <option value="1">Nursery </option>
-                                    <option value="2">LKG </option>
-                                    <option value="3">UKG </option>
+                                    <option value="">All Classes</option>
+                                    <option value="Play Group">Play Group</option>
+                                    <option value="Nursery">Nursery</option>
+                                    <option value="LKG">LKG</option>
+                                    <option value="UKG">UKG</option>
+                                    <option value="1">Class 1</option>
+                                    <option value="2">Class 2</option>
+                                    <option value="3">Class 3</option>
+                                    <option value="4">Class 4</option>
+                                    <option value="5">Class 5</option>
+                                    <option value="6">Class 6</option>
+                                    <option value="7">Class 7</option>
+                                    <option value="8">Class 8</option>
+                                    <option value="9">Class 9</option>
+                                    <option value="10">Class 10</option>
                                 </select>
                             </div>
                             
@@ -710,7 +759,7 @@
                         <div class="px-4 lg:px-6 py-4 border-t border-gray-200 bg-gray-50">
                             <div class="flex flex-col lg:flex-row justify-between items-center">
                                 <div class="text-sm text-gray-700 mb-4 lg:mb-0">
-                                    Showing <span id="startCount">0</span> to <span id="endCount">0</span> of <span id="totalCount">0</span> students
+                                    Showing <span id="startCount">1</span> to <span id="endCount">10</span> of <span id="totalCount">245</span> students
                                 </div>
                                 <div class="flex items-center space-x-2">
                                     <button onclick="previousPage()" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200" id="prevBtn">
@@ -734,7 +783,7 @@
                         <div>
                             <h2 class="text-2xl lg:text-3xl font-bold text-gray-800" id="formTitle">Add New Student</h2>
                         </div>
-                        <button onclick="window.location.href='student-management.html'" class="mt-4 lg:mt-0 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
+                        <button onclick="showAllStudentsSection()" class="mt-4 lg:mt-0 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium">
                             <i class="fas fa-arrow-left mr-2"></i>Back to Students
                         </button>
                     </div>
@@ -1032,6 +1081,10 @@
                                         </label>
                                         <select name="class" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
                                             <option value="">Select Class</option>
+                                            <option value="Play Group">Play Group</option>
+                                            <option value="Nursery">Nursery</option>
+                                            <option value="LKG">LKG</option>
+                                            <option value="UKG">UKG</option>
                                             <option value="1">Class 1</option>
                                             <option value="2">Class 2</option>
                                             <option value="3">Class 3</option>
@@ -1659,7 +1712,7 @@
                                             </div>
                                         </div>
 
-                                        <!-- QR Code Section for Online Transfer - ENHANCED -->
+                                        <!-- QR Code Section for Online Transfer - UPDATED WITH FIXED LIBRARY -->
                                         <div id="qrCodeSection" class="hidden mt-6">
                                             <div class="bg-white rounded-lg p-4 border border-gray-200">
                                                 <h5 class="font-semibold text-gray-700 mb-3">Online Transfer Details</h5>
@@ -1667,10 +1720,8 @@
                                                     <!-- QR Code will be generated here -->
                                                     <div class="text-center mb-4">
                                                         <p class="text-sm text-gray-600 mb-2">Scan this QR code to make payment</p>
-                                                        <div id="qrCodeDisplay" class="w-48 h-48 bg-gray-100 flex items-center justify-center rounded-lg mb-4 border border-gray-300">
-                                                            <div class="text-center p-4">
-                                                                <div id="qrCodeCanvas"></div>
-                                                            </div>
+                                                        <div id="qrCodeDisplay" class="w-64 h-64 bg-gray-100 flex items-center justify-center rounded-lg mb-4 border border-gray-300 p-2">
+                                                            <div id="qrCodeCanvas" class="w-full h-full flex items-center justify-center"></div>
                                                         </div>
                                                         <p class="text-sm font-semibold">Amount: <span id="qrAmount">₹10,000</span></p>
                                                         <p class="text-xs text-gray-500 mt-1">Bank: Kunash School Account</p>
@@ -1681,8 +1732,8 @@
                                                         <button type="button" onclick="closeQRCode()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 text-sm">
                                                             <i class="fas fa-times mr-2"></i>Close QR Code
                                                         </button>
-                                                        <button type="button" onclick="markPaymentAsComplete()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 text-sm">
-                                                            <i class="fas fa-check mr-2"></i>Payment Done
+                                                        <button type="button" onclick="refreshQRCode()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm">
+                                                            <i class="fas fa-sync-alt mr-2"></i>Refresh QR
                                                         </button>
                                                     </div>
                                                 </div>
@@ -1772,327 +1823,8 @@
         </div>
     </div>
 
-    <!-- Edit Student Modal -->
-    <div id="editModalOverlay" class="modal-overlay">
-        <div class="bg-white rounded-xl shadow-2xl modal-content w-full max-w-6xl">
-            <!-- Modal content will be loaded dynamically -->
-        </div>
-    </div>
-
-   <script src="/student-management/student-management.js"></script>
-   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-   <script>
-    // Global variables
-    let otherSports = [];
-    let otherSubjects = [];
-    let transactionVerified = false;
-
-    // 1. Fix image upload
-    function previewStudentPhoto(input) {
-        const file = input.files[0];
-        if (!file) return;
-        
-        // Validate file size (2MB limit)
-        if (file.size > 2 * 1024 * 1024) {
-            Toast.show('File size exceeds 2MB limit', 'error');
-            input.value = '';
-            return;
-        }
-        
-        // Validate file type
-        const validTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-        if (!validTypes.includes(file.type)) {
-            Toast.show('Please upload JPG or PNG files only', 'error');
-            input.value = '';
-            return;
-        }
-        
-        const previewElement = document.getElementById('studentPhotoPreview');
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            previewElement.innerHTML = `
-                <img src="${e.target.result}" class="h-full w-full object-cover rounded-full" alt="Student Photo">
-            `;
-        };
-        
-        reader.readAsDataURL(file);
-        Toast.show('Photo uploaded successfully', 'success');
-    }
-
-    // 2. Handle Student ID and Password
-    function generateStudentId() {
-        const year = new Date().getFullYear().toString().slice(-2);
-        const random = Math.floor(1000 + Math.random() * 9000);
-        return `STU${year}${random}`;
-    }
-
-    // Auto-generate student ID when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        const autoGeneratedId = generateStudentId();
-        document.getElementById('autoGeneratedId').textContent = autoGeneratedId;
-        document.getElementById('studentId').value = autoGeneratedId;
-        
-        // Validate password match
-        const password = document.getElementById('studentPassword');
-        const confirmPassword = document.getElementById('confirmStudentPassword');
-        const mismatchMessage = document.getElementById('passwordMismatch');
-        
-        function checkPasswordMatch() {
-            if (password.value && confirmPassword.value && password.value !== confirmPassword.value) {
-                mismatchMessage.classList.remove('hidden');
-            } else {
-                mismatchMessage.classList.add('hidden');
-            }
-        }
-        
-        password.addEventListener('input', checkPasswordMatch);
-        confirmPassword.addEventListener('input', checkPasswordMatch);
-
-        // Set default date for first installment
-        const today = new Date();
-        const firstInstallmentDate = document.getElementById('firstInstallmentDate');
-        if (firstInstallmentDate) {
-            today.setMonth(today.getMonth() + 1);
-            const nextMonth = today.toISOString().split('T')[0];
-            firstInstallmentDate.value = nextMonth;
-        }
-    });
-
-    // 3. Enhanced manual add options for sports and subjects
-    function toggleOtherSports() {
-        const checkbox = document.getElementById('otherSportsCheckbox');
-        const container = document.getElementById('otherSportsContainer');
-        
-        if (checkbox.checked) {
-            container.classList.remove('hidden');
-        } else {
-            container.classList.add('hidden');
-        }
-    }
-
-    function addOtherSports() {
-        const input = document.getElementById('otherSportsInput');
-        const value = input.value.trim();
-        
-        if (!value) {
-            Toast.show('Please enter sports names', 'error');
-            return;
-        }
-        
-        const sports = value.split(',').map(sport => sport.trim()).filter(sport => sport);
-        const display = document.getElementById('otherSportsDisplay');
-        
-        if (sports.length > 0) {
-            display.classList.remove('hidden');
-            sports.forEach(sport => {
-                if (!otherSports.includes(sport.toLowerCase())) {
-                    otherSports.push(sport.toLowerCase());
-                }
-            });
-            updateOtherSportsDisplay();
-            input.value = '';
-            Toast.show(`${sports.length} sport(s) added`, 'success');
-        }
-    }
-
-    function toggleOtherSubjects() {
-        const checkbox = document.getElementById('otherSubjectsCheckbox');
-        const container = document.getElementById('otherSubjectsContainer');
-        
-        if (checkbox.checked) {
-            container.classList.remove('hidden');
-        } else {
-            container.classList.add('hidden');
-        }
-    }
-
-    function addOtherSubjects() {
-        const input = document.getElementById('otherSubjectsInput');
-        const value = input.value.trim();
-        
-        if (!value) {
-            Toast.show('Please enter subject names', 'error');
-            return;
-        }
-        
-        const subjects = value.split(',').map(subject => subject.trim()).filter(subject => subject);
-        const display = document.getElementById('otherSubjectsDisplay');
-        
-        if (subjects.length > 0) {
-            display.classList.remove('hidden');
-            subjects.forEach(subject => {
-                if (!otherSubjects.includes(subject.toLowerCase())) {
-                    otherSubjects.push(subject.toLowerCase());
-                }
-            });
-            updateOtherSubjectsDisplay();
-            input.value = '';
-            Toast.show(`${subjects.length} subject(s) added`, 'success');
-        }
-    }
-
-    // 4. Handle Payment Method Change
-    function handlePaymentMethodChange() {
-        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-        const qrCodeSection = document.getElementById('qrCodeSection');
-        
-        if (paymentMethod === 'online') {
-            // Show QR code section
-            qrCodeSection.classList.remove('hidden');
-            
-            // Generate QR code based on initial payment amount
-            generateQRCode();
-        } else {
-            // Hide both sections for cash payment
-            qrCodeSection.classList.add('hidden');
-            transactionVerified = false;
-        }
-        
-        // Reset transaction verification status
-        document.getElementById('transactionStatus').innerHTML = '';
-        document.getElementById('transactionId').value = '';
-    }
-
-    // Generate QR Code
-    function generateQRCode() {
-        const qrCodeCanvas = document.getElementById('qrCodeCanvas');
-        const initialPayment = document.getElementById('initialPayment').value;
-        
-        // Clear previous QR code
-        qrCodeCanvas.innerHTML = '';
-        
-        // Update QR code amount display
-        document.getElementById('qrAmount').textContent = `₹${parseInt(initialPayment).toLocaleString()}`;
-        
-        // Generate payment details for QR code
-        const paymentData = {
-            account: '123456789012',
-            ifsc: 'KUNS0001234',
-            amount: initialPayment,
-            name: 'Kunash School',
-            note: 'Student Fees Payment'
-        };
-        
-        // Create QR code using the qrcode library
-        const qr = new QRCode(qrCodeCanvas, {
-            text: JSON.stringify(paymentData),
-            width: 200,
-            height: 200,
-            colorDark: "#000000",
-            colorLight: "#ffffff",
-            correctLevel: QRCode.CorrectLevel.H
-        });
-        
-        Toast.show('QR code generated successfully', 'success');
-    }
-
-    // Update payment details
-    function updatePaymentDetails() {
-        // Update QR code if online payment is selected
-        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
-        if (paymentMethod && paymentMethod.value === 'online') {
-            generateQRCode();
-        }
-        
-        // Update fee calculations
-        updateFeeCalculations();
-    }
-
-    // Close QR Code
-    function closeQRCode() {
-        document.getElementById('qrCodeSection').classList.add('hidden');
-    }
-
-    // Mark payment as complete
-    function markPaymentAsComplete() {
-        const transactionIdInput = document.getElementById('transactionId');
-        const transactionId = transactionIdInput.value.trim();
-        
-        if (!transactionId) {
-            Toast.show('Please enter transaction ID before marking payment as complete', 'error');
-            transactionIdInput.focus();
-            return;
-        }
-        
-        // Show verification in progress
-        const statusElement = document.getElementById('transactionStatus');
-        statusElement.innerHTML = '<div class="flex items-center text-yellow-600"><i class="fas fa-spinner fa-spin mr-2"></i> Verifying transaction...</div>';
-        
-        // Simulate verification process
-        setTimeout(() => {
-            if (transactionId.length >= 8) {
-                statusElement.innerHTML = '<div class="flex items-center text-green-600"><i class="fas fa-check-circle mr-2"></i> Transaction verified successfully!</div>';
-                transactionVerified = true;
-                Toast.show('Transaction verified successfully!', 'success');
-            } else {
-                statusElement.innerHTML = '<div class="flex items-center text-red-600"><i class="fas fa-times-circle mr-2"></i> Invalid transaction ID. Please check and try again.</div>';
-                transactionVerified = false;
-                Toast.show('Invalid transaction ID', 'error');
-            }
-        }, 1500);
-    }
-
-    // Verify Transaction ID
-    function verifyTransactionId() {
-        markPaymentAsComplete();
-    }
-
-    // Update other sports display
-    function updateOtherSportsDisplay() {
-        const display = document.getElementById('otherSportsDisplay');
-        if (otherSports.length === 0) {
-            display.classList.add('hidden');
-            return;
-        }
-        
-        let html = '<div class="flex flex-wrap gap-2 mt-2">';
-        otherSports.forEach((sport, index) => {
-            html += `
-                <div class="inline-flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                    <span>${sport}</span>
-                    <button type="button" onclick="removeOtherSport(${index})" class="ml-2 text-red-500 hover:text-red-700">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                </div>
-            `;
-        });
-        html += '</div>';
-        display.innerHTML = html;
-    }
-
-    // Update other subjects display
-    function updateOtherSubjectsDisplay() {
-        const display = document.getElementById('otherSubjectsDisplay');
-        if (otherSubjects.length === 0) {
-            display.classList.add('hidden');
-            return;
-        }
-        
-        let html = '<div class="flex flex-wrap gap-2 mt-2">';
-        otherSubjects.forEach((subject, index) => {
-            html += `
-                <div class="inline-flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
-                    <span>${subject}</span>
-                    <button type="button" onclick="removeOtherSubject(${index})" class="ml-2 text-red-500 hover:text-red-700">
-                        <i class="fas fa-times text-xs"></i>
-                    </button>
-                </div>
-            `;
-        });
-        html += '</div>';
-        display.innerHTML = html;
-    }
-
-    function removeOtherSport(index) {
-        otherSports.splice(index, 1);
-        updateOtherSportsDisplay();
-    }
-
-    function removeOtherSubject(index) {
-        otherSubjects.splice(index, 1);
-        updateOtherSubjectsDisplay();
-    }
-   </script>
+    <script src="/student-management/student-management.js"></script>
 </body>
 </html>
+
+
